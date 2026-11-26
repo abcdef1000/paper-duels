@@ -1,10 +1,13 @@
 # Paper One Duel
 
-Live 1v1 multiple-choice duels on H2 Physics (9478) Paper 1-style questions, plus solo practice, per-question progress and a leaderboard.
+Party-style multiple-choice game on H2 Physics (9478) Paper 1-style questions, for 2–8 players around a round table, plus solo practice, per-question progress and a leaderboard.
+
+- **Race:** everyone gets the same question. The first correct answer scores, and a wrong answer locks you out of that question.
+- **Bomb:** the holder must answer before the fuse runs out. Right passes the bomb on. Wrong or too slow loses a life. The last player standing wins.
 
 - `docs/`: the website GitHub Pages serves (`index.html`, `questions.json`, `firebase-config.js`).
 - `database.rules.json`: security rules to paste into Firebase.
-- `test/run.sh`: plays a full two-player match in headless Chrome against a fake Firebase.
+- `test/run.sh`: plays a 3-player Race game and a Bomb game in headless Chrome against a fake Firebase.
 - `claude-artifact/`: the claude.ai-hosted version of the same game.
 
 ## Setup (about 10 minutes, all free)
@@ -35,7 +38,7 @@ Firebase's free Spark plan allows 100 simultaneous connections and 10 GB/month o
 
 ## Editing questions
 
-All questions live in `docs/questions.json`. Each has a stable `id`, a `topic` (which must match one listed under `sections`), the stem `q`, four options `o`, the index `a` of the correct option (0–3), and an explanation `x`. Option order is shuffled in play, so explanations shouldn't refer to letters. Progress is keyed by `id`, so don't reuse an id for a different question.
+All questions live in `docs/questions.json`. Questions marked `"quick": true` form the Quick-fire set (mental maths, constants given), which Bomb mode uses by default. A question may carry a `fig`: an inline SVG drawn with `currentColor` and the classes `ac`, `acf`, `guide`, `dim`, `thick`, `hollow` and `solid`, so it follows light and dark mode. Each question has a stable `id`, a `topic` (which must match one listed under `sections`), the stem `q`, four options `o`, the index `a` of the correct option (0–3), and an explanation `x`. Option order is shuffled in play, so explanations shouldn't refer to letters. Progress is keyed by `id`, so don't reuse an id for a different question.
 
 ## Testing
 

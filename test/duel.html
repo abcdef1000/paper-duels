@@ -1,11 +1,12 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>duel test</title>
-<!-- Two game instances in iframes share an in-memory fake Firebase and play a 5-question match.
-     Run via test/run.sh; the verdict is written into the "out" element. -->
+<!-- Three game instances in iframes share an in-memory fake Firebase. They play a 3-question Race game,
+     then a Bomb game to the end. Run via test/run.sh; the verdict is written into the "out" element. -->
 <pre id="out">RUNNING</pre>
 <iframe id="A" width="900" height="700"></iframe>
 <iframe id="B" width="900" height="700"></iframe>
+<iframe id="C" width="900" height="700"></iframe>
 <script>
 "use strict";
 const log = [];
@@ -59,60 +60,96 @@ window.makeFakeFirebase = function () {
 };
 
 /* ---- driver ---- */
-const A = document.getElementById("A"), B = document.getElementById("B");
+const A = document.getElementById("A"), B = document.getElementById("B"), C = document.getElementById("C");
+const F = { A, B, C };
 A.src = "site/index.html#duel";
 setTimeout(() => { B.src = "site/index.html#duel"; }, 300);
+setTimeout(() => { C.src = "site/index.html#duel"; }, 600);
 const W = f => f.contentWindow, D = f => f.contentDocument;
 const S = f => W(f).eval("S");
 const btn = (f, text) => [...D(f).querySelectorAll("button")].find(b => b.textContent.trim() === text && !b.disabled);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function until(fn, what, ms = 20000) {
+async function until(fn, what, ms = 30000) {
   const t0 = Date.now();
   for (;;) { try { const v = fn(); if (v) return v; } catch {} if (Date.now() - t0 > ms) throw new Error("timeout waiting for " + what); await sleep(50); }
 }
+async function nameIfAsked(f, name) {
+  await sleep(100);
+  const inp = D(f).getElementById("nm-in");
+  if (inp) { inp.value = name; btn(f, "Take a seat").click(); }
+}
+const curQ = f => { const s = S(f), g = s.match.g; return s.byId[g.qs[g.k % g.qs.length]]; };
 function pick(f, correct) {
-  const s = S(f), g = s.match.g, q = s.byId[g.qs[g.i]];
-  const target = correct ? q.a : (q.a + 1) % 4;
-  const b = [...D(f).querySelectorAll("#matchbox .opt")].find(b => b.getAttribute("aria-label").endsWith(": " + q.o[target]));
+  const q = curQ(f), target = correct ? q.a : (q.a + 1) % 4;
+  const b = [...D(f).querySelectorAll("#matchbox .opt")].find(b => b.getAttribute("aria-label").endsWith(": " + q.o[target]) && !b.disabled);
+  if (!b) throw new Error("no enabled option to click");
   b.click();
+}
+const rec = f => `W${W(f).eval("P.w")} L${W(f).eval("P.l")} D${W(f).eval("P.d")}`;
+async function seatEveryone(hostOpens) {
+  await until(() => btn(A, "Open room"), "A lobby");
+  for (const f of [B, C]) await until(() => S(f).bank.length && S(f).roomState === "on", "lobby ready");
+  hostOpens();
+  btn(A, "Open room").click(); await nameIfAsked(A, "Ann");
+  for (const [f, n] of [[B, "Ben"], [C, "Cy"]]) {
+    const j = await until(() => btn(f, "Join"), "join button");
+    j.click(); await nameIfAsked(f, n);
+    await until(() => S(f).match, n + " seated");
+  }
+  (await until(() => btn(A, "Start with 3 players"), "start button")).click();
 }
 (async () => {
   try {
-    await until(() => btn(A, "Open match"), "A lobby");
-    await until(() => S(B).bank.length && S(B).roomState === "on", "B lobby");
-    D(A).getElementById("rounds").value = "5";
-    btn(A, "Open match").click();
-    out("A opened match");
-    const ch = await until(() => btn(B, "Challenge"), "challenge button in B");
-    ch.click();
-    out("B challenged");
-    await until(() => S(A).match && S(B).match, "both in match");
-    out("match started; roles " + S(A).match.role + "/" + S(B).match.role);
-    // Round plan: who answers what. [A, B]; "r"=right, "w"=wrong, "-"=no answer (B wrong first then A right; etc.)
-    const plan = [["r", "w"], ["w", "r"], ["r", "r"], ["w", "w"], ["-", "r"]];
+    /* ---------- Race ---------- */
+    await seatEveryone(() => { S(A).form.mode = "race"; S(A).form.n = 5; S(A).form.pool = "all"; });
+    out("race: 3 seated, names " + JSON.stringify(S(A).match.g.nm));
+    // [A, B, C] in click order; "r" right, "w" wrong
+    const plan = [[["A","r"],["B","w"],["C","r"]], [["A","w"],["B","w"],["C","w"]], [["B","w"],["A","w"],["C","r"]], [["C","r"],["A","r"],["B","r"]], [["B","r"],["A","w"],["C","w"]]];
     for (let i = 0; i < plan.length; i++) {
-      await until(() => S(A).match.g.ph === "q" && S(A).match.g.i === i && D(A).querySelector("#matchbox .opt") && S(B).match.g.ph === "q" && D(B).querySelector("#matchbox .opt"), "q" + i);
-      const [pa, pb] = plan[i];
-      if (pa === "r" && pb === "r") { pick(B, true); await sleep(150); pick(A, true); }      // B is faster
-      else {
-        if (pb !== "-") pick(B, pb === "r");
-        await sleep(80);
-        if (pa !== "-") pick(A, pa === "r");
-      }
-      await until(() => S(A).match.g.ph === "r" && S(B).match.g.ph === "r", "reveal " + i, 100000);
+      await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && S(f).match.g.k === i && D(f).querySelector("#matchbox .opt")), "race q" + i);
+      for (const [who, how] of plan[i]) { pick(F[who], how === "r"); await sleep(120); }
+      await until(() => [A, B, C].every(f => S(f).match.g.ph === "r"), "race reveal " + i, 100000);
       const g = S(A).match.g;
-      out(`Q${i + 1} plan A:${pa} B:${pb} -> winner ${g.res.w} score ${g.sc.join("-")}`);
-      await until(() => btn(A, i < 4 ? "Next question" : "See result") && btn(B, i < 4 ? "Next question" : "See result"), "next buttons");
-      btn(A, i < 4 ? "Next question" : "See result").click();
-      btn(B, i < 4 ? "Next question" : "See result").click();
+      out(`  Q${i + 1} ${plan[i].map(x => x.join(":")).join(" ")} -> winner seat ${g.res.w}, scores ${g.sc.join("-")}`);
+      const label = i < plan.length - 1 ? "Next question" : "See results";
+      for (const f of [A, B, C]) (await until(() => btn(f, label), "next"))?.click();
     }
-    await until(() => S(A).match.g.ph === "end" && S(B).match.ended, "end");
-    const ga = S(A).match.g;
-    const ra = D(A).querySelector(".result").textContent, rb = D(B).querySelector(".result").textContent;
-    out(`final ${ga.sc.join("-")} | A sees "${ra}" | B sees "${rb}"`);
-    out(`A record W${W(A).eval("P.w")} L${W(A).eval("P.l")} D${W(A).eval("P.d")}; B record W${W(B).eval("P.w")} L${W(B).eval("P.l")} D${W(B).eval("P.d")}`);
-    out(`A answered ${Object.keys(W(A).eval("P.q")).length} questions in progress; B ${Object.keys(W(B).eval("P.q")).length}`);
-    out("players docs: " + JSON.stringify(Object.keys(store).filter(k => k.startsWith("players/"))));
+    await until(() => [A, B, C].every(f => S(f).match.ended), "race end");
+    out("  final " + S(A).match.g.sc.join("-") + " | " + ["A","B","C"].map(n => `${n} sees "${D(F[n]).querySelector(".status").textContent}"`).join(" | "));
+    out(`  records A ${rec(A)} · B ${rec(B)} · C ${rec(C)}`);
+    for (const f of [A, B, C]) btn(f, "Back to lobby").click();
+
+    /* ---------- Bomb ---------- */
+    await seatEveryone(() => { S(A).form.mode = "bomb"; S(A).form.lives = 1; S(A).form.fuse = 20; S(A).form.pool = "quick"; });
+    out("bomb: 3 seated, 1 life each, 20 s fuse");
+    const turns = { Ann: 0, Ben: 0, Cy: 0 };
+    let lastK = -1;
+    for (let t = 0; t < 20; t++) {
+      await until(() => S(A).match.g.ph === "end" || (S(A).match.g.ph === "q" && S(A).match.g.k !== lastK && [A, B, C].every(f => S(f).match.g.k === S(A).match.g.k && S(f).match.g.ph === "q")), "bomb turn", 100000);
+      const g = S(A).match.g;
+      if (g.ph === "end") break;
+      lastK = g.k;
+      const holderName = g.nm[g.turn];
+      const hf = [A, B, C].find(f => S(f).myPeer === g.pl[g.turn]);
+      turns[holderName]++;
+      let action;
+      if (holderName === "Ben") action = "wrong";
+      else if (holderName === "Cy") action = turns.Cy >= 2 ? "timeout" : "right";
+      else action = "right";
+      await sleep(200);
+      // non-holders must not be able to answer
+      const others = [A, B, C].filter(f => f !== hf);
+      const blocked = others.every(f => [...D(f).querySelectorAll("#matchbox .opt")].every(b => b.disabled));
+      if (action !== "timeout") pick(hf, action === "right");
+      await until(() => S(A).match.g.ph === "r" || S(A).match.g.ph === "end", "bomb result", 100000);
+      const r = S(A).match.g;
+      out(`  turn ${t + 1}: ${holderName} ${action} -> ${r.res && r.res.boom ? "BOOM" : "passed"}, lives ${r.lv.join("-")}, others blocked: ${blocked}`);
+    }
+    await until(() => [A, B, C].every(f => S(f).match.ended), "bomb end", 100000);
+    const gb = S(A).match.g;
+    out(`  winner ${gb.nm[gb.win]} | A sees "${D(A).querySelector(".status").textContent}" | B sees "${D(B).querySelector(".status").textContent}"`);
+    out(`  records A ${rec(A)} · B ${rec(B)} · C ${rec(C)}`);
+    out("players docs: " + Object.keys(store).filter(k => k.startsWith("players/")).length);
     out("DONE");
   } catch (e) { out("FAIL: " + e.message); }
 })();

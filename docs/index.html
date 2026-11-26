@@ -5,17 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Paper One Duel</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cellipse cx=%2716%27 cy=%2716%27 rx=%2714%27 ry=%279.5%27 fill=%27%232A2F3B%27 stroke=%27%23C8336A%27 stroke-width=%273%27/%3E%3C/svg%3E">
-<meta name="description" content="Live 1v1 multiple-choice duels on H2 Physics (9478) Paper 1-style questions, with practice and progress tracking.">
-<style>
-:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-body { margin: 0; }
-img { max-width: 100%; }
-[hidden] { display: none !important; }
-</style>
+<meta name="description" content="Party-style H2 Physics (9478) multiple-choice game: race or pass the bomb with 2–8 players, plus practice and progress tracking.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-/* Layout: an optical answer sheet. Paper-white sheets on a cool desk, drop-out pink printing for structure, graphite for marks you make. */
+/* Layout: an optical answer sheet. Paper-white sheets on a cool desk, drop-out pink printing for structure,
+   graphite for marks you make. In a room, players sit around a round table with the question below it. */
 :root {
   --desk: #EEF0F4;
   --sheet: #FFFFFF;
@@ -26,40 +21,40 @@ img { max-width: 100%; }
   --drop-soft: #FBE6EE;
   --graphite: #2A2F3B;      /* a shaded bubble */
   --on-graphite: #FFFFFF;
-  --you: #3446C4;
-  --opp: #0B7B84;
   --good: #1D7F52;
   --good-soft: #E1F3EA;
   --bad: #B83A12;
   --bad-soft: #FBE9E1;
+  --s0: #3446C4; --s1: #0B7B84; --s2: #B5531A; --s3: #7A3FB8; --s4: #1D7F52; --s5: #B8336A; --s6: #8A6D00; --s7: #44515F;
+  --on-seat: #FFFFFF;
   --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --r: 10px;
+  color-scheme: light;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root {
     --desk: #10131B; --sheet: #191D28; --ink: #E8EAF1; --muted: #9AA1B4; --rule: #2C3243;
     --drop: #F0709E; --drop-soft: #3A1F2C; --graphite: #E8EAF1; --on-graphite: #10131B;
-    --you: #93A0FF; --opp: #46C9D3; --good: #4CC48C; --good-soft: #15301F; --bad: #F2865C; --bad-soft: #3A2016;
+    --good: #4CC48C; --good-soft: #15301F; --bad: #F2865C; --bad-soft: #3A2016;
+    --s0: #93A0FF; --s1: #46C9D3; --s2: #F29A5E; --s3: #C39BF5; --s4: #4CC48C; --s5: #F0709E; --s6: #E2C24E; --s7: #A9B6C4;
+    --on-seat: #10131B;
     color-scheme: dark;
   }
 }
-:root[data-theme="dark"] {
-  --desk: #10131B; --sheet: #191D28; --ink: #E8EAF1; --muted: #9AA1B4; --rule: #2C3243;
-  --drop: #F0709E; --drop-soft: #3A1F2C; --graphite: #E8EAF1; --on-graphite: #10131B;
-  --you: #93A0FF; --opp: #46C9D3; --good: #4CC48C; --good-soft: #15301F; --bad: #F2865C; --bad-soft: #3A2016;
-  color-scheme: dark;
-}
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
 body {
-  background: var(--desk); color: var(--ink); font: 15px/1.55 var(--body);
+  margin: 0; background: var(--desk); color: var(--ink); font: 15px/1.55 var(--body);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 0 48px;
 }
 button, input, select { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--s0); outline-offset: 2px; }
 .mono { font-family: var(--mono); }
 .wrap { max-width: 1040px; margin: 0 auto; }
 
@@ -68,7 +63,7 @@ button, input, select { font: inherit; color: inherit; }
 .brand { display: flex; flex-direction: column; gap: 2px; }
 .brand small { font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--drop); }
 .brand h1 { margin: 0; font: 800 clamp(26px, 4.4vw, 38px)/1 var(--display); letter-spacing: -.02em; text-wrap: balance; }
-.who { display: flex; align-items: center; gap: 8px; }
+.who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .who label { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .who input { width: 11em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
 nav.tabs { display: flex; gap: 4px; padding-block: 12px; overflow-x: auto; }
@@ -84,19 +79,31 @@ p { margin: 0 0 10px; }
 .muted { color: var(--muted); }
 .note { font-size: 13px; color: var(--muted); }
 .banner { padding: 10px 14px; border-radius: 8px; background: var(--drop-soft); color: var(--ink); font-size: 14px; margin-bottom: 14px; }
-.grid2 { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; align-items: start; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 16px; align-items: start; }
 @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
 .stack { display: flex; flex-direction: column; gap: 14px; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.spread { justify-content: space-between; }
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field span { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-select, .field input { padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); min-width: 0; }
-.btn { appearance: none; border: 1px solid var(--graphite); background: var(--graphite); color: var(--on-graphite); padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+select, .field input { padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); min-width: 0; max-width: 100%; }
+.btn { appearance: none; border: 1px solid var(--graphite); background: var(--graphite); color: var(--on-graphite); padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
 .btn:hover { filter: brightness(1.12); }
 .btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
 .btn.ghost:hover { border-color: var(--ink); }
 .btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
 .btn.small { padding: 5px 12px; font-size: 13px; }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: var(--sheet); }
+
+/* mode picker */
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 0; padding: 0; margin: 0; }
+@media (max-width: 460px) { .modes { grid-template-columns: 1fr; } }
+.mode { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1.5px solid var(--rule); border-radius: 10px; cursor: pointer; }
+.mode input { position: absolute; opacity: 0; pointer-events: none; }
+.mode b { font: 700 17px/1.2 var(--display); }
+.mode span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.mode:has(input:checked) { border-color: var(--drop); background: var(--drop-soft); }
+.mode:has(input:focus-visible) { outline: 2px solid var(--s0); outline-offset: 2px; }
 
 /* lobby */
 .lobby-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
@@ -104,13 +111,54 @@ select, .field input { padding: 8px 10px; border: 1px solid var(--rule); border-
 .lobby-list li:first-child { border-top: 0; }
 .lobby-list .who-col { flex: 1; min-width: 0; }
 .lobby-list .nm { font-weight: 600; overflow-wrap: anywhere; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; margin-right: 6px; vertical-align: middle; }
+.tag { font: 600 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; background: var(--drop-soft); color: var(--drop); margin-right: 6px; vertical-align: 1px; }
 .empty { padding: 18px; border: 1px dashed var(--rule); border-radius: 8px; color: var(--muted); font-size: 14px; }
-.code { font: 600 28px/1 var(--mono); letter-spacing: .2em; color: var(--drop); }
 .pulse { animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .45; } }
 
+/* the round table */
+.table { position: relative; width: min(100%, 390px); aspect-ratio: 1; margin: 4px auto 8px; }
+.table::before { content: ""; position: absolute; inset: 17%; border-radius: 50%; border: 2px dashed var(--rule); }
+.seat { position: absolute; transform: translate(-50%, -50%); width: 96px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; transition: left .4s, top .4s, opacity .3s; }
+.av { --c: var(--s0); position: relative; width: 58px; height: 58px; border-radius: 50%; background: var(--c); color: var(--on-seat); display: grid; place-items: center; font: 800 20px/1 var(--display); box-shadow: 0 0 0 3px var(--sheet); transition: transform .25s, box-shadow .25s; }
+.seat.me .av { box-shadow: 0 0 0 3px var(--sheet), 0 0 0 5px var(--c); }
+.seat.holder .av { transform: scale(1.18); box-shadow: 0 0 0 3px var(--sheet), 0 0 0 6px var(--drop); }
+.seat.out { opacity: .35; filter: grayscale(1); }
+.seat.gone .av { opacity: .4; }
+.sn { font-size: 13px; font-weight: 600; max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb { font: 600 12px/1.2 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.sb.hearts { color: var(--bad); letter-spacing: .1em; }
+.mark { position: absolute; right: -5px; bottom: -5px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 13px/1 var(--mono); background: var(--sheet); border: 2px solid var(--rule); color: var(--ink); }
+.mark.lock { border-color: var(--c); color: var(--c); }
+.mark.ok { background: var(--good); border-color: var(--good); color: var(--sheet); }
+.mark.no { background: var(--bad); border-color: var(--bad); color: var(--sheet); }
+@media (max-width: 480px) { .seat { width: 74px; } .av { width: 44px; height: 44px; font-size: 16px; } .sn { max-width: 74px; font-size: 12px; } }
+.hub { position: absolute; left: 50%; top: 50%; width: 40%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; display: grid; place-items: center; text-align: center; }
+.hub > * { grid-area: 1 / 1; }
+.hub .ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.hub .ring circle { fill: none; stroke-width: 5; }
+.hub .ring .track { stroke: var(--rule); }
+.hub .ring .prog { stroke: var(--drop); stroke-linecap: round; transition: stroke-dashoffset .25s linear; }
+.hub .big { font: 800 clamp(30px, 9vw, 46px)/1 var(--display); color: var(--drop); }
+.hub .lbl { font: 600 12px/1.3 var(--mono); color: var(--muted); letter-spacing: .06em; }
+.pointer { width: 100%; height: 100%; transition: transform .55s cubic-bezier(.3,1.4,.5,1); }
+.pointer::after { content: ""; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); border: 11px solid transparent; border-left: 16px solid var(--drop); border-right: 0; }
+.bomb { width: 62%; height: 62%; }
+.bomb .body { fill: #262B36; stroke: var(--ink); stroke-width: 2; }
+.bomb .shine { fill: #FFFFFF; opacity: .3; }
+.bomb .cap { fill: var(--muted); }
+.bomb .fuse { fill: none; stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
+.bomb .spark { fill: var(--drop); transform-origin: 76px 14px; animation: spark .35s ease-in-out infinite alternate; }
+@keyframes spark { from { transform: scale(.7); opacity: .7; } to { transform: scale(1.25); opacity: 1; } }
+.hub.urgent .bomb { animation: shake .18s linear infinite; }
+@keyframes shake { 25% { transform: translate(-2px, 1px) rotate(-3deg); } 75% { transform: translate(2px, -1px) rotate(3deg); } }
+.hub.boom .bomb .body { fill: var(--bad); }
+.hub .count { position: absolute; bottom: 8%; font: 700 13px/1 var(--mono); color: var(--drop); font-variant-numeric: tabular-nums; }
+
 /* question card */
+.panel { display: flex; flex-direction: column; gap: 14px; }
+.status { font: 700 19px/1.3 var(--display); }
+.status.win { color: var(--good); } .status.lose { color: var(--bad); }
 .qcard { display: flex; flex-direction: column; gap: 14px; }
 .qhead { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
 .qid { font: 600 13px/1 var(--mono); color: var(--drop); letter-spacing: .06em; }
@@ -128,32 +176,46 @@ select, .field input { padding: 8px 10px; border: 1px solid var(--rule); border-
 .opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
 .opt.wrong .bubble { background: var(--bad); border-color: var(--bad); color: var(--on-graphite); }
 .otext { overflow-wrap: anywhere; }
-.marks { display: flex; gap: 4px; }
-.chip { font: 600 11px/1 var(--mono); padding: 4px 7px; border-radius: 999px; letter-spacing: .04em; white-space: nowrap; }
-.chip.you { background: var(--you); color: var(--sheet); }
-.chip.opp { background: var(--opp); color: var(--sheet); }
+.marks { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.chip { --c: var(--s0); font: 600 11px/1 var(--mono); padding: 4px 7px; border-radius: 999px; letter-spacing: .04em; white-space: nowrap; background: var(--c); color: var(--on-seat); }
 .explain { border-left: 3px solid var(--good); padding: 8px 14px; background: var(--good-soft); border-radius: 0 8px 8px 0; }
 .explain.badx { border-left-color: var(--bad); background: var(--bad-soft); }
 .explain p:last-child { margin: 0; }
 details.data { font-size: 12px; color: var(--muted); }
 details.data summary { cursor: pointer; font-family: var(--mono); letter-spacing: .06em; }
-
-/* scoreboard */
-.score { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 12px; align-items: center; margin-bottom: 14px; }
-.player { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.player.r { align-items: flex-end; text-align: right; }
-.player .nm { font-weight: 600; overflow-wrap: anywhere; }
-.player .pts { font: 800 44px/1 var(--display); font-variant-numeric: tabular-nums; }
-.player.you .pts { color: var(--you); }
-.player.opp .pts { color: var(--opp); }
-.player .st { font-size: 12px; color: var(--muted); min-height: 1.4em; }
-.mid { text-align: center; }
-.mid .round { font: 600 13px/1.2 var(--mono); color: var(--muted); }
-.timer { height: 6px; background: var(--rule); border-radius: 999px; overflow: hidden; margin-bottom: 16px; }
+.timer { height: 6px; background: var(--rule); border-radius: 999px; overflow: hidden; }
 .timer i { display: block; height: 100%; background: var(--drop); width: 100%; transition: width .25s linear; }
-.result { font: 700 20px/1.25 var(--display); }
-.result.win { color: var(--good); } .result.lose { color: var(--bad); }
-.big-count { font: 800 96px/1 var(--display); text-align: center; color: var(--drop); padding: 30px 0; }
+
+/* figures (inline SVG from questions.json) */
+.fig { color: var(--ink); margin: 0; padding: 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); align-self: flex-start; width: 100%; max-width: 440px; }
+.fig svg { display: block; width: 100%; height: auto; }
+.fig line, .fig path, .fig polyline, .fig .hollow { stroke: currentColor; stroke-width: 1.5; fill: none; }
+.fig .solid, .fig .hd { fill: currentColor; stroke: none; }
+.fig .ac { stroke: var(--drop); }
+.fig .hd.ac, .fig .acf { fill: var(--drop); stroke: none; }
+.fig .thick { stroke-width: 3; }
+.fig .guide { stroke: var(--muted); stroke-dasharray: 4 4; }
+.fig .guide.solidline { stroke-dasharray: none; }
+.fig .hd.guide, .fig .hd.dim { fill: var(--muted); }
+.fig .dash { stroke-dasharray: 5 4; }
+.fig .dim { stroke: var(--muted); stroke-width: 1; }
+.fig text { fill: currentColor; stroke: none; font: 12px var(--mono); }
+.fig text.muted { fill: var(--muted); }
+.fig text.acfill { fill: var(--drop); font-weight: 600; font-size: 15px; }
+
+/* standings */
+.standings { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.standings li { display: grid; grid-template-columns: 2em 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; }
+.standings li.first { border-color: var(--good); background: var(--good-soft); }
+.standings .pos { font: 700 15px/1 var(--mono); color: var(--muted); }
+.standings .mini { width: 36px; height: 36px; font-size: 14px; box-shadow: none; }
+.standings .pn { font-weight: 600; overflow-wrap: anywhere; }
+.standings .pv { font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; }
+
+/* name prompt */
+.modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: max(16px, env(safe-area-inset-left, 0px)); background: color-mix(in srgb, var(--desk) 70%, transparent); backdrop-filter: blur(3px); }
+.modal form { width: min(420px, 100%); display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.modal input { font-size: 20px; padding: 10px 12px; border: 1.5px solid var(--drop); border-radius: 8px; background: var(--sheet); }
 
 /* progress */
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
@@ -196,13 +258,13 @@ tr.me td { background: var(--drop-soft); }
       <h1>Paper One Duel</h1>
     </div>
     <div class="who">
-      <label for="nick">Callsign</label>
+      <label for="nick">Name</label>
       <input id="nick" maxlength="20" autocomplete="off" spellcheck="false">
       <button id="acct" class="btn ghost small" hidden></button>
     </div>
   </header>
   <nav class="tabs" id="tabs">
-    <a href="#duel" data-v="duel">Duel</a>
+    <a href="#duel" data-v="duel">Play</a>
     <a href="#practice" data-v="practice">Practice</a>
     <a href="#progress" data-v="progress">Progress</a>
     <a href="#leaderboard" data-v="leaderboard">Leaderboard</a>
@@ -219,6 +281,7 @@ function el(tag, attrs = {}, ...kids) {
   for (const [k, v] of Object.entries(attrs || {})) {
     if (v == null || v === false) continue;
     if (k === "class") e.className = v;
+    else if (k === "style") e.setAttribute("style", v);
     else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
     else if (v === true) e.setAttribute(k, "");
     else e.setAttribute(k, v);
@@ -226,6 +289,7 @@ function el(tag, attrs = {}, ...kids) {
   for (const k of kids.flat(Infinity)) if (k != null && k !== false) e.append(k instanceof Node ? k : document.createTextNode(String(k)));
   return e;
 }
+const svgEl = html => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
 const LETTERS = ["A", "B", "C", "D"];
 function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 function rng(seed) { let a = seed; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -235,22 +299,27 @@ const rid = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => "abc
 function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej({ code: "timeout" }), ms))]);
+// Built from code points so the source never contains raw control or invisible characters.
 const BAD_CHARS = new RegExp("[" + [[0,31],[127,159],[0x200b,0x200f],[0x2028,0x202e],[0x2060,0x206f],[0xfeff,0xfeff]].map(([a,b]) => "\\u" + a.toString(16).padStart(4,"0") + "-\\u" + b.toString(16).padStart(4,"0")).join("") + "]", "g");
 const cleanNick = s => String(s || "").replace(BAD_CHARS, "").trim().slice(0, 20);
+const initials = s => { const w = cleanNick(s).split(/\s+/).filter(Boolean); return ((w[0] || "?")[0] + (w[1] ? w[1][0] : (w[0] || "").slice(1, 2))).toUpperCase(); };
+const seatColor = i => `var(--s${i % 8})`;
 
 /* ---------- state ---------- */
 const S = {
   bank: [], byId: {}, sections: [], constants: "",
   view: "duel",
-  db: null, user: null, uid: null, room: null, roomState: "connecting",
+  db: null, uid: null, room: null, roomState: "connecting",
   peers: [], myPeer: null, pres: {},
-  nick: "", storeMode: "local",
-  hosting: null, joining: null, match: null, lobbyMsg: "",
+  nick: "", named: false, storeMode: "local",
+  joining: null, match: null, lobbyMsg: "",
+  form: { mode: "race", n: 10, pool: "all", lives: 2, fuse: 30 },
   prac: { topic: "all", mode: "smart", qid: null, perm: null, picked: null },
   board: [], boardState: "idle",
 };
-const LIM = 90;          // seconds per question
+const RACE_LIM = 60;     // seconds per question in Race
 const GRACE = 1000;      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
+const MAX_PLAYERS = 8;
 const P = { q: {}, w: 0, l: 0, d: 0 };
 
 const Q = id => S.byId[id];
@@ -310,16 +379,12 @@ async function initStore() {
   render();
 }
 
-/* ---------- room / presence ---------- */
+/* ---------- presence ---------- */
 function pushPresence(patch) {
   for (const [k, v] of Object.entries(patch)) { if (v === null) delete S.pres[k]; else S.pres[k] = v; }
   if (S.room) S.room.presence(patch).catch(() => {});
 }
-function onRoomErr(e) {
-  if (["not_granted", "revoked", "capability_disabled", "capability_removed", "transform_error"].includes(e.code)) {
-    S.roomState = "off"; S.room = null; render();
-  }
-}
+function onRoomErr() { S.roomState = "off"; S.room = null; render(); }
 function initRoom(room) {
   if (!room) { S.roomState = "off"; render(); return; }
   S.room = room; S.roomState = "on";
@@ -329,145 +394,237 @@ function initRoom(room) {
     if (me) S.myPeer = me.peer;
     onPeersChanged();
   }, onRoomErr);
-  pushPresence({ v: 1, nick: S.nick, mast: masteredCount(), st: "idle" });
+  pushPresence({ v: 2, nick: S.nick, mast: masteredCount(), st: "idle" });
   render();
 }
 const peerOf = id => S.peers.find(p => p.peer === id);
 const pp = p => (p && p.presence) || {};
-const peerNick = p => cleanNick(pp(p).nick) || "Player";
+
+/* ---------- rooms: one host runs the game, everyone follows its state ----------
+   Host presence carries g = { id, mode: "race"|"bomb", pl: [peer ids by seat], nm: [names], ph: "lobby"|"cd"|"q"|"r"|"end",
+   k: question counter, qs: question ids, n: race length, lim: seconds, sc: race scores, lv: bomb lives, lives, turn: bomb holder seat,
+   res: last result, win, ab }. Players publish their answer as a = { m: room id, k, c: option index, rt: ms }. */
+const validG = g => g && typeof g === "object" && typeof g.id === "string" && Array.isArray(g.pl) && Array.isArray(g.qs) && g.pl.length <= MAX_PLAYERS && ["race", "bomb"].includes(g.mode);
+const qidOf = g => g.qs[g.k % g.qs.length];
+const mySeat = () => S.match ? S.match.g.pl.indexOf(S.myPeer) : -1;
+const seatName = (g, i) => cleanNick(g.nm && g.nm[i]) || "Player";
+function validAns(a, g) {
+  return a && a.m === g.id && a.k === g.k && Number.isInteger(a.c) && a.c >= 0 && a.c < 4 && typeof a.rt === "number" && a.rt >= 0 ? a : null;
+}
+function seatAnswer(g, s) {
+  if (g.pl[s] === S.myPeer && S.match) return validAns(S.match.my, g);
+  return validAns(pp(peerOf(g.pl[s])).a, g);
+}
+function poolFor(key) {
+  if (key === "all") return S.bank;
+  if (key === "quick") return S.bank.filter(q => q.quick);
+  const s = S.sections.find(x => x.name === key);
+  return s ? S.bank.filter(q => s.topics.includes(q.topic)) : S.bank;
+}
+const poolLabel = key => key === "all" ? "Whole syllabus" : key === "quick" ? "Quick-fire" : key;
+
+function withName(then) {
+  if (S.named) return then();
+  const input = el("input", { id: "nm-in", maxlength: "20", autocomplete: "off", spellcheck: "false", value: /^Player \d+$/.test(S.nick) ? "" : S.nick, placeholder: "e.g. Wei Ling" });
+  const err = el("p", { class: "note", hidden: true }, "Enter at least one character.");
+  const box = el("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "nm-h" },
+    el("form", { class: "sheet", onsubmit: e => {
+      e.preventDefault();
+      const v = cleanNick(input.value);
+      if (!v) { err.hidden = false; input.focus(); return; }
+      setNick(v); S.named = true; try { sessionStorage.setItem("p1d.named", "1"); } catch {}
+      box.remove(); then();
+    } },
+      el("p", { class: "eyebrow" }, "Before you sit down"),
+      el("h2", { id: "nm-h", style: "margin:0" }, "What should the table call you?"),
+      input, err,
+      el("div", { class: "row spread" },
+        el("button", { type: "button", class: "btn ghost", onclick: () => box.remove() }, "Cancel"),
+        el("button", { type: "submit", class: "btn" }, "Take a seat"))));
+  box.addEventListener("keydown", e => { if (e.key === "Escape") box.remove(); });
+  document.body.append(box);
+  input.focus(); input.select();
+}
+function setNick(v) {
+  S.nick = v; $("#nick").value = v; lsSet("p1d.nick", v);
+  pushPresence({ nick: v }); writePlayer();
+}
+
+function newMatch(role, g, host) {
+  return { role, id: g.id, host, g, gKey: JSON.stringify(g), my: null, qStart: {}, recorded: new Set(), ended: false, phaseAt: Date.now(), firstOk: null, gone: {}, readyKey: null, cdAt: null };
+}
+function openRoom() {
+  if (!S.myPeer) return;
+  const f = S.form, pool = poolFor(f.pool), ids = shuffle(pool.map(q => q.id));
+  const race = f.mode === "race";
+  const g = { id: rid(8), mode: f.mode, pl: [S.myPeer], nm: [S.nick], ph: "lobby", k: 0,
+    qs: race ? ids.slice(0, Math.min(f.n, ids.length)) : ids, n: race ? Math.min(f.n, ids.length) : 0,
+    lim: race ? RACE_LIM : f.fuse, lives: f.lives, pool: f.pool, sc: null, lv: null, turn: 0, res: null };
+  S.match = newMatch("host", g, S.myPeer);
+  S.lobbyMsg = "";
+  pushPresence({ st: "host", g, a: null, rd: null, tgt: null, jm: null, mast: masteredCount() });
+  S.hostTimer = setInterval(hostTick, 200);
+  render();
+}
+function joinRoom(p) {
+  const g = pp(p).g; if (!validG(g)) return;
+  S.joining = { host: p.peer, id: g.id };
+  S.lobbyMsg = "";
+  pushPresence({ st: "join", tgt: p.peer, jm: g.id, g: null, a: null, rd: null });
+  render();
+  setTimeout(() => { if (S.joining && S.joining.id === g.id && !S.match) failJoin("The host didn't respond. Try another room."); }, 9000);
+}
+function failJoin(msg) { S.joining = null; S.lobbyMsg = msg; pushPresence({ st: "idle", tgt: null, jm: null }); render(); }
+function leaveMatch(msg) {
+  clearInterval(S.hostTimer);
+  S.match = null; S.joining = null; S.lobbyMsg = msg || "";
+  pushPresence({ st: "idle", g: null, a: null, rd: null, tgt: null, jm: null, mast: masteredCount() });
+  render();
+}
 
 function onPeersChanged() {
   const me = S.myPeer;
-  // Host waiting: accept the first challenger aimed at me.
-  if (S.hosting && !S.match) {
-    const ch = S.peers.find(p => !p.sameTab && pp(p).st === "join" && pp(p).tgt === me && pp(p).jm === S.hosting.id);
-    if (ch) startAsHost(ch);
-  }
-  // Challenger waiting: see whether the host took me.
   if (S.joining && !S.match) {
-    const host = peerOf(S.joining.host), hp = pp(host), g = hp.g;
-    if (!host) failJoin("That player left the lobby.");
-    else if (g && g.id === S.joining.id && g.opp === me) startAsGuest(host, g);
-    else if (g && g.id === S.joining.id && g.opp && g.opp !== me) failJoin("Someone else took that match first.");
-    else if (hp.st !== "host" && !g) failJoin("That match is no longer open.");
+    const host = peerOf(S.joining.host), g = pp(host).g;
+    if (!host) failJoin("That room's host left.");
+    else if (validG(g) && g.id === S.joining.id) {
+      if (g.pl.includes(me)) { S.match = newMatch("guest", g, host.peer); S.joining = null; pushPresence({ st: "play" }); onGameState(); return; }
+      if (g.ph !== "lobby") failJoin("That game has already started.");
+      else if (g.pl.length >= MAX_PLAYERS) failJoin("That room is full.");
+    } else failJoin("That room has closed.");
   }
-  if (S.match) {
-    const m = S.match;
-    if (m.role === "guest") {
-      const host = peerOf(m.opp);
-      if (host) {
-        m.oppGoneAt = null;
-        const g = pp(host).g;
-        if (g && g.id === m.id && g.opp === me && JSON.stringify(g) !== m.gKey) { m.gKey = JSON.stringify(g); m.g = g; onGameState(); }
-      }
+  const m = S.match;
+  if (m && m.role === "guest" && !m.ended) {
+    const host = peerOf(m.host);
+    if (host) {
+      m.hostGone = null;
+      const g = pp(host).g;
+      if (!validG(g) || g.id !== m.id) { if (m.g.ph === "lobby") return leaveMatch("The host closed the room."); m.g = { ...m.g, ph: "end", ab: 1 }; onGameState(); return; }
+      if (!g.pl.includes(me)) return leaveMatch("You left the room.");
+      const key = JSON.stringify(g);
+      if (key !== m.gKey) { m.gKey = key; m.g = g; onGameState(); return; }
     }
-    if (S.view === "duel") renderMatchStatus();
-  } else if (S.view === "duel") renderLobbyLists();
+  }
+  if (S.view !== "duel") return;
+  if (S.match) renderTable(); else renderLobbyLists();
 }
 
-/* ---------- match flow ---------- */
-function poolFor(sec) {
-  if (sec === "all") return S.bank;
-  const s = S.sections.find(x => x.name === sec);
-  return s ? S.bank.filter(q => s.topics.includes(q.topic)) : S.bank;
-}
-function createMatch() {
-  const n = +$("#rounds").value, sec = $("#sec").value;
-  const pool = poolFor(sec);
-  const qs = shuffle(pool.map(q => q.id)).slice(0, Math.min(n, pool.length));
-  S.hosting = { id: rid(8), n: qs.length, sec, qs };
-  S.lobbyMsg = "";
-  pushPresence({ st: "host", hx: { id: S.hosting.id, n: qs.length, sec }, g: null, a: null, rd: null, tgt: null, jm: null, mast: masteredCount() });
-  render();
-}
-function cancelHost() { S.hosting = null; pushPresence({ st: "idle", hx: null }); render(); }
-function challenge(p) {
-  const hx = pp(p).hx; if (!hx) return;
-  S.joining = { host: p.peer, id: hx.id, at: Date.now() };
-  S.lobbyMsg = "";
-  pushPresence({ st: "join", tgt: p.peer, jm: hx.id, hx: null });
-  render();
-  setTimeout(() => { if (S.joining && S.joining.id === hx.id && !S.match) failJoin("The host didn't respond. Try another match."); }, 9000);
-}
-function failJoin(msg) { S.joining = null; S.lobbyMsg = msg; pushPresence({ st: "idle", tgt: null, jm: null }); render(); }
-
-function newMatch(role, id, opp, g) {
-  return { role, id, opp, g, gKey: JSON.stringify(g), my: null, qStart: {}, recorded: new Set(), ended: false, phaseAt: Date.now(), firstOk: null, oppGoneAt: null, readyKey: null };
-}
-function startAsHost(ch) {
-  const h = S.hosting;
-  const g = { id: h.id, opp: ch.peer, qs: h.qs, n: h.n, i: 0, ph: "cd", sc: [0, 0], res: null, lim: LIM, sec: h.sec };
-  S.match = newMatch("host", h.id, ch.peer, g);
-  S.hosting = null;
-  pushPresence({ st: "play", hx: null, g, a: null, rd: null });
-  S.hostTimer = setInterval(hostTick, 200);
-  onGameState();
-}
-function startAsGuest(host, g) {
-  S.match = newMatch("guest", g.id, host.peer, g);
-  S.joining = null;
-  pushPresence({ st: "play", tgt: null, a: null, rd: null });
-  onGameState();
-}
 function setG(patch) {
   const m = S.match, prev = m.g;
   m.g = { ...prev, ...patch };
-  if (m.g.ph !== prev.ph || m.g.i !== prev.i) { m.phaseAt = Date.now(); m.firstOk = null; }
+  if (m.g.ph !== prev.ph || m.g.k !== prev.k) { m.phaseAt = Date.now(); m.firstOk = null; }
   m.gKey = JSON.stringify(m.g);
   pushPresence({ g: m.g });
   onGameState();
 }
-function validAns(a, g) {
-  return a && a.m === g.id && a.i === g.i && Number.isInteger(a.c) && a.c >= 0 && a.c < 4 && typeof a.rt === "number" && a.rt >= 0 ? a : null;
+function startGame() {
+  const g = S.match.g; if (g.pl.length < 2) return;
+  if (g.mode === "race") setG({ ph: "cd", sc: g.pl.map(() => 0) });
+  else setG({ ph: "cd", lv: g.pl.map(() => g.lives), turn: Math.floor(Math.random() * g.pl.length) });
 }
 function hostTick() {
   const m = S.match; if (!m || m.role !== "host") return;
-  const g = m.g, now = Date.now(), opp = peerOf(m.opp);
+  const g = m.g, now = Date.now();
   if (g.ph === "end") return;
-  if (!opp) { m.oppGoneAt = m.oppGoneAt || now; if (now - m.oppGoneAt > 6000) { setG({ ph: "end", ab: 1 }); return; } }
-  else m.oppGoneAt = null;
-  if (g.ph === "cd") { if (now - m.phaseAt > 3000) setG({ ph: "q" }); return; }
-  if (g.ph === "q") {
-    const ans = [validAns(m.my, g), validAns(pp(opp).a, g)];
-    const right = Q(g.qs[g.i]).a;
-    const ok = ans.map(a => !!a && a.c === right);
-    if (ok[0] || ok[1]) m.firstOk = m.firstOk || now;
-    const timeUp = now - m.phaseAt > g.lim * 1000 + 1500;
-    if ((ans[0] && ans[1]) || (m.firstOk && now - m.firstOk > GRACE) || timeUp) {
-      let w = -1;
-      if (ok[0] && ok[1]) w = ans[0].rt <= ans[1].rt ? 0 : 1; else if (ok[0]) w = 0; else if (ok[1]) w = 1;
-      const sc = g.sc.slice(); if (w >= 0) sc[w]++;
-      setG({ ph: "r", sc, res: { w, c: ans.map(a => a ? a.c : null), rt: ans.map(a => a ? a.rt : null) } });
+  const present = s => s === 0 || pp(peerOf(g.pl[s])).jm === g.id;
+  g.pl.forEach((p, s) => { if (present(s)) delete m.gone[p]; else m.gone[p] = m.gone[p] || now; });
+  const goneFor = s => m.gone[g.pl[s]] ? now - m.gone[g.pl[s]] : 0;
+  const patch = {};
+  const nm = g.pl.map((p, s) => s === 0 ? S.nick : (cleanNick(pp(peerOf(p)).nick) || g.nm[s] || "Player"));
+  if (JSON.stringify(nm) !== JSON.stringify(g.nm)) patch.nm = nm;
+
+  if (g.ph === "lobby") {
+    let pl = g.pl.slice(), names = (patch.nm || g.nm).slice();
+    const keep = pl.map((_, s) => goneFor(s) < 2500);
+    pl = pl.filter((_, s) => keep[s]); names = names.filter((_, s) => keep[s]);
+    for (const p of S.peers) {
+      if (pl.length >= MAX_PLAYERS) break;
+      const pr = pp(p);
+      if (!p.sameTab && pr.st === "join" && pr.tgt === S.myPeer && pr.jm === g.id && !pl.includes(p.peer)) { pl.push(p.peer); names.push(cleanNick(pr.nick) || "Player"); }
     }
+    if (pl.length !== g.pl.length || JSON.stringify(names) !== JSON.stringify(g.nm)) setG({ pl, nm: names });
     return;
   }
-  if (g.ph === "r") {
-    const key = g.id + ":" + g.i;
-    if ((S.pres.rd === key && pp(opp).rd === key) || now - m.phaseAt > 30000) {
-      if (g.i + 1 < g.n) setG({ ph: "q", i: g.i + 1, res: null }); else setG({ ph: "end" });
+  if (g.ph === "cd") { if (now - m.phaseAt > 3000) setG({ ...patch, ph: "q" }); else if (patch.nm) setG(patch); return; }
+
+  const active = g.pl.map((_, s) => goneFor(s) < 6000);
+  if (g.mode === "race") {
+    if (active.filter(Boolean).length < 2) return setG({ ...patch, ph: "end", ab: 1 });
+    if (g.ph === "q") {
+      const right = Q(qidOf(g)).a;
+      const ans = g.pl.map((_, s) => seatAnswer(g, s));
+      const ok = ans.map(a => !!a && a.c === right);
+      if (ok.some(Boolean)) m.firstOk = m.firstOk || now;
+      const allIn = ans.every((a, s) => a || !active[s]);
+      const timeUp = now - m.phaseAt > g.lim * 1000 + 1500;
+      if (allIn || (m.firstOk && now - m.firstOk > GRACE) || timeUp) {
+        let w = -1;
+        ok.forEach((o, s) => { if (o && (w < 0 || ans[s].rt < ans[w].rt)) w = s; });
+        const sc = g.sc.slice(); if (w >= 0) sc[w]++;
+        return setG({ ...patch, ph: "r", sc, res: { w, c: ans.map(a => a ? a.c : null), rt: ans.map(a => a ? a.rt : null) } });
+      }
+    } else if (g.ph === "r") {
+      const key = g.id + ":" + g.k;
+      const allReady = g.pl.every((p, s) => !active[s] || (s === 0 ? S.pres.rd === key : pp(peerOf(p)).rd === key));
+      if (allReady || now - m.phaseAt > 20000) return setG({ ...patch, ...(g.k + 1 < g.n ? { ph: "q", k: g.k + 1, res: null } : { ph: "end" }) });
+    }
+    if (patch.nm) setG(patch);
+    return;
+  }
+
+  // Bomb
+  let lv = g.lv.slice(), lvChanged = false;
+  g.pl.forEach((_, s) => { if (!active[s] && lv[s] > 0) { lv[s] = 0; lvChanged = true; } });
+  const alive = lv.map((l, s) => l > 0 ? s : -1).filter(s => s >= 0);
+  const nextAlive = from => { for (let d = 1; d <= lv.length; d++) { const s = (from + d) % lv.length; if (lv[s] > 0) return s; } return -1; };
+  if (alive.length <= 1) return setG({ ...patch, lv, ph: "end", win: alive.length ? alive[0] : -1 });
+  if (lvChanged) patch.lv = lv;
+  if (g.ph === "q") {
+    const s = g.turn;
+    if (lv[s] <= 0) return setG({ ...patch, k: g.k + 1, turn: nextAlive(s), res: null });
+    const a = seatAnswer(g, s);
+    const timeUp = now - m.phaseAt > g.lim * 1000 + 800;
+    if (a || timeUp) {
+      const ok = !!a && a.c === Q(qidOf(g)).a;
+      if (!ok) lv[s]--;
+      return setG({ ...patch, lv, ph: "r", res: { seat: s, c: a ? a.c : null, rt: a ? a.rt : null, ok, boom: !ok } });
+    }
+  } else if (g.ph === "r") {
+    if (now - m.phaseAt > (g.res && g.res.ok ? 2200 : 3800)) {
+      const still = lv.filter(l => l > 0).length;
+      if (still <= 1) return setG({ ...patch, lv, ph: "end", win: lv.findIndex(l => l > 0) });
+      return setG({ ...patch, lv, ph: "q", k: g.k + 1, turn: nextAlive(g.turn), res: null });
     }
   }
+  if (patch.nm || patch.lv) setG(patch);
 }
-// Guest side: notice a vanished host.
+// Guests: notice a vanished host.
 setInterval(() => {
   const m = S.match; if (!m || m.role !== "guest" || m.ended) return;
-  if (!peerOf(m.opp)) { m.oppGoneAt = m.oppGoneAt || Date.now(); if (Date.now() - m.oppGoneAt > 6000) { m.g = { ...m.g, ph: "end", ab: 1 }; onGameState(); } }
+  if (!peerOf(m.host)) {
+    m.hostGone = m.hostGone || Date.now();
+    if (Date.now() - m.hostGone > 6000) { if (m.g.ph === "lobby") leaveMatch("The host left, so the room closed."); else { m.g = { ...m.g, ph: "end", ab: 1 }; onGameState(); } }
+  }
 }, 1000);
 
 function onGameState() {
-  const m = S.match, g = m.g, key = g.id + ":" + g.i;
+  const m = S.match, g = m.g, key = g.id + ":" + g.k, me = mySeat();
+  if (g.ph === "cd" && !m.cdAt) m.cdAt = performance.now();
   if (g.ph === "q" && !m.qStart[key]) m.qStart[key] = performance.now();
   if (g.ph === "r" && !m.recorded.has(key)) {
     m.recorded.add(key);
-    const mine = validAns(m.my, g);
-    if (mine) record(g.qs[g.i], mine.c === Q(g.qs[g.i]).a);
+    const qid = qidOf(g);
+    if (g.mode === "race") { const mine = validAns(m.my, g); if (mine) record(qid, mine.c === Q(qid).a); }
+    else if (g.res && g.res.seat === me && g.res.c != null) record(qid, !!g.res.ok);
   }
   if (g.ph === "end" && !m.ended) {
     m.ended = true;
     clearInterval(S.hostTimer);
-    if (!g.ab) {
-      const me = m.role === "host" ? 0 : 1, a = g.sc[me], b = g.sc[1 - me];
-      if (a > b) P.w++; else if (a < b) P.l++; else P.d++;
+    if (!g.ab && me >= 0) {
+      if (g.mode === "race") {
+        const best = Math.max(...g.sc), tops = g.sc.filter(x => x === best).length;
+        if (g.sc[me] === best) { if (tops === 1) P.w++; else P.d++; } else P.l++;
+      } else if (g.win === me) P.w++; else P.l++;
       scheduleSave();
     }
     pushPresence({ mast: masteredCount() });
@@ -475,23 +632,18 @@ function onGameState() {
   if (S.view === "duel") renderMatch();
 }
 function answer(orig) {
-  const m = S.match, g = m.g, key = g.id + ":" + g.i;
+  const m = S.match, g = m.g, key = g.id + ":" + g.k;
   if (g.ph !== "q" || validAns(m.my, g)) return;
+  if (g.mode === "bomb" && g.turn !== mySeat()) return;
   const rt = Math.round(performance.now() - (m.qStart[key] || performance.now()));
   if (rt > g.lim * 1000) return;
-  m.my = { m: g.id, i: g.i, c: orig, rt };
+  m.my = { m: g.id, k: g.k, c: orig, rt };
   pushPresence({ a: m.my });
   renderMatch();
 }
 function ready() {
-  const m = S.match, key = m.g.id + ":" + m.g.i;
+  const m = S.match, key = m.g.id + ":" + m.g.k;
   m.readyKey = key; pushPresence({ rd: key }); renderMatch();
-}
-function leaveMatch() {
-  clearInterval(S.hostTimer);
-  S.match = null; S.hosting = null; S.joining = null;
-  pushPresence({ st: "idle", g: null, a: null, rd: null, tgt: null, hx: null, jm: null, mast: masteredCount() });
-  render();
 }
 
 /* ---------- rendering ---------- */
@@ -510,38 +662,45 @@ function render() {
   else if (S.view === "leaderboard") v.append(boardView());
 }
 
+function poolSelect(id, value, onchange) {
+  return el("select", { id, onchange: e => onchange(e.target.value) },
+    el("option", { value: "quick", selected: value === "quick" }, `Quick-fire, mental maths (${poolFor("quick").length})`),
+    el("option", { value: "all", selected: value === "all" }, `Whole syllabus (${S.bank.length})`),
+    S.sections.map(s => el("option", { value: s.name, selected: value === s.name }, `${s.name} (${poolFor(s.name).length})`)));
+}
 function lobbyView() {
   const wrap = el("div", { class: "stack" });
-  if (S.roomState === "off") wrap.append(el("div", { class: "banner" }, S.setupMissing ? "Live duels aren't set up yet: add your Firebase settings to firebase-config.js (see README). Practice and progress tracking still work." : "Live duels can't connect right now. Practice and progress tracking still work."));
+  if (S.roomState === "off") wrap.append(el("div", { class: "banner" }, S.setupMissing ? "Live games aren't set up yet: add your Firebase settings to firebase-config.js (see README). Practice and progress tracking still work." : "Live games can't connect right now. Practice and progress tracking still work."));
   if (S.lobbyMsg) wrap.append(el("div", { class: "banner" }, S.lobbyMsg));
+  const f = S.form;
   const left = el("section", { class: "sheet stack" });
-  left.append(el("p", { class: "eyebrow" }, "Start a match"));
-  if (S.hosting) {
-    left.append(
-      el("h2", {}, "Waiting for a challenger"),
-      el("p", { class: "muted pulse" }, "Your match is listed in the lobby. It starts as soon as someone takes it."),
-      el("p", { class: "note" }, `${S.hosting.n} questions · ${S.hosting.sec === "all" ? "Whole syllabus" : S.hosting.sec} · ${LIM} s per question`),
-      el("div", { class: "row" }, el("button", { class: "btn ghost", onclick: cancelHost }, "Cancel"))
-    );
-  } else if (S.joining) {
-    left.append(el("h2", {}, "Joining…"), el("p", { class: "muted pulse" }, "Waiting for the host to confirm."),
-      el("button", { class: "btn ghost", onclick: () => failJoin("") }, "Cancel"));
+  left.append(el("p", { class: "eyebrow", style: "margin:0" }, "Host a room · 2–8 players"));
+  if (S.joining) {
+    left.append(el("h2", {}, "Joining…"), el("p", { class: "muted pulse" }, "Waiting for the host to seat you."),
+      el("div", {}, el("button", { class: "btn ghost", onclick: () => failJoin("") }, "Cancel")));
   } else {
-    const secSel = el("select", { id: "sec" }, el("option", { value: "all" }, "Whole syllabus"), S.sections.map(s => el("option", { value: s.name }, s.name)));
-    const rSel = el("select", { id: "rounds" }, [5, 10, 15].map(n => el("option", { value: n, selected: n === 10 }, n + " questions")));
-    left.append(
-      el("h2", {}, "Host a 1v1"),
-      el("p", { class: "muted" }, "Both players see the same question. The first to answer correctly takes the point. Answer wrong and you're locked out, so your rival can still take it."),
-      el("div", { class: "row" },
-        el("label", { class: "field" }, el("span", {}, "Length"), rSel),
-        el("label", { class: "field" }, el("span", {}, "Topics"), secSel)),
-      el("div", { class: "row" }, el("button", { class: "btn", onclick: createMatch, disabled: S.roomState !== "on" }, "Open match"))
-    );
+    const modeCard = (val, title, desc) => el("label", { class: "mode" },
+      el("input", { type: "radio", name: "mode", value: val, checked: f.mode === val, onchange: () => { f.mode = val; if (val === "bomb" && f.pool === "all") f.pool = "quick"; render(); } }),
+      el("b", {}, title), el("span", {}, desc));
+    left.append(el("fieldset", { class: "modes" }, el("legend", { class: "note", style: "margin-bottom:6px" }, "Game mode"),
+      modeCard("race", "Race", "Everyone gets the same question. The first correct answer scores. Answer wrong and you're out for that question."),
+      modeCard("bomb", "Bomb", "Pass the bomb round the table. Answer right to pass it on. Answer wrong or run out of time and it blows: you lose a life.")));
+    const settings = el("div", { class: "row" });
+    if (f.mode === "race") {
+      settings.append(el("label", { class: "field" }, el("span", {}, "Length"),
+        el("select", { id: "rounds", onchange: e => f.n = +e.target.value }, [5, 10, 15].map(n => el("option", { value: n, selected: n === f.n }, n + " questions")))));
+    } else {
+      settings.append(
+        el("label", { class: "field" }, el("span", {}, "Lives"), el("select", { id: "lives", onchange: e => f.lives = +e.target.value }, [1, 2, 3].map(n => el("option", { value: n, selected: n === f.lives }, n + (n === 1 ? " life" : " lives"))))),
+        el("label", { class: "field" }, el("span", {}, "Fuse"), el("select", { id: "fuse", onchange: e => f.fuse = +e.target.value }, [20, 30, 45, 60].map(n => el("option", { value: n, selected: n === f.fuse }, n + " s")))));
+    }
+    settings.append(el("label", { class: "field", style: "flex:1;min-width:12em" }, el("span", {}, "Questions"), poolSelect("pool", f.pool, v => f.pool = v)));
+    left.append(settings, el("div", {}, el("button", { class: "btn", onclick: () => withName(openRoom), disabled: S.roomState !== "on" }, "Open room")));
   }
   const right = el("section", { class: "sheet" },
     el("p", { class: "eyebrow" }, "Lobby"),
-    el("div", { class: "row", style: "justify-content:space-between" }, el("h2", {}, "Open matches"), el("span", { class: "note", id: "online" })),
-    el("div", { id: "openlist" }));
+    el("div", { class: "row spread" }, el("h2", { style: "margin:0" }, "Open rooms"), el("span", { class: "note", id: "online" })),
+    el("div", { id: "openlist", style: "margin-top:10px" }));
   wrap.append(el("div", { class: "grid2" }, left, right));
   queueMicrotask(renderLobbyLists);
   return wrap;
@@ -550,125 +709,220 @@ function renderLobbyLists() {
   const box = $("#openlist"); if (!box) return;
   const online = $("#online");
   if (online) online.textContent = S.roomState === "on" ? `${S.peers.length} online` : "";
-  const open = S.peers.filter(p => !p.sameTab && pp(p).st === "host" && pp(p).hx && typeof pp(p).hx.id === "string");
   if (S.roomState !== "on") { box.replaceChildren(el("div", { class: "empty" }, "The lobby isn't connected.")); return; }
-  if (!open.length) { box.replaceChildren(el("div", { class: "empty" }, "No open matches right now. Host one, and anyone who opens this page can take it. To test it yourself, open the page in a second tab.")); return; }
+  const open = S.peers.filter(p => !p.sameTab && pp(p).st === "host" && validG(pp(p).g) && pp(p).g.ph === "lobby");
+  if (!open.length) { box.replaceChildren(el("div", { class: "empty" }, "No open rooms right now. Host one and anyone with this page open can join. To try it alone, open the page in a second tab.")); return; }
   const ul = el("ul", { class: "lobby-list" });
   for (const p of open) {
-    const hx = pp(p).hx, n = Math.max(1, Math.min(15, +hx.n || 10));
-    const sec = typeof hx.sec === "string" && hx.sec !== "all" ? hx.sec : "Whole syllabus";
-    const mast = Number.isFinite(+pp(p).mast) ? +pp(p).mast : 0;
+    const g = pp(p).g, full = g.pl.length >= MAX_PLAYERS;
+    const detail = g.mode === "race" ? `${Math.min(15, +g.n || 0)} questions` : `${Math.min(3, +g.lives || 1)} ${+g.lives === 1 ? "life" : "lives"} · ${Math.min(60, +g.lim || 30)} s fuse`;
     ul.append(el("li", {},
       el("div", { class: "who-col" },
-        el("div", { class: "nm" }, el("span", { class: "dot" }), peerNick(p), p.isMe ? " (your other tab)" : ""),
-        el("div", { class: "note" }, `${n} questions · ${sec} · ${mast}/${S.bank.length} mastered`)),
-      el("button", { class: "btn small", onclick: () => challenge(p), disabled: !!S.hosting || !!S.joining }, "Challenge")));
+        el("div", { class: "nm" }, el("span", { class: "tag" }, g.mode === "race" ? "Race" : "Bomb"), (cleanNick(pp(p).nick) || "Player") + "'s room", p.isMe ? " (your other tab)" : ""),
+        el("div", { class: "note" }, `${g.pl.length}/${MAX_PLAYERS} seated · ${detail} · ${poolLabel(typeof g.pool === "string" ? g.pool : "all")}`)),
+      el("button", { class: "btn small", onclick: () => withName(() => joinRoom(p)), disabled: full || !!S.joining }, full ? "Full" : "Join")));
   }
   box.replaceChildren(ul);
 }
 
 function questionCard(q, perm, opts) {
-  // opts: { onPick(orig), disabled, mine (orig|null), reveal (bool), oppPick (orig|null), showOpp }
+  // opts: { onPick(orig), disabled, mine (orig|null), reveal, picks: [{orig, label, seat}] }
   const list = el("ol", { class: "opts" });
   perm.forEach((orig, k) => {
     const cls = ["opt"];
     if (opts.mine === orig) cls.push("mine");
     if (opts.reveal && orig === q.a) cls.push("correct");
     if (opts.reveal && opts.mine === orig && orig !== q.a) cls.push("wrong");
-    const marks = el("span", { class: "marks" },
-      opts.reveal && opts.mine === orig ? el("span", { class: "chip you" }, "YOU") : null,
-      opts.reveal && opts.showOpp && opts.oppPick === orig ? el("span", { class: "chip opp" }, "RIVAL") : null);
+    const marks = el("span", { class: "marks" }, opts.reveal ? (opts.picks || []).filter(p => p.orig === orig).map(p => el("span", { class: "chip", style: `--c:${seatColor(p.seat)}` }, p.label)) : null);
     list.append(el("li", {}, el("button", {
       class: cls.join(" "), disabled: opts.disabled, onclick: () => opts.onPick && opts.onPick(orig),
       "aria-label": `Option ${LETTERS[k]}: ${q.o[orig]}`
     }, el("span", { class: "bubble" }, LETTERS[k]), el("span", { class: "otext" }, q.o[orig]), marks)));
   });
+  const fig = q.fig ? el("figure", { class: "fig" }) : null;
+  if (fig) fig.append(svgEl(q.fig));   // figures are our own SVG from questions.json
   return el("article", { class: "qcard" },
     el("div", { class: "qhead" }, el("span", { class: "qid" }, q.id), el("span", { class: "qtopic" }, q.topic)),
     el("p", { class: "stem" }, q.q),
+    fig,
     list,
     opts.reveal ? el("div", { class: "explain" + (opts.mine === q.a ? "" : " badx") }, el("p", {}, el("b", {}, "Answer " + LETTERS[perm.indexOf(q.a)] + ". "), q.x)) : null,
     el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.constants)));
 }
 
-function matchView() {
-  const m = S.match, g = m.g, me = m.role === "host" ? 0 : 1;
-  const opp = peerOf(m.opp);
-  const box = el("section", { class: "sheet", id: "matchbox" });
-  box.append(el("div", { class: "score" },
-    el("div", { class: "player you" }, el("span", { class: "nm" }, S.nick + " (you)"), el("span", { class: "pts" }, g.sc[me]), el("span", { class: "st", id: "st-me" })),
-    el("div", { class: "mid" }, el("div", { class: "round" }, g.ph === "end" ? "FINAL" : g.ph === "cd" ? "GET READY" : `Q ${g.i + 1} / ${g.n}`)),
-    el("div", { class: "player opp r" }, el("span", { class: "nm" }, opp ? peerNick(opp) : "Opponent"), el("span", { class: "pts" }, g.sc[1 - me]), el("span", { class: "st", id: "st-opp" }))));
-
-  if (g.ph === "cd") {
-    box.append(el("div", { class: "big-count", id: "cd" }, "3"), el("p", { class: "muted", style: "text-align:center" }, `${g.n} questions. ${g.lim} s each. First correct answer scores.`));
-  } else if (g.ph === "q" || g.ph === "r") {
-    const q = Q(g.qs[g.i]), perm = permFor(g.id + q.id);
-    const mine = validAns(m.my, g);
-    if (g.ph === "q") box.append(el("div", { class: "timer" }, el("i", { id: "tbar" })));
-    if (g.ph === "r") {
-      const res = g.res || { w: -1, c: [null, null], rt: [null, null] };
-      const txt = res.w === me ? "You took the point." : res.w === 1 - me ? "Your rival took the point." : "Nobody scored.";
-      const sub = [];
-      if (res.c[me] != null) sub.push(`You: ${LETTERS[perm.indexOf(res.c[me])]} in ${(res.rt[me] / 1000).toFixed(1)} s`); else sub.push("You didn't answer");
-      if (res.c[1 - me] != null) sub.push(`Rival: ${LETTERS[perm.indexOf(res.c[1 - me])]} in ${(res.rt[1 - me] / 1000).toFixed(1)} s`); else sub.push("Rival didn't answer");
-      box.append(el("div", { class: "row", style: "justify-content:space-between;margin-bottom:14px" },
-        el("div", {}, el("div", { class: "result " + (res.w === me ? "win" : res.w === 1 - me ? "lose" : "") }, txt), el("div", { class: "note" }, sub.join(" · "))),
-        m.readyKey === g.id + ":" + g.i
-          ? el("span", { class: "note pulse" }, "Waiting for your rival…")
-          : el("button", { class: "btn", onclick: ready }, g.i + 1 < g.n ? "Next question" : "See result")));
-      box.append(questionCard(q, perm, { disabled: true, mine: res.c[me], reveal: true, oppPick: res.c[1 - me], showOpp: true }));
-    } else {
-      box.append(questionCard(q, perm, { onPick: answer, disabled: !!mine, mine: mine ? mine.c : null, reveal: false }));
+/* the round table */
+const RING = 2 * Math.PI * 46;
+function seatAngle(g, s) {
+  const base = Math.max(0, g.pl.indexOf(S.myPeer));
+  return 90 + 360 * (s - base) / g.pl.length;   // you sit at the bottom
+}
+function tableView() {
+  const m = S.match, g = m.g;
+  const t = el("div", { class: "table", id: "table" });
+  g.pl.forEach((peer, s) => {
+    const ang = seatAngle(g, s) * Math.PI / 180;
+    const isMe = peer === S.myPeer, present = isMe || !!peerOf(peer);
+    const out = g.mode === "bomb" && g.lv && g.lv[s] <= 0;
+    const holder = g.mode === "bomb" && (g.ph === "q" || g.ph === "r") && g.turn === s;
+    let mark = null;
+    if (g.ph === "q" && g.mode === "race" && seatAnswer(g, s)) mark = el("span", { class: "mark lock", title: "Locked in" }, "•");
+    if (g.ph === "r" && g.mode === "race" && g.res) {
+      if (g.res.w === s) mark = el("span", { class: "mark ok", title: "Took the point" }, "✓");
+      else if (g.res.c[s] != null) mark = el("span", { class: "mark no", title: g.res.c[s] === Q(qidOf(g)).a ? "Right, but slower" : "Wrong" }, g.res.c[s] === Q(qidOf(g)).a ? "✓" : "✗");
     }
-  } else if (g.ph === "end") {
-    const a = g.sc[me], b = g.sc[1 - me];
-    const head = g.ab ? "Your opponent left the match." : a > b ? "You win." : a < b ? "You lose." : "It's a draw.";
-    box.append(el("div", { class: "stack", style: "align-items:flex-start" },
-      el("div", { class: "result " + (g.ab ? "" : a > b ? "win" : a < b ? "lose" : "") }, head),
-      el("p", { class: "muted" }, g.ab ? "This match isn't counted. Your answers so far are saved to Progress." : `Final score ${a}–${b}. Your answers are saved to Progress.`),
-      el("div", { class: "row" }, el("button", { class: "btn", onclick: leaveMatch }, "Back to lobby"),
-        el("a", { class: "btn ghost", href: "#progress", onclick: leaveMatch, style: "text-decoration:none" }, "View progress"))));
+    if (g.ph === "r" && g.mode === "bomb" && g.res && g.res.seat === s) mark = el("span", { class: "mark " + (g.res.ok ? "ok" : "no") }, g.res.ok ? "✓" : "✗");
+    let badge;
+    if (g.mode === "race") badge = el("span", { class: "sb" }, g.sc ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === 0 ? "host" : "ready"));
+    else badge = el("span", { class: "sb hearts", "aria-label": `${g.lv ? g.lv[s] : g.lives} lives` }, g.lv ? "♥".repeat(Math.max(0, g.lv[s])) + "♡".repeat(Math.max(0, g.lives - g.lv[s])) : "♥".repeat(g.lives));
+    t.append(el("div", {
+      class: "seat" + (isMe ? " me" : "") + (holder ? " holder" : "") + (out ? " out" : "") + (present ? "" : " gone"),
+      style: `left:${(50 + 41 * Math.cos(ang)).toFixed(2)}%;top:${(50 + 41 * Math.sin(ang)).toFixed(2)}%`
+    },
+      el("div", { class: "av", style: `--c:${seatColor(s)}` }, initials(seatName(g, s)), mark),
+      el("span", { class: "sn" }, isMe ? "You" : seatName(g, s)),
+      badge));
+  });
+  t.append(hubView());
+  return t;
+}
+function hubView() {
+  const m = S.match, g = m.g;
+  const hub = el("div", { class: "hub", id: "hub" });
+  const ring = prog => svgEl(`<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="46"/><circle class="prog" id="ringprog" cx="50" cy="50" r="46" stroke-dasharray="${RING.toFixed(1)}" stroke-dashoffset="${(RING * (1 - prog)).toFixed(1)}"/></svg>`);
+  if (g.ph === "lobby") { hub.append(el("div", {}, el("div", { class: "big" }, `${g.pl.length}/${MAX_PLAYERS}`), el("div", { class: "lbl" }, "SEATED"))); return hub; }
+  if (g.ph === "cd") { hub.append(el("div", { class: "big", id: "cd" }, "3")); return hub; }
+  if (g.ph === "end") { hub.append(el("div", { class: "lbl" }, "FINAL")); return hub; }
+  if (g.mode === "race") {
+    hub.append(ring(g.ph === "q" ? 1 : 0), el("div", {}, el("div", { class: "big" }, g.k + 1), el("div", { class: "lbl" }, `OF ${g.n}`)));
+    return hub;
   }
-  queueMicrotask(renderMatchStatus);
+  if (g.ph === "r" && g.res && g.res.boom) hub.classList.add("boom");
+  const ang = seatAngle(g, g.turn);
+  hub.append(ring(g.ph === "q" ? 1 : 0),
+    el("div", { class: "pointer", style: `transform:rotate(${ang}deg)` }),
+    svgEl(`<svg class="bomb" viewBox="0 0 100 100" aria-hidden="true"><path class="fuse" d="M58 30 Q66 12 76 14"/><rect class="cap" x="46" y="26" width="16" height="10" rx="2" transform="rotate(20 54 31)"/><circle class="body" cx="46" cy="60" r="30"/><ellipse class="shine" cx="36" cy="49" rx="8" ry="5" transform="rotate(-35 36 49)"/>${g.ph === "q" ? '<circle class="spark" cx="76" cy="14" r="6"/>' : ""}</svg>`),
+    el("span", { class: "count", id: "fusecount" }, ""));
+  return hub;
+}
+function renderTable() {
+  const t = $("#table"); if (!t || !S.match) return;
+  t.replaceWith(tableView());
+}
+
+function matchView() {
+  const m = S.match, g = m.g, me = mySeat(), host = m.role === "host";
+  const box = el("section", { class: "sheet stack", id: "matchbox" });
+  const head = g.mode === "race" ? `Race · ${g.n} questions · ${poolLabel(g.pool || "all")}` : `Bomb · ${g.lives} ${g.lives === 1 ? "life" : "lives"} · ${g.lim} s fuse · ${poolLabel(g.pool || "all")}`;
+  box.append(el("div", { class: "row spread" }, el("p", { class: "eyebrow", style: "margin:0" }, head),
+    g.ph === "end" ? null : el("button", { class: "btn ghost small", id: "leave", onclick: e => {
+      if (e.currentTarget.dataset.armed) return leaveMatch(host ? "You closed your room." : "");
+      e.currentTarget.dataset.armed = "1"; e.currentTarget.textContent = host ? "Close room for everyone?" : "Leave the game?";
+      e.currentTarget.classList.add("danger");
+    } }, host ? "Close room" : "Leave")));
+  box.append(tableView());
+  const panel = el("div", { class: "panel" });
+  box.append(panel);
+
+  if (g.ph === "lobby") {
+    if (host) panel.append(
+      el("p", { class: "status" }, g.pl.length < 2 ? "Waiting for players to join…" : `${g.pl.length} players seated.`),
+      el("p", { class: "muted" }, "Your room is listed in the lobby. Anyone with this page open can join, up to 8 players."),
+      el("div", {}, el("button", { class: "btn", onclick: startGame, disabled: g.pl.length < 2 }, g.pl.length < 2 ? "Need at least 2 players" : `Start with ${g.pl.length} players`)));
+    else panel.append(el("p", { class: "status pulse" }, `Waiting for ${seatName(g, 0)} to start…`), el("p", { class: "muted" }, `${g.pl.length} of ${MAX_PLAYERS} seats taken.`));
+    return box;
+  }
+  if (g.ph === "cd") {
+    panel.append(el("p", { class: "status", style: "text-align:center" }, g.mode === "race" ? "First correct answer scores." : `${seatName(g, g.turn)} starts with the bomb.`));
+    return box;
+  }
+  if (g.ph === "end") { panel.append(endView()); return box; }
+
+  const q = Q(qidOf(g)), perm = permFor(g.id + ":" + g.k + q.id);
+  const mine = validAns(m.my, g);
+  if (g.mode === "race") {
+    if (g.ph === "q") {
+      panel.append(el("div", { class: "timer" }, el("i", { id: "tbar" })));
+      panel.append(questionCard(q, perm, { onPick: answer, disabled: !!mine, mine: mine ? mine.c : null }));
+    } else {
+      const res = g.res || { w: -1, c: [], rt: [] };
+      const txt = res.w === me ? "You took the point." : res.w >= 0 ? `${seatName(g, res.w)} took the point.` : "Nobody scored.";
+      const key = g.id + ":" + g.k;
+      panel.append(el("div", { class: "row spread" },
+        el("div", {}, el("div", { class: "status " + (res.w === me ? "win" : "") }, txt),
+          res.w >= 0 ? el("div", { class: "note" }, `in ${(res.rt[res.w] / 1000).toFixed(1)} s`) : null),
+        m.readyKey === key ? el("span", { class: "note pulse" }, "Waiting for the others…") : el("button", { class: "btn", onclick: ready }, g.k + 1 < g.n ? "Next question" : "See results")));
+      const picks = g.pl.map((p, s) => ({ orig: res.c[s], seat: s, label: s === me ? "YOU" : initials(seatName(g, s)) })).filter(p => p.orig != null);
+      panel.append(questionCard(q, perm, { disabled: true, mine: me >= 0 ? res.c[me] : null, reveal: true, picks }));
+    }
+  } else {
+    const holding = g.turn === me;
+    if (g.ph === "q") {
+      panel.append(el("p", { class: "status " + (holding ? "lose" : "") }, holding ? "You have the bomb. Answer before it blows!" : `${seatName(g, g.turn)} has the bomb.`));
+      panel.append(questionCard(q, perm, { onPick: answer, disabled: !holding || !!mine, mine: holding && mine ? mine.c : null }));
+    } else {
+      const res = g.res || {};
+      const who = res.seat === me ? "You" : seatName(g, res.seat);
+      const lost = g.lv && g.lv[res.seat] <= 0;
+      const txt = res.ok ? `${who} got it. The bomb moves on.` : `BOOM! ${who} ${res.c == null ? "ran out of time" : "picked the wrong answer"}${lost ? (res.seat === me ? " and you're out." : " and is out.") : " and lost a life."}`;
+      panel.append(el("p", { class: "status " + (res.ok ? "win" : "lose") }, txt));
+      panel.append(questionCard(q, perm, { disabled: true, mine: res.seat === me ? res.c : null, reveal: true,
+        picks: res.c != null ? [{ orig: res.c, seat: res.seat, label: res.seat === me ? "YOU" : initials(seatName(g, res.seat)) }] : [] }));
+    }
+  }
   return box;
 }
-function renderMatch() { if (S.view !== "duel") return; const v = $("#view"); v.replaceChildren(S.match ? matchView() : lobbyView()); }
-function renderMatchStatus() {
-  const m = S.match; if (!m) return;
-  const g = m.g, opp = peerOf(m.opp);
-  const sMe = $("#st-me"), sOpp = $("#st-opp");
-  if (!sMe || !sOpp) return;
-  if (g.ph === "q") {
-    sMe.textContent = validAns(m.my, g) ? "Locked in" : "Thinking…";
-    sOpp.textContent = !opp ? "Disconnected…" : validAns(pp(opp).a, g) ? "Locked in" : "Thinking…";
-  } else if (g.ph === "r") {
-    const key = g.id + ":" + g.i;
-    sMe.textContent = m.readyKey === key ? "Ready" : "";
-    sOpp.textContent = !opp ? "Disconnected…" : pp(opp).rd === key ? "Ready" : "Reading…";
-  } else { sMe.textContent = ""; sOpp.textContent = opp ? "" : (g.ph === "end" ? "" : "Disconnected…"); }
+function endView() {
+  const m = S.match, g = m.g, me = mySeat();
+  const wrap = el("div", { class: "stack" });
+  let head, order;
+  if (g.ab) head = m.role === "guest" && !peerOf(m.host) ? "The host left, so the game ended." : "Everyone else left, so the game ended.";
+  if (g.mode === "race") {
+    order = g.pl.map((_, s) => s).sort((a, b) => (g.sc[b] - g.sc[a]) || a - b);
+    const best = Math.max(...g.sc), tops = g.sc.filter(x => x === best).length;
+    if (!head) head = g.sc[me] === best ? (tops === 1 ? "You win!" : "You share first place.") : `${order.filter(s => g.sc[s] === best).map(s => seatName(g, s)).join(" and ")} ${tops === 1 ? "wins" : "share first place"}.`;
+  } else {
+    order = g.pl.map((_, s) => s).sort((a, b) => (b === g.win) - (a === g.win) || (g.lv[b] - g.lv[a]) || a - b);
+    if (!head) head = g.win === me ? "You're the last one standing!" : g.win >= 0 ? `${seatName(g, g.win)} is the last one standing.` : "Nobody survived.";
+  }
+  wrap.append(el("p", { class: "status " + ((g.mode === "race" ? g.sc[me] === Math.max(...g.sc) : g.win === me) && !g.ab ? "win" : "") }, head));
+  wrap.append(el("ol", { class: "standings" }, order.map((s, i) => el("li", { class: i === 0 && !g.ab ? "first" : "" },
+    el("span", { class: "pos" }, i + 1),
+    el("span", { class: "av mini", style: `--c:${seatColor(s)}` }, initials(seatName(g, s))),
+    el("span", { class: "pn" }, s === me ? `${seatName(g, s)} (you)` : seatName(g, s)),
+    el("span", { class: "pv" }, g.mode === "race" ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === g.win ? "survived" : "out"))))));
+  wrap.append(el("p", { class: "note" }, g.ab ? "This game isn't counted. Your answers are still saved to Progress." : "Your answers are saved to Progress."));
+  wrap.append(el("div", { class: "row" }, el("button", { class: "btn", onclick: () => leaveMatch() }, "Back to lobby"),
+    el("a", { class: "btn ghost", href: "#progress", onclick: () => leaveMatch() }, "View progress")));
+  return wrap;
 }
-// Timer and countdown animation.
+function renderMatch() { if (S.view !== "duel") return; $("#view").replaceChildren(S.match ? matchView() : lobbyView()); }
+
+// Timers: question bar, hub ring, bomb fuse, countdown.
 setInterval(() => {
   const m = S.match; if (!m || S.view !== "duel") return;
-  const g = m.g, key = g.id + ":" + g.i;
+  const g = m.g, key = g.id + ":" + g.k;
   if (g.ph === "q") {
-    const bar = $("#tbar"); if (!bar) return;
-    const el_ = (performance.now() - (m.qStart[key] || performance.now())) / 1000;
-    const frac = Math.max(0, 1 - el_ / g.lim);
-    bar.style.width = (frac * 100).toFixed(1) + "%";
+    const elapsed = (performance.now() - (m.qStart[key] || performance.now())) / 1000;
+    const frac = Math.max(0, 1 - elapsed / g.lim);
+    const bar = $("#tbar"); if (bar) bar.style.width = (frac * 100).toFixed(1) + "%";
+    const rp = $("#ringprog"); if (rp) rp.setAttribute("stroke-dashoffset", (RING * (1 - frac)).toFixed(1));
+    const fc = $("#fusecount"); if (fc) fc.textContent = Math.ceil(frac * g.lim) + " s";
+    const hub = $("#hub"); if (hub && g.mode === "bomb") hub.classList.toggle("urgent", frac * g.lim < 6);
     if (frac === 0 && !validAns(m.my, g)) for (const b of document.querySelectorAll("#matchbox .opt")) b.disabled = true;
   } else if (g.ph === "cd") {
-    const cd = $("#cd"); if (!cd) return;
-    if (!m.cdStart) m.cdStart = performance.now();
-    cd.textContent = Math.max(1, 3 - Math.floor((performance.now() - m.cdStart) / 1000));
+    const cd = $("#cd"); if (cd && m.cdAt) cd.textContent = Math.max(1, 3 - Math.floor((performance.now() - m.cdAt) / 1000));
   }
 }, 250);
 
 /* practice */
+function practicePool(topic) {
+  if (topic === "all") return S.bank;
+  if (topic === "quick") return S.bank.filter(q => q.quick);
+  if (topic === "fig") return S.bank.filter(q => q.fig);
+  return S.bank.filter(q => q.topic === topic);
+}
 function nextPractice(forceId) {
-  const pr = S.prac;
-  let pool = pr.topic === "all" ? S.bank : S.bank.filter(q => q.topic === pr.topic);
+  const pr = S.prac, pool = practicePool(pr.topic);
   let pick;
   if (forceId && Q(forceId)) pick = Q(forceId);
   else {
@@ -690,17 +944,20 @@ function practiceView() {
   if (pr.qid === null) nextPractice();
   const topics = S.sections.flatMap(s => s.topics);
   const tSel = el("select", { id: "ptopic", onchange: e => { pr.topic = e.target.value; nextPractice(); render(); } },
-    el("option", { value: "all" }, "All topics"), topics.map(t => el("option", { value: t, selected: pr.topic === t }, t)));
+    el("option", { value: "all" }, "All topics"),
+    el("option", { value: "quick", selected: pr.topic === "quick" }, "Quick-fire (mental maths)"),
+    el("option", { value: "fig", selected: pr.topic === "fig" }, "Picture questions"),
+    topics.map(t => el("option", { value: t, selected: pr.topic === t }, t)));
   const mSel = el("select", { id: "pmode", onchange: e => { pr.mode = e.target.value; nextPractice(); render(); } },
     [["smart", "Unseen first, then mistakes"], ["mistakes", "Only my mistakes"], ["random", "Random"]].map(([v, t]) => el("option", { value: v, selected: pr.mode === v }, t)));
   const wrap = el("div", { class: "stack" });
   wrap.append(el("section", { class: "sheet" },
-    el("div", { class: "row", style: "justify-content:space-between;align-items:end" },
-      el("div", {}, el("p", { class: "eyebrow" }, "Solo practice"), el("h2", { style: "margin:0" }, "Work through the canon set")),
+    el("div", { class: "row spread", style: "align-items:end" },
+      el("div", {}, el("p", { class: "eyebrow" }, "Solo practice"), el("h2", { style: "margin:0" }, "Work through the question set")),
       el("div", { class: "row" }, el("label", { class: "field" }, el("span", {}, "Topic"), tSel), el("label", { class: "field" }, el("span", {}, "Order"), mSel)))));
   const card = el("section", { class: "sheet stack" });
   if (!pr.qid) {
-    card.append(el("p", {}, pr.mode === "mistakes" ? "No mistakes to retry here. Every question you've answered in this topic was right last time." : "No questions match."));
+    card.append(el("p", {}, pr.mode === "mistakes" ? "No mistakes to retry here. Every question you've answered in this set was right last time." : "No questions match."));
   } else {
     const q = Q(pr.qid), done = pr.picked !== null;
     card.append(questionCard(q, pr.perm, {
@@ -708,7 +965,7 @@ function practiceView() {
       onPick: orig => { if (pr.picked !== null) return; pr.picked = orig; record(q.id, orig === q.a); pushPresence({ mast: masteredCount() }); render(); }
     }));
     const st = P.q[q.id];
-    card.append(el("div", { class: "row", style: "justify-content:space-between" },
+    card.append(el("div", { class: "row spread" },
       el("span", { class: "note" }, st ? `Answered ${st.n}× · correct ${st.c}×` : "First attempt"),
       done ? el("button", { class: "btn", onclick: () => { nextPractice(); render(); } }, "Next question") : el("span", { class: "note" }, `${masteredCount()} / ${S.bank.length} mastered`)));
   }
@@ -725,11 +982,11 @@ function progressView() {
     el("div", { class: "stat" }, el("b", {}, `${mast}/${S.bank.length}`), el("span", {}, "Mastered")),
     el("div", { class: "stat" }, el("b", {}, `${seen}`), el("span", {}, "Attempted")),
     el("div", { class: "stat" }, el("b", {}, n ? Math.round(100 * c / n) + "%" : "–"), el("span", {}, "Accuracy")),
-    el("div", { class: "stat" }, el("b", {}, `${P.w}–${P.l}–${P.d}`), el("span", {}, "Duels W–L–D"))));
+    el("div", { class: "stat" }, el("b", {}, `${P.w}–${P.l}–${P.d}`), el("span", {}, "Games W–L–D"))));
   const sheet = el("section", { class: "sheet" });
   sheet.append(
     el("p", { class: "eyebrow" }, "Answer sheet"),
-    el("h2", {}, "The canon set, by topic"),
+    el("h2", {}, "The question set, by topic"),
     el("div", { class: "legend" },
       el("span", {}, el("span", { class: "oval" }), "Not yet answered"),
       el("span", {}, el("span", { class: "oval ok" }), "Right last time"),
@@ -746,7 +1003,7 @@ function progressView() {
         el("span", { class: "tn" }, t),
         el("div", { class: "ovals" }, tq.map((q, i) => {
           const r = P.q[q.id];
-          return el("button", { class: "oval" + (r ? (r.last === 1 ? " ok" : " no") : ""), title: `${q.id}${r ? ` · ${r.c}/${r.n} correct` : " · not yet answered"}`, "aria-label": `${q.id}, practise`,
+          return el("button", { class: "oval" + (r ? (r.last === 1 ? " ok" : " no") : ""), title: `${q.id}${q.fig ? " (picture)" : ""}${r ? ` · ${r.c}/${r.n} correct` : " · not yet answered"}`, "aria-label": `${q.id}, practise`,
             onclick: () => { S.prac.topic = t; nextPractice(q.id); location.hash = "practice"; } }, i + 1);
         })),
         el("span", { class: "tpct" }, `${tm}/${tq.length}`)));
@@ -778,19 +1035,18 @@ function boardView() {
   if (S.boardState === "slow") sheet.append(el("div", { class: "banner" }, "The standings can't be reached right now. They'll appear when the connection returns."));
   if (S.boardState === "err") { sheet.append(el("div", { class: "empty" }, "The standings couldn't be loaded.")); return sheet; }
   const rows = S.board.filter(r => Number.isFinite(+r.mastered)).sort((a, b) => (+b.mastered - +a.mastered) || ((+b.w || 0) - (+a.w || 0)));
-  if (!rows.length) { sheet.append(el("div", { class: "empty" }, "Nobody is on the board yet. Answer a question or finish a duel to get on it.")); return sheet; }
+  if (!rows.length) { sheet.append(el("div", { class: "empty" }, "Nobody is on the board yet. Answer a question or finish a game to get on it.")); return sheet; }
   const tbody = el("tbody");
   rows.forEach((r, i) => {
-    const nameCell = el("td", {}, cleanNick(r.nick) || "Player");
     tbody.append(el("tr", { class: r.id === S.uid ? "me" : null },
-      el("td", { class: "num mono" }, i + 1), nameCell,
-      el("td", { class: "num" }, `${+r.mastered || 0}/${+r.total || S.bank.length}`),
+      el("td", { class: "num mono" }, i + 1), el("td", {}, cleanNick(r.nick) || "Player"),
+      el("td", { class: "num" }, `${+r.mastered || 0}/${S.bank.length}`),
       el("td", { class: "num" }, +r.w || 0), el("td", { class: "num" }, +r.l || 0), el("td", { class: "num" }, +r.d || 0)));
   });
   sheet.append(el("div", { class: "tablewrap" }, el("table", {},
     el("thead", {}, el("tr", {}, el("th", { class: "num" }, "#"), el("th", {}, "Player"), el("th", { class: "num" }, "Mastered"), el("th", { class: "num" }, "W"), el("th", { class: "num" }, "L"), el("th", { class: "num" }, "D"))),
     tbody)));
-  sheet.append(el("p", { class: "note", style: "margin-top:10px" }, "Mastered means the last answer to that question was right."));
+  sheet.append(el("p", { class: "note", style: "margin-top:10px" }, "Mastered means the last answer to that question was right. W–L–D counts finished games: a win is sole first place in Race or last standing in Bomb."));
   return sheet;
 }
 
@@ -807,13 +1063,14 @@ window.addEventListener("hashchange", route);
 /* ---------- boot ---------- */
 async function boot() {
   S.nick = cleanNick(lsGet("p1d.nick")) || "Player " + Math.floor(100 + Math.random() * 900);
+  try { S.named = sessionStorage.getItem("p1d.named") === "1"; } catch {}
   const nickIn = $("#nick"); nickIn.value = S.nick;
   nickIn.addEventListener("change", () => {
     const v = cleanNick(nickIn.value); if (!v) { nickIn.value = S.nick; return; }
-    S.nick = v; nickIn.value = v; lsSet("p1d.nick", v); pushPresence({ nick: v }); writePlayer(); if (S.match) renderMatch();
+    setNick(v); S.named = true; try { sessionStorage.setItem("p1d.named", "1"); } catch {}
   });
   try {
-    const res = await fetch("questions.json");
+    const res = await fetch("questions.json", { cache: "no-cache" });
     const data = await res.json();
     S.bank = data.questions; S.sections = data.sections; S.constants = data.constants;
     for (const q of S.bank) S.byId[q.id] = q;
@@ -897,11 +1154,11 @@ function makeRoom(rtdb, uid) {
         s.forEach(c => {
           const v = c.val() || {}; let p = {};
           try { p = JSON.parse(v.p) || {}; } catch {}
-          peers.push({ peer: c.key, by: v.by || null, isMe: v.by === uid, sameTab: c.key === me.key, kind: "viewer", guest: false, presence: p });
+          peers.push({ peer: c.key, by: v.by || null, isMe: v.by === uid, sameTab: c.key === me.key, presence: p });
         });
-        if (!peers.some(p => p.sameTab)) peers.push({ peer: me.key, by: uid, isMe: true, sameTab: true, kind: "viewer", guest: false, presence: pres });
+        if (!peers.some(p => p.sameTab)) peers.push({ peer: me.key, by: uid, isMe: true, sameTab: true, presence: pres });
         fn({ peers });
-      }, () => onErr && onErr({ code: "not_granted" }));
+      }, () => onErr && onErr());
     }
   };
 }
@@ -920,12 +1177,11 @@ function setupAccountButton(auth, user) {
       try { await user.linkWithPopup(provider); location.reload(); }
       catch (e) {
         if (e.code === "auth/credential-already-in-use" && e.credential) { await auth.signInWithCredential(e.credential); location.reload(); }
-        else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") showToast("Google sign-in failed: " + (e.code || "unknown error"));
+        else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") { S.lobbyMsg = "Google sign-in failed: " + (e.code || "unknown error"); render(); }
       }
     };
   }
 }
-function showToast(msg) { S.lobbyMsg = msg; render(); }
 boot();
 </script>
 </body>
