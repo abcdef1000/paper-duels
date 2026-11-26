@@ -35,6 +35,23 @@
           }
         }
       }
+    },
+    "packMeta": {
+      ".read": "auth != null",
+      ".indexOn": [
+        "t"
+      ],
+      "$id": {
+        ".write": "auth != null && (data.exists() ? data.child('owner').val() === auth.uid : newData.child('owner').val() === auth.uid)",
+        ".validate": "newData.child('owner').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('n').isNumber()"
+      }
+    },
+    "packData": {
+      "$id": {
+        ".read": "auth != null",
+        ".write": "auth != null && (data.exists() ? data.child('owner').val() === auth.uid : newData.child('owner').val() === auth.uid)",
+        ".validate": "newData.child('owner').val() === auth.uid && newData.child('json').isString() && newData.child('json').val().length < 200000"
+      }
     }
   }
 }

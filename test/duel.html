@@ -80,7 +80,15 @@ async function nameIfAsked(f, name) {
 }
 const curQ = f => { const s = S(f), g = s.match.g; return s.byId[g.qs[g.k % g.qs.length]]; };
 function pick(f, correct) {
-  const q = curQ(f), target = correct ? q.a : (q.a + 1) % 4;
+  const q = curQ(f);
+  if (q.type === "short") {
+    const inp = D(f).getElementById("sa-in");
+    if (!inp || inp.disabled) throw new Error("no enabled answer box");
+    inp.value = correct ? (q.answers ? q.answers[0] : String(q.num.value)) : "definitely wrong";
+    btn(f, "Submit").click();
+    return;
+  }
+  const target = correct ? q.a : (q.a + 1) % 4;
   const b = [...D(f).querySelectorAll("#matchbox .opt")].find(b => b.getAttribute("aria-label").endsWith(": " + q.o[target]) && !b.disabled);
   if (!b) throw new Error("no enabled option to click");
   b.click();
@@ -106,7 +114,7 @@ async function seatEveryone(hostOpens) {
     // [A, B, C] in click order; "r" right, "w" wrong
     const plan = [[["A","r"],["B","w"],["C","r"]], [["A","w"],["B","w"],["C","w"]], [["B","w"],["A","w"],["C","r"]], [["C","r"],["A","r"],["B","r"]], [["B","r"],["A","w"],["C","w"]]];
     for (let i = 0; i < plan.length; i++) {
-      await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && S(f).match.g.k === i && D(f).querySelector("#matchbox .opt")), "race q" + i);
+      await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && S(f).match.g.k === i && D(f).querySelector("#matchbox .opt, #matchbox #sa-in")), "race q" + i);
       for (const [who, how] of plan[i]) { pick(F[who], how === "r"); await sleep(120); }
       await until(() => [A, B, C].every(f => S(f).match.g.ph === "r"), "race reveal " + i, 100000);
       const g = S(A).match.g;
@@ -139,7 +147,7 @@ async function seatEveryone(hostOpens) {
       await sleep(200);
       // non-holders must not be able to answer
       const others = [A, B, C].filter(f => f !== hf);
-      const blocked = others.every(f => [...D(f).querySelectorAll("#matchbox .opt")].every(b => b.disabled));
+      const blocked = others.every(f => [...D(f).querySelectorAll("#matchbox .opt, #matchbox #sa-in")].every(b => b.disabled));
       if (action !== "timeout") pick(hf, action === "right");
       await until(() => S(A).match.g.ph === "r" || S(A).match.g.ph === "end", "bomb result", 100000);
       const r = S(A).match.g;
@@ -170,6 +178,37 @@ async function seatEveryone(hostOpens) {
     const cases = [[numQ, "2.4 V", true], [numQ, "2.40", true], [numQ, "2.5", false], [numQ, "", false], [txtQ, "hess’s LAW.", true], [txtQ, "Boyle's law", false], [o2, "O₂", true], [{ a: 2 }, 2, true], [{ a: 2 }, 1, false]];
     const bad = cases.filter(([q, r, want]) => chk(q, r) !== want);
     out(`answer matching: ${cases.length - bad.length}/${cases.length} cases right` + (bad.length ? " FAILED " + JSON.stringify(bad) : ""));
+    for (const f of [A, B, C]) (await until(() => btn(f, "See results"), "see results")).click();
+    await until(() => [A, B, C].every(f => S(f).match.ended), "short race end", 100000);
+    for (const f of [A, B, C]) btn(f, "Back to lobby").click();
+
+    /* ---------- player-made pack: AI reply -> validate -> save -> host -> others join ---------- */
+    const aiPack = { name: "Sec 3 Acids", questions: [
+      { id: "AC-1", topic: "pH", type: "mcq", q: "What is the pH of pure water at 25 °C?", o: ["0", "7", "14", "1"], a: 1, x: "Pure water is neutral, pH 7.", d: 1, quick: true },
+      { id: "AC-2", topic: "Neutralisation", type: "short", q: "Name the salt formed when hydrochloric acid reacts with sodium hydroxide.", answers: ["sodium chloride", "NaCl"], x: "HCl + NaOH → NaCl + H2O.", quick: true },
+      { id: "AC-3", topic: "pH", type: "mcq", q: "Which has the lowest pH?", o: ["soap", "lemon juice", "water", "milk"], a: 1, x: "Lemon juice is acidic.", d: 2, fig: "<svg></svg>" } ] };
+    const reply = "Here you go!\n```json\n" + JSON.stringify(aiPack, null, 2) + "\n```\nHope this helps.";
+    const res = W(A).eval("validatePack")(W(A).eval("extractJson")(reply));
+    out(`pack check: ${res.errors.length} errors, ${res.warnings.length} warnings, sections ${JSON.stringify(res.pack.sections)}, AC-2 d=${res.pack.questions[1].d}, fig kept: ${"fig" in res.pack.questions[2]}`);
+    const bad1 = W(A).eval("validatePack")({ questions: [{ q: "x?", o: ["a", "b"], a: 0 }] });
+    out(`broken pack rejected: ${bad1.errors.length > 0} (${bad1.errors[0]})`);
+    const pid = await W(A).eval("savePack")(res.pack, true);
+    out(`saved pack ${pid}; stored: ${!!store["packData/" + pid]} meta: ${!!store["packMeta/" + pid]}`);
+    W(A).eval(`setSubject("pk:${pid}")`);
+    delete W(B).eval("S").banks["pk:" + pid];                 // B starts without the pack
+    await until(() => btn(A, "Open room"), "A lobby (pack)");
+    S(A).form.mode = "race"; S(A).form.n = 5; S(A).form.pool = "all";
+    W(A).eval("render()");
+    btn(A, "Open room").click();
+    (await until(() => btn(B, "Join"), "B sees pack room", 30000)).click();
+    await until(() => S(B).match, "B seated in pack room");
+    out(`B loaded pack for room: ${!!S(B).banks["pk:" + pid]}; room subject ${S(A).match.g.bk}`);
+    (await until(() => btn(A, "Start with 2 players"), "start pack game")).click();
+    await until(() => [A, B].every(f => S(f).match.g.ph === "q" && (D(f).querySelector("#matchbox .opt") || D(f).getElementById("sa-in"))), "pack question");
+    const pq = curQ(B);
+    if (pq.type === "short") { D(B).getElementById("sa-in").value = pq.answers[0]; btn(B, "Submit").click(); } else pick(B, true);
+    await until(() => S(A).match.g.ph === "r", "pack reveal", 100000);
+    out(`pack round: ${pq.id} (${pq.type}) -> winner ${S(A).match.g.nm[S(A).match.g.res.w]}`);
     out("players docs: " + Object.keys(store).filter(k => k.startsWith("players/")).length);
     out("DONE");
   } catch (e) { out("FAIL: " + e.message); }

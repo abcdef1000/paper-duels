@@ -291,6 +291,22 @@ details.data summary { cursor: pointer; font: 400 12px/1 var(--label); text-tran
 .key { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--muted); }
 .key i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
 
+/* packs */
+.steplist { counter-reset: st; display: flex; flex-direction: column; gap: 18px; }
+.stepbox { position: relative; padding-left: 44px; }
+.stepbox::before { counter-increment: st; content: counter(st); position: absolute; left: 0; top: 0; width: 30px; height: 30px; display: grid; place-items: center; font: 400 12px/1 var(--display); background: var(--accent); color: var(--space); }
+.stepbox h3 { color: var(--accent); }
+textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 0; background: var(--panel2); color: var(--ink); font: 15px/1.45 var(--body); box-shadow: inset 0 -3px 0 var(--line); resize: vertical; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.thumbs img { width: 84px; height: 64px; object-fit: cover; box-shadow: 0 0 0 3px var(--line); }
+.errs { margin: 0; padding-left: 18px; color: var(--bad); font-size: 14px; }
+.packlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.packlist li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0; border-top: 3px dotted var(--line); }
+.packlist li:first-child { border-top: 0; }
+.packlist .pn { flex: 1; min-width: 10em; }
+.packlist .pn b { display: block; overflow-wrap: anywhere; }
+.preview { display: flex; flex-direction: column; gap: 14px; padding: 14px; background: var(--space); }
+
 /* leaderboard */
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
@@ -323,6 +339,7 @@ tr.sim td { color: var(--muted); }
     <a href="#practice" data-v="practice">Practice</a>
     <a href="#progress" data-v="progress">Progress</a>
     <a href="#leaderboard" data-v="leaderboard">Leaderboard</a>
+    <a href="#packs" data-v="packs">Packs</a>
     <label class="subj" for="subject">Subject <select id="subject"></select></label>
   </nav>
   <main id="view"><div class="sheet"><p class="muted">Docking… loading the question banks.</p></div></main>
@@ -454,7 +471,7 @@ function writePlayer() {
   if (!S.db || !S.uid || S.storeMode !== "db") return;
   if (!seenIn(allQs()) && !(P.w + P.l + P.d)) return;   // stay off the board until you have played
   const body = { nick: S.nick, mastered: masteredIn(allQs()), seen: seenIn(allQs()), w: P.w, l: P.l, d: P.d };
-  for (const b of BANKS) if (S.banks[b.key]) body["m_" + b.key] = masteredIn(S.banks[b.key].questions);
+  for (const b of BANKS) if (S.banks[b.key] && !b.custom) body["m_" + b.key] = masteredIn(S.banks[b.key].questions);
   const key = JSON.stringify(body);
   if (key === lastPlayerBody) return;
   lastPlayerBody = key;
@@ -570,7 +587,7 @@ function openRoom() {
   const f = S.form, pool = poolFor(f.pool), ids = shuffle(pool.map(q => q.id));
   const race = f.mode === "race";
   const g = { id: rid(8), mode: f.mode, pl: [S.myPeer], nm: [S.nick], ph: "lobby", k: 0,
-    qs: race ? ids.slice(0, Math.min(f.n, ids.length)) : ids, n: race ? Math.min(f.n, ids.length) : 0,
+    qs: race ? ids.slice(0, Math.min(f.n, ids.length)) : ids.slice(0, 60), n: race ? Math.min(f.n, ids.length) : 0,
     lim: race ? RACE_LIM : f.fuse, lives: f.lives, pool: f.pool, bk: S.subject, sc: null, lv: null, turn: 0, res: null };
   S.match = newMatch("host", g, S.myPeer);
   S.lobbyMsg = "";
@@ -773,6 +790,7 @@ function render() {
   else if (S.view === "practice") v.append(practiceView());
   else if (S.view === "progress") v.append(progressView());
   else if (S.view === "leaderboard") v.append(boardView());
+  else if (S.view === "packs") v.append(packsView());
 }
 
 function poolSelect(id, value, onchange) {
@@ -823,6 +841,7 @@ function renderLobbyLists() {
   const online = $("#online");
   if (online) online.textContent = S.roomState === "on" ? `${S.peers.length} aboard` : "";
   if (S.roomState !== "on") { box.replaceChildren(el("div", { class: "empty" }, "The docking bay isn't connected.")); return; }
+  for (const p of S.peers) { const g = pp(p).g; if (pp(p).st === "host" && g && typeof g.bk === "string" && g.bk.startsWith("pk:")) ensurePack(g.bk.slice(3)); }
   const open = S.peers.filter(p => !p.sameTab && pp(p).st === "host" && validG(pp(p).g) && pp(p).g.ph === "lobby");
   if (!open.length) { box.replaceChildren(el("div", { class: "empty" }, "No open rooms right now. Host one and anyone aboard can join. To try it alone, open the page in a second tab.")); return; }
   const ul = el("ul", { class: "lobby-list" });
@@ -861,7 +880,7 @@ function questionCard(q, perm, opts) {
     el("p", { class: "stem" }, q.q),
     fig,
     list,
-    opts.reveal ? el("div", { class: "explain" + (isCorrect(q, opts.mine) ? "" : " badx") }, el("p", {}, el("b", {}, "Answer " + LETTERS[perm.indexOf(q.a)] + ". "), q.x)) : null,
+    opts.reveal ? el("div", { class: "explain" + (isCorrect(q, opts.mine) || opts.neutral ? "" : " badx") }, el("p", {}, el("b", {}, "Answer " + LETTERS[perm.indexOf(q.a)] + ". "), q.x)) : null,
     (S.banks[q.bk] && S.banks[q.bk].constants) ? el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.banks[q.bk].constants)) : null);
 }
 
@@ -880,7 +899,7 @@ function shortCard(q, opts) {
     el("div", { class: "qhead" }, el("span", { class: "qid" }, q.id), el("span", { class: "qtopic" }, q.topic + " · short answer")),
     el("p", { class: "stem" }, q.q),
     form, picks,
-    opts.reveal ? el("div", { class: "explain" + (mineOk ? "" : " badx") }, el("p", {}, el("b", {}, `Answer: ${shownAnswer(q)}. `), q.x)) : null,
+    opts.reveal ? el("div", { class: "explain" + (mineOk || opts.neutral ? "" : " badx") }, el("p", {}, el("b", {}, `Answer: ${shownAnswer(q)}. `), q.x)) : null,
     (S.banks[q.bk] && S.banks[q.bk].constants) ? el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.banks[q.bk].constants)) : null);
 }
 
@@ -1404,10 +1423,298 @@ function boardView() {
   return sheet;
 }
 
+/* ---------- player-made packs ----------
+   A pack is stored as packMeta/<id> {owner, name, nick, n, pub, t} and packData/<id> {owner, json}. Loaded packs become
+   subjects with key "pk:<id>" and question ids "<id>:<qid>". Pack content is untrusted: it is validated, figures are
+   dropped, and everything is rendered as text. */
+const PACK_LIMITS = { questions: 200, q: 700, o: 220, x: 900, answers: 12 };
+const myPacks = () => { const v = lsGet("p1d.mypacks"); return Array.isArray(v) ? v.filter(p => p && /^[a-z0-9]{6,20}$/.test(p.id)) : []; };
+const setMyPacks = list => lsSet("p1d.mypacks", list);
+function refreshSubjects() {
+  const sel = $("#subject"), cur = sel.value;
+  sel.replaceChildren(...BANKS.filter(b => !b.custom).map(b => el("option", { value: b.key }, b.name)));
+  const custom = BANKS.filter(b => b.custom && myPacks().some(p => "pk:" + p.id === b.key));
+  if (custom.length) sel.append(el("optgroup", { label: "Custom packs" }, custom.map(b => el("option", { value: b.key }, b.name))));
+  if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+}
+function extractJson(text) {
+  const t = String(text || "");
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = fence ? fence[1] : t;
+  const a = body.indexOf("{"), b = body.lastIndexOf("}");
+  if (a < 0 || b <= a) throw new Error("I couldn't find a JSON object in that text. Paste the AI's whole reply.");
+  return JSON.parse(body.slice(a, b + 1));
+}
+// Checks and tidies a pack. Returns { pack, errors, warnings }. Fixable problems become warnings.
+function validatePack(raw) {
+  const errors = [], warnings = [];
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { errors: ["The reply isn't a JSON object."], warnings };
+  const str = (v, max) => typeof v === "string" ? v.replace(BAD_CHARS, " ").trim().slice(0, max) : "";
+  const name = str(raw.name, 60) || "Untitled pack";
+  let qs = Array.isArray(raw.questions) ? raw.questions : [];
+  if (!qs.length) errors.push("There are no questions. The JSON needs a \"questions\" list.");
+  if (qs.length > PACK_LIMITS.questions) { warnings.push(`Only the first ${PACK_LIMITS.questions} questions are kept.`); qs = qs.slice(0, PACK_LIMITS.questions); }
+  const out = [], seen = new Set();
+  qs.forEach((q, i) => {
+    const where = `Question ${i + 1}`;
+    if (!q || typeof q !== "object") { errors.push(`${where} isn't an object.`); return; }
+    const type = q.type === "short" ? "short" : "mcq";
+    let id = str(q.id, 30).replace(/[^A-Za-z0-9_.-]/g, "") || `Q${i + 1}`;
+    while (seen.has(id)) id += "x";
+    seen.add(id);
+    const item = { id, topic: str(q.topic, 60) || "General", type, q: str(q.q, PACK_LIMITS.q), x: str(q.x, PACK_LIMITS.x) };
+    if (!item.q) { errors.push(`${where} has no question text ("q").`); return; }
+    if (!item.x) warnings.push(`${where} has no explanation ("x").`);
+    const d = Number(q.d);
+    item.d = [1, 2, 3, 4].includes(d) ? d : 2;
+    if (![1, 2, 3, 4].includes(d)) warnings.push(`${where}: difficulty "d" should be 1–4, so it's set to 2.`);
+    item.quick = q.quick === true;
+    if (type === "mcq") {
+      const o = Array.isArray(q.o) ? q.o.map(v => str(String(v ?? ""), PACK_LIMITS.o)) : [];
+      if (o.length !== 4 || o.some(v => !v)) { errors.push(`${where} needs exactly 4 non-empty options in "o".`); return; }
+      if (new Set(o.map(v => v.toLowerCase())).size !== 4) { errors.push(`${where} has two identical options.`); return; }
+      if (!Number.isInteger(q.a) || q.a < 0 || q.a > 3) { errors.push(`${where} needs "a", the index 0–3 of the correct option.`); return; }
+      item.o = o; item.a = q.a;
+    } else {
+      const answers = Array.isArray(q.answers) ? q.answers.map(v => str(String(v ?? ""), 80)).filter(Boolean).slice(0, PACK_LIMITS.answers) : [];
+      const num = q.num && typeof q.num === "object" && Number.isFinite(+q.num.value) ? { value: +q.num.value, tol: Math.max(0, +q.num.tol || 0), unit: str(q.num.unit, 20) } : null;
+      if (!answers.length && !num) { errors.push(`${where} is short-answer but has no "answers" or "num".`); return; }
+      if (answers.length) item.answers = answers;
+      if (num) item.num = num;
+    }
+    if (q.fig) warnings.push(`${where}: images and figures aren't supported in player-made packs, so it was dropped.`);
+    out.push(item);
+  });
+  const topics = [...new Set(out.map(q => q.topic))];
+  let sections = Array.isArray(raw.sections) ? raw.sections.filter(s => s && typeof s.name === "string" && Array.isArray(s.topics))
+    .map(s => ({ name: str(s.name, 60), topics: s.topics.map(t => str(String(t), 60)).filter(t => topics.includes(t)) })).filter(s => s.name && s.topics.length) : [];
+  const covered = new Set(sections.flatMap(s => s.topics));
+  const loose = topics.filter(t => !covered.has(t));
+  if (loose.length) sections.push({ name: sections.length ? "Other topics" : name, topics: loose });
+  const tiers = new Set(out.map(q => q.d));
+  if (out.length && tiers.size < 4) warnings.push("Not every difficulty level 1–4 is used, so the Daily Test will borrow from nearby levels.");
+  return { pack: { format: "orbit-pack/1", name, constants: str(raw.constants, 500), sections, questions: out }, errors, warnings };
+}
+function registerPack(id, pack, meta) {
+  const key = "pk:" + id;
+  const qs = pack.questions.map(q => ({ ...q, id: `${id}:${q.id}`, bk: key }));
+  for (const q of qs) S.byId[q.id] = q;
+  S.banks[key] = { questions: qs, sections: pack.sections, constants: pack.constants || "" };
+  const info = { key, file: "", name: pack.name, tag: `Orbit Station · Custom pack${meta && meta.nick ? " by " + cleanNick(meta.nick) : ""}`, custom: true, id, owner: meta && meta.owner };
+  BANKS = BANKS.filter(b => b.key !== key).concat(info);
+  return key;
+}
+function loadPackFromCache(id) {
+  const raw = lsGet("p1d.pack." + id);
+  if (!raw) return false;
+  const { pack, errors } = validatePack(raw.pack);
+  if (errors.length || !pack.questions.length) return false;
+  registerPack(id, pack, raw.meta);
+  return true;
+}
+const packLoads = {};
+function ensurePack(id, refresh) {
+  if (!/^[a-z0-9]{6,20}$/.test(id) || !S.db) return Promise.resolve(false);
+  if (S.banks["pk:" + id] && !refresh) return Promise.resolve(true);
+  if (packLoads[id]) return packLoads[id];
+  packLoads[id] = Promise.all([S.db.doc("packData/" + id).get(), S.db.doc("packMeta/" + id).get()]).then(([d, m]) => {
+    if (!d.exists) return false;
+    const meta = m.exists ? m.data() : {};
+    const { pack, errors } = validatePack(JSON.parse(d.data().json));
+    if (errors.length || !pack.questions.length) return false;
+    registerPack(id, pack, { owner: d.data().owner, nick: meta.nick });
+    if (myPacks().some(p => p.id === id)) lsSet("p1d.pack." + id, { pack, meta: { owner: d.data().owner, nick: meta.nick } });
+    refreshSubjects();
+    if (S.view === "duel" && !S.match) renderLobbyLists();
+    if (S.view === "packs") render();
+    return true;
+  }).catch(() => false).finally(() => { delete packLoads[id]; });
+  return packLoads[id];
+}
+async function addSharedPack(id) {
+  S.packMsg = "Loading the shared pack…";
+  const ok = await ensurePack(id);
+  if (ok) {
+    if (!myPacks().some(p => p.id === id)) setMyPacks(myPacks().concat({ id, name: bankInfo("pk:" + id).name }));
+    lsSet("p1d.pack." + id, { pack: { name: bankInfo("pk:" + id).name, sections: S.banks["pk:" + id].sections, constants: S.banks["pk:" + id].constants, questions: S.banks["pk:" + id].questions.map(q => ({ ...q, id: q.id.split(":").slice(1).join(":") })) }, meta: {} });
+    refreshSubjects();
+    S.packMsg = `Added "${bankInfo("pk:" + id).name}". Pick it from the subject menu to practise it or host a room with it.`;
+  } else S.packMsg = S.db ? "That pack link doesn't work. It may have been deleted." : "Shared packs need the online connection. Try again in a moment.";
+  if (S.view === "packs") render();
+}
+function packPrompt(f) {
+  const example = { format: "orbit-pack/1", name: f.name || "My pack", constants: "",
+    sections: [{ name: "Section name", topics: ["Topic A", "Topic B"] }],
+    questions: [
+      { id: "A-01", topic: "Topic A", type: "mcq", q: "Question text?", o: ["option", "option", "option", "option"], a: 2, x: "Why the answer is right, with the key step.", d: 2, quick: true },
+      { id: "B-01", topic: "Topic B", type: "short", q: "Question with a typed answer. Give your answer in cm.", num: { value: 12.5, tol: 0.1, unit: "cm" }, answers: ["12.5 cm"], x: "Working.", d: 3, quick: false }
+    ] };
+  return `You are writing a question pack for Orbit Station, a multiplayer quiz game for students. Use my notes${f.shots ? " and the screenshots I've attached" : ""} as the source material.
+
+Pack name: ${f.name || "(choose a short name)"}
+Subject and level: ${f.level || "(work it out from my material)"}
+Number of questions: ${f.count}
+My notes and ideas:
+${f.notes || "(none: base it on the screenshots)"}
+
+Rules:
+1. Write original questions in your own words. Don't copy textbook or past-paper wording. Work out every answer and check it twice.
+2. Mostly multiple choice: "type": "mcq", exactly 4 options in "o", and "a" = the index (0–3) of the correct option. Wrong options should be common mistakes.
+3. About a quarter short answer: "type": "short" with accepted answers in "answers" (list common spellings), and/or a numeric answer in "num": {"value": number, "tol": allowed error, "unit": "unit"}. Say the unit in the question.
+4. "x" is a 1–3 sentence explanation with the key step. Never mention option letters, because options are shuffled.
+5. "d" is difficulty: 1 recall, 2 one step, 3 multi-step, 4 hardest. Use all four levels, roughly evenly. "quick": true if it can be done in your head in about 30 seconds.
+6. Group questions into "topics", and list every topic under "sections". Give each question a short unique "id".
+7. Plain text only. Unicode such as ×, ÷, ², ⁻¹, √, π and ° is fine. No images, HTML or LaTeX.
+
+Reply with ONLY one JSON object in exactly this shape, with no other text:
+${JSON.stringify(example, null, 2)}`;
+}
+async function savePack(pack, pub) {
+  if (!S.db || !S.uid) throw new Error("offline");
+  const id = rid(10);
+  const json = JSON.stringify(pack);
+  if (json.length > 190000) throw new Error("too big");
+  await S.db.doc("packData/" + id).set({ owner: S.uid, json });
+  await S.db.doc("packMeta/" + id).set({ owner: S.uid, name: pack.name, nick: S.nick, n: pack.questions.length, pub: !!pub, t: Date.now() });
+  registerPack(id, pack, { owner: S.uid, nick: S.nick });
+  setMyPacks(myPacks().concat({ id, name: pack.name }));
+  lsSet("p1d.pack." + id, { pack, meta: { owner: S.uid, nick: S.nick } });
+  refreshSubjects();
+  return id;
+}
+async function deletePack(id) {
+  const info = bankInfo("pk:" + id);
+  if (S.db && info.owner === S.uid) { await S.db.doc("packMeta/" + id).set(null); await S.db.doc("packData/" + id).set(null); }
+  removePackLocal(id);
+}
+function removePackLocal(id) {
+  setMyPacks(myPacks().filter(p => p.id !== id));
+  try { localStorage.removeItem("p1d.pack." + id); } catch {}
+  if (S.subject === "pk:" + id) { setSubject(BANKS[0].key); lsSet("p1d.subject", S.subject); }
+  refreshSubjects();
+}
+let communityUnsub = null;
+function subscribeCommunity() {
+  if (!S.db || communityUnsub) return;
+  S.community = null;
+  communityUnsub = S.db.collection("packMeta").orderBy("t").limit(60).onSnapshot(snap => {
+    S.community = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.pub && typeof p.name === "string" && /^[a-z0-9]{6,20}$/.test(p.id)).reverse();
+    if (S.view === "packs") renderCommunity();
+  }, () => { S.community = []; if (S.view === "packs") renderCommunity(); });
+}
+const shareUrl = id => location.href.split("#")[0] + "#pack-" + id;
+async function copyText(text, btn, done) {
+  try { await navigator.clipboard.writeText(text); btn.textContent = done; }
+  catch { btn.textContent = "Copy failed: select and copy by hand"; }
+  setTimeout(() => { btn.textContent = btn.dataset.label; }, 2500);
+}
+function packsView() {
+  subscribeCommunity();
+  const f = S.packForm || (S.packForm = { name: "", level: "", count: 20, notes: "", shots: [], reply: "", check: null, pub: true });
+  const wrap = el("div", { class: "stack" });
+  if (S.packMsg) wrap.append(el("div", { class: "banner" }, S.packMsg));
+  const left = el("section", { class: "sheet stack" }, el("p", { class: "eyebrow" }, "Pack workshop"), el("h2", { style: "margin:0" }, "Make a pack with AI"),
+    el("p", { class: "muted" }, "Turn your notes, worksheets or screenshots into a question pack. It works with any AI chat: Claude, ChatGPT or Gemini."));
+  const steps = el("div", { class: "steplist" });
+  // 1 describe
+  const shotsBox = el("div", { class: "thumbs" }, f.shots.map(u => el("img", { src: u, alt: "Your screenshot" })));
+  steps.append(el("div", { class: "stepbox stack" }, el("h3", {}, "Describe your pack"),
+    el("div", { class: "row" },
+      el("label", { class: "field", style: "flex:1;min-width:12em" }, el("span", {}, "Pack name"), el("input", { id: "pk-name", maxlength: "60", value: f.name, placeholder: "e.g. Sec 3 Chemistry: Acids", oninput: e => f.name = e.target.value })),
+      el("label", { class: "field", style: "flex:1;min-width:12em" }, el("span", {}, "Subject and level"), el("input", { id: "pk-level", maxlength: "80", value: f.level, placeholder: "e.g. O-Level Pure Chemistry", oninput: e => f.level = e.target.value })),
+      el("label", { class: "field" }, el("span", {}, "Questions"), el("select", { id: "pk-count", onchange: e => f.count = +e.target.value }, [10, 20, 30, 40].map(n => el("option", { value: n, selected: n === f.count }, n))))),
+    el("label", { class: "field" }, el("span", {}, "Notes, topics or ideas"), el("textarea", { id: "pk-notes", maxlength: "4000", placeholder: "Paste notes, list topics, or describe what to test. Example: neutralisation, pH scale, making salts; include 2 calculation questions.", oninput: e => f.notes = e.target.value }, f.notes)),
+    el("label", { class: "field" }, el("span", {}, "Screenshots (optional)"),
+      el("input", { type: "file", id: "pk-shots", accept: "image/*", multiple: true, onchange: e => {
+        f.shots = []; shotsBox.replaceChildren();
+        for (const file of [...e.target.files].slice(0, 8)) { const u = URL.createObjectURL(file); f.shots.push(u); shotsBox.append(el("img", { src: u, alt: file.name })); }
+      } })),
+    shotsBox,
+    el("p", { class: "note" }, "Screenshots stay on your device. You'll attach them in the AI chat in the next step.")));
+  // 2 prompt
+  const copyBtn = el("button", { class: "btn", "data-label": "Copy prompt", onclick: e => copyText(packPrompt({ ...f, shots: f.shots.length }), e.currentTarget, "Copied! Now paste it into an AI chat") }, "Copy prompt");
+  steps.append(el("div", { class: "stepbox stack" }, el("h3", {}, "Ask an AI"),
+    el("p", { class: "muted", style: "margin:0" }, "Copy the prompt, open an AI chat, paste it, attach your screenshots, and send."),
+    el("div", { class: "row" }, copyBtn,
+      el("a", { class: "btn ghost small", href: "https://claude.ai/new", target: "_blank", rel: "noopener" }, "Open Claude"),
+      el("a", { class: "btn ghost small", href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT"),
+      el("a", { class: "btn ghost small", href: "https://gemini.google.com/app", target: "_blank", rel: "noopener" }, "Open Gemini")),
+    el("details", { class: "data" }, el("summary", {}, "See the prompt"), el("pre", { style: "white-space:pre-wrap;font-size:12px" }, packPrompt({ ...f, shots: f.shots.length })))));
+  // 3 paste + check
+  const result = el("div", { class: "stack" });
+  const doCheck = () => {
+    try { f.check = validatePack(extractJson(f.reply)); } catch (err) { f.check = { errors: [err.message.startsWith("I couldn't") ? err.message : "That isn't valid JSON. Ask the AI to reply with only the JSON object, then paste it again."], warnings: [] }; }
+    render();
+  };
+  steps.append(el("div", { class: "stepbox stack" }, el("h3", {}, "Paste the reply"),
+    el("textarea", { id: "pk-reply", placeholder: "Paste the AI's whole reply here", oninput: e => f.reply = e.target.value }, f.reply),
+    el("div", {}, el("button", { class: "btn teal", onclick: doCheck }, "Check pack")), result));
+  if (f.check) {
+    const c = f.check;
+    if (c.errors && c.errors.length) result.append(el("p", { class: "status lose" }, `${c.errors.length} problem${c.errors.length === 1 ? "" : "s"} to fix`), el("ul", { class: "errs" }, c.errors.slice(0, 12).map(e => el("li", {}, e))),
+      el("p", { class: "note" }, "Tip: paste these problems back into the AI chat and ask it to fix them."));
+    else if (c.pack) {
+      const pk = c.pack, shortN = pk.questions.filter(q => q.type === "short").length;
+      result.append(el("p", { class: "status win" }, `"${pk.name}" looks good: ${pk.questions.length} questions (${shortN} short answer) in ${pk.sections.reduce((n, s) => n + s.topics.length, 0)} topics.`));
+      if (c.warnings.length) result.append(el("ul", { class: "errs", style: "color:var(--gold)" }, c.warnings.slice(0, 8).map(w => el("li", {}, w))));
+      const pv = el("div", { class: "preview" }, el("p", { class: "eyebrow", style: "margin:0" }, "Preview: first question"));
+      const q0 = { ...pk.questions[0], bk: "preview" };
+      pv.append(questionCard(q0, [0, 1, 2, 3], { disabled: true, mine: null, reveal: true, neutral: true }));
+      result.append(pv);
+      const pubBox = el("input", { type: "checkbox", id: "pk-pub", checked: f.pub, onchange: e => f.pub = e.target.checked });
+      const saveBtn = el("button", { class: "btn", onclick: async e => {
+        const b = e.currentTarget; b.disabled = true; b.textContent = "Saving…";
+        try {
+          const id = await savePack(pk, f.pub);
+          S.packMsg = `Saved "${pk.name}". It's now in the subject menu: practise it, or host a room with it.`;
+          S.packForm = null; setSubject("pk:" + id); lsSet("p1d.subject", S.subject); render();
+        } catch (err) { b.disabled = false; b.textContent = "Save pack"; S.packMsg = err.message === "offline" ? "Saving packs needs the online connection." : "The pack couldn't be saved. The database rules may need the packs section from database.rules.json."; render(); }
+      } }, "Save pack");
+      result.append(el("label", { class: "row", style: "gap:8px" }, pubBox, el("span", {}, "List it in Community packs so anyone can use it")), el("div", {}, saveBtn));
+    }
+  }
+  left.append(steps);
+  // right column: my packs + community
+  const mine = el("section", { class: "sheet" }, el("p", { class: "eyebrow" }, "Your packs"));
+  const list = myPacks();
+  if (!list.length) mine.append(el("div", { class: "empty" }, "No packs yet. Make one, or add one from Community packs."));
+  else mine.append(el("ul", { class: "packlist" }, list.map(p => {
+    const info = bankInfo("pk:" + p.id), loaded = !!S.banks["pk:" + p.id];
+    const share = el("button", { class: "btn ghost small", "data-label": "Copy link", onclick: e => copyText(shareUrl(p.id), e.currentTarget, "Link copied") }, "Copy link");
+    return el("li", {},
+      el("div", { class: "pn" }, el("b", {}, loaded ? info.name : p.name), el("span", { class: "note" }, loaded ? `${S.banks["pk:" + p.id].questions.length} questions${info.owner === S.uid ? " · made by you" : ""}` : "Not loaded yet")),
+      el("button", { class: "btn small teal", disabled: !loaded, onclick: () => { setSubject("pk:" + p.id); lsSet("p1d.subject", S.subject); location.hash = "practice"; } }, "Practise"),
+      el("button", { class: "btn small", disabled: !loaded, onclick: () => { setSubject("pk:" + p.id); lsSet("p1d.subject", S.subject); location.hash = "duel"; } }, "Host"),
+      share,
+      el("button", { class: "btn ghost small", onclick: e => {
+        const b = e.currentTarget;
+        if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = info.owner === S.uid ? "Delete for everyone?" : "Remove?"; b.classList.add("danger"); return; }
+        deletePack(p.id).then(() => { S.packMsg = ""; render(); }).catch(() => { S.packMsg = "The pack couldn't be deleted right now."; render(); });
+      } }, info.owner === S.uid ? "Delete" : "Remove"));
+  })));
+  const comm = el("section", { class: "sheet" }, el("p", { class: "eyebrow" }, "Community packs"), el("div", { id: "community" }));
+  wrap.append(el("div", { class: "grid2" }, left, el("div", { class: "stack" }, mine, comm)));
+  queueMicrotask(renderCommunity);
+  return wrap;
+}
+function renderCommunity() {
+  const box = $("#community"); if (!box) return;
+  if (!S.db) { box.replaceChildren(el("div", { class: "empty" }, "Community packs need the online connection.")); return; }
+  if (!S.community) { box.replaceChildren(el("p", { class: "note blink" }, "Loading…")); return; }
+  const mineIds = new Set(myPacks().map(p => p.id));
+  const items = S.community.filter(p => !mineIds.has(p.id));
+  if (!items.length) { box.replaceChildren(el("div", { class: "empty" }, "No community packs yet. Make the first one!")); return; }
+  box.replaceChildren(el("ul", { class: "packlist" }, items.map(p => el("li", {},
+    el("div", { class: "pn" }, el("b", {}, cleanNick(p.name) ? String(p.name).slice(0, 60) : "Untitled pack"), el("span", { class: "note" }, `${+p.n || 0} questions · by ${cleanNick(p.nick) || "Crew"}`)),
+    el("button", { class: "btn small teal", onclick: () => addSharedPack(p.id) }, "Add")))));
+}
+
 /* ---------- routing ---------- */
-const VIEWS = ["duel", "daily", "practice", "progress", "leaderboard"];
+const VIEWS = ["duel", "daily", "practice", "progress", "leaderboard", "packs"];
 function route() {
   const h = location.hash.replace("#", "");
+  const shared = h.match(/^pack-([a-z0-9]{6,20})$/);
+  if (shared) { S.view = "packs"; addSharedPack(shared[1]); render(); return; }
   S.view = VIEWS.includes(h) ? h : "duel";
   if (S.view === "leaderboard") subscribeBoard();
   render();
@@ -1432,14 +1739,16 @@ async function boot() {
       S.banks[b.key] = { questions: data.questions, sections: data.sections, constants: data.constants || "" };
     });
     const sel = $("#subject");
-    for (const b of BANKS) sel.append(el("option", { value: b.key }, b.name));
+    refreshSubjects();
     sel.addEventListener("change", () => {
       setSubject(sel.value); lsSet("p1d.subject", S.subject);
       S.prac.topic = "all"; S.prac.qid = null;
       S.form.pool = S.form.mode === "bomb" ? "quick" : "all";
       if (S.view !== "duel" || !S.match) render();
     });
-    setSubject(lsGet("p1d.subject") || "h2");
+    for (const mp of myPacks()) loadPackFromCache(mp.id);
+    refreshSubjects();
+    setSubject(lsGet("p1d.subject") || BANKS[0].key);
   } catch {
     $("#view").replaceChildren(el("div", { class: "sheet" }, el("p", {}, "The question banks couldn't be loaded. Reload the page to try again.")));
     return;
@@ -1455,6 +1764,7 @@ async function boot() {
   S.dailyKey = "";   // resubscribe now that the database is available
   await initStore();
   initRoom(fb.room);
+  for (const mp of myPacks()) ensurePack(mp.id, true);
   if (S.view === "leaderboard") subscribeBoard();
   if (S.view === "daily") { S.daily = null; render(); }
 }

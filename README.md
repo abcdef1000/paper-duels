@@ -41,7 +41,15 @@ Whenever `database.rules.json` changes, paste it into Firebase console → Realt
 
 Firebase's free Spark plan allows 100 simultaneous connections and 10 GB/month of downloads. That's plenty for a class or a few CCAs. Each open tab is one connection.
 
+## Player-made packs
+
+The **Packs** tab lets anyone make a pack. They describe it and add notes or screenshots, copy the generated prompt into Claude, ChatGPT or Gemini, and paste the reply back. The site checks the pack, previews it and saves it to Firebase (`packMeta/`, `packData/`). Saved packs show up in the subject menu for practice, the Daily Test and hosting rooms. Players joining a room download its pack automatically. Packs can be shared with a `#pack-<id>` link or listed under Community packs. Player-made packs can't contain figures, and everything in them is shown as plain text.
+
 ## Editing questions
+
+Adding a whole subject is described in [QUESTION_FORMAT.md](QUESTION_FORMAT.md). It's written so another person or an AI agent can follow it and finish with `python3 tools/validate_packs.py` printing OK.
+
+
 
 Questions live in `docs/questions.json` (H2 Physics), `docs/psle-science.json` and `docs/psle-maths.json`. Ids must be unique across all three files. To add a subject, add a file and an entry to `BANKS` in `docs/index.html`. Questions marked `"quick": true` form the Quick-fire set (mental maths, constants given), which Bomb mode uses by default. A question may carry a `fig`: an inline SVG drawn with `currentColor` and the classes `ac`, `acf`, `guide`, `dim`, `thick`, `hollow` and `solid`, so it follows light and dark mode. Each question has a stable `id`, a `topic` (which must match one listed under `sections`), the stem `q`, four options `o`, the index `a` of the correct option (0–3), and an explanation `x`. Option order is shuffled in play, so explanations shouldn't refer to letters. Progress is keyed by `id`, so don't reuse an id for a different question.
 
