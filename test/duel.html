@@ -225,10 +225,24 @@ async function seatEveryone(hostOpens) {
     btn(A, "Rematch with this crew").click();
     await until(() => [B, C].every(f => S(f).match && !S(f).match.ended && S(f).match.g.id === S(A).match.g.id && S(f).match.g.ph === "lobby"), "crew follows rematch", 30000);
     await sleep(3500);   // past the captain's 2.5 s seat-cleanup window
+    out(`how to play on the waiting screen: ${[...D(B).querySelectorAll(".howto li b")].map(e => e.textContent).join(" / ")}`);
+    const annSeat = [...D(B).querySelectorAll(".seat")].find(se => se.querySelector(".sn").textContent === "Ann");
+    annSeat.querySelector(".av").click();
+    out(`tap Ann's sprite: flips ${annSeat.querySelector(".av").classList.contains("flip")}, chat box reads "${D(B).getElementById("chat-in").value}", focused ${D(B).activeElement === D(B).getElementById("chat-in")}`);
+    D(B).getElementById("chat-in").value = "";
     (await until(() => [...D(B).querySelectorAll(".chat .quick button")].find(x => x.textContent === "gg" && !x.disabled), "B quick chat")).click();
     D(C).getElementById("chat-in").value = "rematch time <b>bold?</b>"; D(C).querySelector(".chatform button").click();
     await until(() => D(A).querySelectorAll(".chatlog li:not(.empty)").length >= 2, "A sees chat", 15000);
     out(`chat on A: ${[...D(A).querySelectorAll(".chatlog li")].map(li => li.textContent).join(" | ")}; carried rematch chat id: ${S(A).match.g.chat === oldId}`);
+    const cid = S(A).chat.cid;
+    for (let i = 0; i < 40; i++) store[`chat/${cid}/z${String(i).padStart(2, "0")}`] = { by: "x", nick: "Spam", text: "message " + i, t: Date.now() + i };
+    notify();
+    await until(() => D(A).querySelectorAll(".chatlog li").length >= 40, "40 messages", 10000);
+    W(A).eval("renderMatch()"); await sleep(200);
+    const log = D(A).querySelector(".chatlog");
+    out(`chat with 40+ messages after a re-render: pinned to the newest ${log.scrollHeight - log.scrollTop - log.clientHeight < 2} (last visible: "${log.lastElementChild.textContent}")`);
+    await sleep(500); log.scrollTop = 150; log.dispatchEvent(new Event("scroll")); W(A).eval("renderMatch()"); await sleep(200);
+    out(`after scrolling up to read: kept the reader's place ${Math.abs(D(A).querySelector(".chatlog").scrollTop - 150) < 3}`);
     out(`rematch: new room ${S(A).match.g.id !== oldId ? "created" : "NOT created"}, seated ${S(A).match.g.pl.length}/3, B and C followed: ${[B, C].every(f => S(f).match.g.id === S(A).match.g.id)}`);
     btn(A, "Close room").click(); btn(A, "Close room for everyone?").click();
     await until(() => [B, C].every(f => !S(f).match), "crew back in lobby", 30000);

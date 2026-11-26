@@ -200,6 +200,17 @@ select, .field input { padding: 8px 10px; border: 0; background: var(--panel2); 
 .optfig .thick { stroke-width: 3; }
 .optfig text { fill: var(--muted); stroke: none; font: 13px var(--body); }
 .marks { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.av[role="button"] { cursor: pointer; }
+.av[role="button"]:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+.av.flip { animation: flip .55s steps(4) 1; }
+@keyframes flip { 0% { scale: 1 1; } 25% { scale: .3 1.08; } 50% { scale: -1 1; } 75% { scale: -.3 1.08; } 100% { scale: 1 1; } }
+:root[data-motion="off"] .av.flip { animation: none; }
+.howto { display: flex; flex-direction: column; gap: 12px; padding: 14px; background: var(--panel2); }
+.howto ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.howto li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px; background: var(--space); }
+.howto .ico.big { width: 32px; height: 32px; color: var(--accent); }
+.howto b { display: block; font: 400 11px/1.4 var(--display); margin-bottom: 4px; }
+.howto span { font-size: 16px; color: var(--muted); line-height: 1.3; }
 .pick { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 3px; background: var(--space); box-shadow: inset 0 0 0 2px var(--c); color: var(--c); font: 700 11px/1 var(--label); text-transform: uppercase; white-space: nowrap; }
 .pick svg { width: 20px; height: 20px; image-rendering: pixelated; }
 .chip { --c: var(--s0); font: 700 11px/1 var(--label); padding: 4px 6px; white-space: nowrap; background: var(--c); color: var(--space); }
@@ -1460,6 +1471,20 @@ function questionCard(q, perm, opts) {
     (S.banks[q.bk] && S.banks[q.bk].constants) ? el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.banks[q.bk].constants)) : null);
 }
 
+// tap a crew sprite: it flips, and the chat box opens with "@Name " ready to go
+function tapCrew(av, peer, name) {
+  S.flipAt = S.flipAt || {};
+  S.flipAt[peer] = performance.now();
+  av.classList.remove("flip"); void av.offsetWidth; av.classList.add("flip");
+  sfx("click");
+  const input = $("#chat-in");
+  if (!input || !name) return;
+  const tag = "@" + name.replace(/\s+/g, "") + " ";
+  if (!input.value.includes(tag.trim())) input.value = (input.value.trim() ? input.value.trim() + " " : "") + tag;
+  if (input.disabled) return;
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+}
 // who picked this: their helmet sprite and name
 const pickTag = p => el("span", { class: "pick", style: `--c:${seatColor(p.seat)}` }, helmet(p.seat), el("span", {}, p.label));
 function shortCard(q, opts) {
@@ -1520,7 +1545,11 @@ function seatEls(g, place) {
     else badge = el("span", { class: "sb hearts", "aria-label": `${g.lv ? g.lv[s] : g.lives} lives` }, g.lv ? "♥".repeat(Math.max(0, g.lv[s])) + "♡".repeat(Math.max(0, g.lives - g.lv[s])) : "♥".repeat(g.lives));
     const sprite = helmet(s);
     if (live) sprite.style.animationDelay = `${(-phase - s * 0.15).toFixed(2)}s`;
-    const av = el("div", { class: "av", style: `--c:${seatColor(s)}`, title: seatName(g, s) }, sprite, mark);
+    const flipping = S.flipAt && S.flipAt[peer] && performance.now() - S.flipAt[peer] < 600;
+    const av = el("div", { class: "av" + (flipping ? " flip" : ""), style: `--c:${seatColor(s)}`, title: isMe ? "You" : `Message ${seatName(g, s)}`,
+      role: "button", tabindex: "0", "aria-label": isMe ? "You" : `Mention ${seatName(g, s)} in chat`,
+      onclick: e => tapCrew(e.currentTarget, peer, isMe ? null : seatName(g, s)),
+      onkeydown: e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tapCrew(e.currentTarget, peer, isMe ? null : seatName(g, s)); } } }, sprite, mark);
     out.push(el("div", {
       class: "seat" + (isMe ? " me" : "") + (holder ? " holder" : "") + (out_ ? " out" : "") + (present ? "" : " gone"),
       style: place(ang)
@@ -1580,18 +1609,23 @@ function chatFor(g) {
   const quick = el("div", { class: "row quick" }, QUICK_CHAT.map(t => el("button", { type: "button", class: "btn ghost small", onclick: () => sendChat(t) }, t)));
   const form = el("form", { class: "chatform", onsubmit: e => { e.preventDefault(); sendChat(input.value); } }, input, sendBtn);
   const box = el("section", { class: "chat", "aria-label": "Room chat" }, el("p", { class: "eyebrow", style: "margin:0" }, "Room chat"), list, note, form, quick);
-  const c = S.chat = { cid, el: box, list, input, note, sendBtn, quick, seen: new Set(), lastSent: 0, paused: false, first: true };
+  const c = S.chat = { cid, el: box, list, input, note, sendBtn, quick, seen: new Set(), lastSent: 0, paused: false, first: true, stick: true };
+  // stay pinned to the newest message unless the reader has scrolled up to look at older ones
+  list.addEventListener("scroll", () => {
+    if (!list.isConnected || performance.now() - (c.attachAt || 0) < 400) return;   // ignore the jump to the top that re-attaching causes
+    c.stick = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+    c.savedTop = list.scrollTop;
+  });
   list.append(el("li", { class: "empty note" }, "No messages yet. Say hi!"));
   if (!S.db) { note.textContent = "Chat needs the online connection."; input.disabled = sendBtn.disabled = true; return c; }
   c.unsub = S.db.collection("chat/" + cid).orderBy("t").limit(60).onSnapshot(snap => {
     const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => typeof m.text === "string" && m.text.trim()).sort((a, b) => (+a.t || 0) - (+b.t || 0));
-    const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
     let fresh = false;
     list.replaceChildren(...(msgs.length ? msgs.map(m => {
-      if (!c.seen.has(m.id)) { c.seen.add(m.id); if (!c.first && m.by !== S.uid) fresh = true; }
+      if (!c.seen.has(m.id)) { c.seen.add(m.id); if (!c.first && m.by !== S.uid) fresh = true; if (m.by === S.uid) c.stick = true; }
       return el("li", { class: m.by === S.uid ? "mine" : "", style: `--c:${seatColor(hash(String(m.by || "")) % 8)}` }, el("b", {}, cleanNick(m.nick) || "Crew"), String(m.text).replace(BAD_CHARS, " ").slice(0, 200));
     }) : [el("li", { class: "empty note" }, "No messages yet. Say hi!")]));
-    if (nearBottom || c.first) list.scrollTop = list.scrollHeight;
+    if (c.stick || c.first) list.scrollTop = list.scrollHeight;
     if (fresh) sfx("chat");
     c.first = false;
   }, () => { note.textContent = "Chat couldn't load. The database rules may need the chat section from database.rules.json."; });
@@ -1604,6 +1638,10 @@ function syncChat(g) {
   c.input.disabled = c.sendBtn.disabled = off;
   c.quick.querySelectorAll("button").forEach(b => { b.disabled = off; });
   if (S.db && c.note.textContent === "Chat pauses while a question is up.") c.note.textContent = "";
+  // re-attaching the box (every re-render) resets its scroll to the top: put it back on the newest message
+  c.attachAt = performance.now();
+  const pin = () => { if (!c.list.isConnected) return; c.list.scrollTop = c.stick ? c.list.scrollHeight : (c.savedTop || 0); };
+  requestAnimationFrame(pin); setTimeout(pin, 60);
   return c.el;
 }
 function sendChat(text) {
@@ -1613,6 +1651,7 @@ function sendChat(text) {
   const now = Date.now();
   if (now - c.lastSent < 1000) { c.note.textContent = "Slow down a little."; return; }
   c.lastSent = now;
+  c.stick = true;
   const p = S.db.push("chat/" + c.cid, { by: S.uid, nick: S.nick, text: t, t: now });
   if (p && p.catch) p.catch(() => { if (S.chat) S.chat.note.textContent = "Your message couldn't be sent."; });
   c.input.value = "";
@@ -1641,6 +1680,7 @@ function matchView() {
       el("p", { class: "muted" }, g.code ? `Share code ${g.code} or the invite link. Your ship is also docked in the bay. Up to 8 crew.` : "Your room is listed in the docking bay. Anyone aboard can join, up to 8 crew."),
       el("div", {}, el("button", { class: "btn", onclick: startGame, disabled: g.pl.length < 2 }, g.pl.length < 2 ? "Need at least 2 players" : `Start with ${g.pl.length} players`)));
     else panel.append(el("p", { class: "status blink" }, `Waiting for ${seatName(g, 0)} to launch…`), el("p", { class: "muted" }, `${g.pl.length} of ${MAX_PLAYERS} seats taken.`));
+    panel.append(howToPlay(g));
     return box;
   }
   if (g.ph === "cd") {
@@ -1706,6 +1746,25 @@ function raceTrack(g) {
       el("span", { class: "ln" }, s === me ? "You" : seatName(g, s)),
       el("div", { class: "road" }, Object.assign(icon("ship", { c: seatColor(s) }), { style: `left:calc(15px + (100% - 30px) * ${Math.max(0, Math.min(1, g.sc[s] / n)).toFixed(3)})` })),
       icon("flag"))));
+}
+function howToPlay(g) {
+  const step = (ico, title, text) => el("li", {}, ico, el("div", {}, el("b", {}, title), el("span", {}, text)));
+  const race = g.mode === "race";
+  const steps = race ? [
+    step(icon("flag", { cls: "big" }), "Same question for everyone", "Pick an answer, or type one for short-answer questions."),
+    step(icon("trophy", { cls: "big", c: "var(--gold)" }), "Fastest right answer scores", "Speed is timed on your own screen, so a slow connection doesn't cost you."),
+    step(icon("clock", { cls: "big" }), "Then the clock starts", "First answer right: everyone else has 8 s (red). Wrong: 15 s (yellow)."),
+    step(icon("heart", { cls: "big", c: "var(--bad)" }), "Don't just guess", "Every second wrong answer costs a point."),
+  ] : [
+    step(icon("core", { cls: "big", c: "var(--core)", c2: "var(--gold)" }), "Hold the core, answer the question", `Only the holder answers. The fuse is ${g.lim} s.`),
+    step(icon("rocket", { cls: "big" }), "Right answer passes it on", "The core moves to the next crew member round the table."),
+    step(icon("heart", { cls: "big", c: "var(--bad)" }), "Wrong or too slow: BOOM", `You lose a life. Everyone starts with ${g.lives}.`),
+    step(icon("trophy", { cls: "big", c: "var(--gold)" }), "Last one standing wins", "Out of lives? Stay and watch, or chat."),
+  ];
+  return el("section", { class: "howto", "aria-label": "How to play" },
+    el("p", { class: "eyebrow", style: "margin:0" }, `How to play ${modeName(g.mode)}`),
+    el("ol", {}, steps),
+    el("p", { class: "note", style: "margin:0" }, "Tap a crew member to say hi in chat."));
 }
 function endView() {
   const m = S.match, g = m.g, me = mySeat();
