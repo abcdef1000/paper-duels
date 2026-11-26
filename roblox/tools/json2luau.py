@@ -6,7 +6,8 @@ import json, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 DOCS = os.path.join(HERE, "..", "..", "docs")
 OUT = os.path.join(HERE, "..", "src", "server", "Banks.luau")
-BANKS = [("h2", "questions.json", "H2 Physics"), ("sci", "psle-science.json", "PSLE Science"), ("math", "psle-maths.json", "PSLE Maths")]
+# every subject registered in docs/packs.json
+BANKS = [(p["key"], p["file"], p["name"]) for p in json.load(open(os.path.join(DOCS, "packs.json"), encoding="utf-8"))]
 
 def s(v):
     return '"' + v.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n") + '"'

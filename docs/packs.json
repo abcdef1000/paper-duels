@@ -1,5 +1,8 @@
 [
   { "key": "h2", "file": "questions.json", "name": "H2 Physics", "tag": "Orbit Station · H2 Physics 9478 · Paper 1 style" },
   { "key": "sci", "file": "psle-science.json", "name": "PSLE Science", "tag": "Orbit Station · PSLE Science · Booklet A style" },
-  { "key": "math", "file": "psle-maths.json", "name": "PSLE Maths", "tag": "Orbit Station · PSLE Maths · Paper 1 style" }
+  { "key": "math", "file": "psle-maths.json", "name": "PSLE Maths", "tag": "Orbit Station · PSLE Maths · Paper 1 style" },
+  { "key": "chem", "file": "h2-chemistry.json", "name": "H2 Chemistry", "tag": "Orbit Station · H2 Chemistry 9476 · Paper 1 style" },
+  { "key": "bio", "file": "h2-biology.json", "name": "H2 Biology", "tag": "Orbit Station · H2 Biology 9477 · Paper 1 style" },
+  { "key": "olymp", "file": "maths-olympiad.json", "name": "Maths Olympiad", "tag": "Orbit Station · Maths Olympiad · SMO Junior & Senior style" }
 ]
