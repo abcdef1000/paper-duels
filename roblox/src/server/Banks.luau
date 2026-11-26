@@ -2,7 +2,7 @@
 -- Lives in ServerScriptService so clients can't read the answers.
 return {
 	order = { "h2", "sci", "math", "chem", "bio", "olymp", "o-phys", "o-chem", "o-bio" },
-	h2 = {
+	["h2"] = {
 		name = "H2 Physics",
 		constants = "g = 9.81 m s⁻², e = 1.60 × 10⁻¹⁹ C, mₑ = 9.11 × 10⁻³¹ kg, h = 6.63 × 10⁻³⁴ J s, c = 3.00 × 10⁸ m s⁻¹, R = 8.31 J K⁻¹ mol⁻¹, 1 u = 931.5 MeV/c²",
 		questions = {
@@ -83,7 +83,7 @@ return {
 			{ id = "PRE-15", topic = "Nuclear Physics", quick = false, q = "A detector near a radioactive source records 800 counts per minute. Three half-lives later it records 135 counts per minute. What is the background count rate?", o = { "35 counts min⁻¹", "40 counts min⁻¹", "70 counts min⁻¹", "100 counts min⁻¹" }, a = 2, x = "Let the background be b. The source part falls by 2³ = 8: (800 − b)/8 + b = 135, so 7b = 280 and b = 40 counts min⁻¹. (35 comes from forgetting that 800 includes background.)" },
 		},
 	},
-	sci = {
+	["sci"] = {
 		name = "PSLE Science",
 		constants = "",
 		questions = {
@@ -132,7 +132,7 @@ return {
 			{ id = "PS-ENV-04", topic = "Environment", quick = true, q = "What is the role of decomposers such as fungi and bacteria?", o = { "They break down dead matter and return nutrients to the soil.", "They make food using sunlight.", "They eat only living plants.", "They pollinate flowers." }, a = 1, x = "Decomposers break down dead plants and animals, returning nutrients to the soil for plants to use." },
 		},
 	},
-	math = {
+	["math"] = {
 		name = "PSLE Maths",
 		constants = "",
 		questions = {
@@ -170,7 +170,7 @@ return {
 			{ id = "PM-AV-02", topic = "Average", quick = true, q = "The average of 4 numbers is 25. When a fifth number is added, the average becomes 28. What is the fifth number?", o = { "3", "28", "33", "40" }, a = 4, x = "The total goes from 4 × 25 = 100 to 5 × 28 = 140, so the fifth number is 40." },
 		},
 	},
-	chem = {
+	["chem"] = {
 		name = "H2 Chemistry",
 		constants = "Avogadro constant L = 6.02 × 10²³ mol⁻¹ · Faraday constant F = 9.65 × 10⁴ C mol⁻¹ · Gas constant R = 8.31 J K⁻¹ mol⁻¹ · Molar volume of gas at r.t.p. = 24.0 dm³ mol⁻¹ · Kw = 1.00 × 10⁻¹⁴ mol² dm⁻⁶ at 298 K · Specific heat capacity of water = 4.18 J g⁻¹ K⁻¹ · 0 °C = 273 K",
 		questions = {
@@ -274,7 +274,7 @@ return {
 			{ id = "HC-NIT-06", topic = "Nitrogen Compounds", quick = false, q = "How many different tripeptides can be made that each contain one glycine, one alanine and one serine residue?", o = { "6", "3", "9", "27" }, a = 1, x = "A peptide has a direction (N-terminus to C-terminus), so each order is a different molecule: 3 × 2 × 1 = 6. 27 would allow amino acids to repeat." },
 		},
 	},
-	bio = {
+	["bio"] = {
 		name = "H2 Biology",
 		constants = "",
 		questions = {
@@ -376,7 +376,7 @@ return {
 			{ id = "HB-CLI-06", topic = "Climate Change", quick = false, q = "Why does rising temperature reduce net photosynthesis in many C3 plants?", o = { "RuBisCO fixes O₂ instead of CO₂ more often as temperature rises, increasing photorespiration.", "Chlorophyll is denatured at temperatures just above 25 °C.", "Higher temperatures stop the light-dependent reactions.", "Stomata stay fully open, so the plant takes in too much CO₂." }, a = 1, x = "As temperature rises, CO₂ becomes less soluble relative to O₂ and RuBisCO's oxygenase activity increases. Photorespiration wastes energy and releases fixed carbon as CO₂, lowering net carbon gain." },
 		},
 	},
-	olymp = {
+	["olymp"] = {
 		name = "Maths Olympiad",
 		constants = "",
 		questions = {
@@ -395,7 +395,7 @@ return {
 			{ id = "MO-TRI-08", topic = "Triangles and Polygons", quick = false, q = "In triangle ABC, D is on AB and E is on AC with DE parallel to BC and AD : DB = 2 : 3. What is the ratio of the area of triangle ADE to the area of quadrilateral DBCE?", o = { "4 : 21", "4 : 25", "2 : 3", "4 : 9" }, a = 1, x = "ADE is similar to ABC with scale factor AD/AB = 2/5, so its area is 4/25 of ABC. The quadrilateral is the remaining 21/25, giving 4 : 21. 4 : 25 compares ADE with the whole triangle." },
 		},
 	},
-	o-phys = {
+	["o-phys"] = {
 		name = "O-Level Physics",
 		constants = "g = 10 N kg⁻¹ · Speed of light in vacuum = 3.0 × 10⁸ m s⁻¹ · Specific heat capacity of water = 4200 J kg⁻¹ °C⁻¹ · Density of water = 1000 kg m⁻³",
 		questions = {
@@ -421,7 +421,7 @@ return {
 			{ id = "OP-EMG-02", topic = "Electromagnetism", quick = false, q = "An ideal transformer has 1200 turns on its primary coil, which is connected to the 240 V mains. Its secondary lights a 12 V, 24 W lamp at normal brightness. How many turns are on the secondary coil, and what is the current in the primary coil?", o = { "60 turns and 0.10 A", "60 turns and 2.0 A", "24 000 turns and 0.10 A", "60 turns and 0.050 A" }, a = 1, x = "Ns = 1200 × 12/240 = 60 turns. For an ideal transformer, power in = power out = 24 W, so Ip = 24/240 = 0.10 A. 2.0 A is the secondary current." },
 		},
 	},
-	o-chem = {
+	["o-chem"] = {
 		name = "O-Level Chemistry",
 		constants = "Relative atomic masses: H 1, C 12, O 16, Na 23, Mg 24, S 32, Cl 35.5, Ca 40 · Molar volume of gas at r.t.p. = 24 dm³",
 		questions = {
@@ -447,7 +447,7 @@ return {
 			{ id = "OC-ORG-02", topic = "Organic Chemistry", quick = false, q = "Glucose is fermented: C₆H₁₂O₆ → 2C₂H₅OH + 2CO₂. What is the maximum mass of ethanol that can be made from 18 g of glucose?", o = { "4.6 g", "8.8 g", "9.2 g", "18 g" }, a = 3, x = "Mr of glucose = 180, so 18 g is 0.10 mol. This gives 0.20 mol ethanol (Mr 46): 0.20 × 46 = 9.2 g. 8.8 g is the mass of CO₂; 4.6 g forgets the 2 in the equation." },
 		},
 	},
-	o-bio = {
+	["o-bio"] = {
 		name = "O-Level Biology",
 		constants = "",
 		questions = {
