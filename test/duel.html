@@ -149,6 +149,27 @@ async function seatEveryone(hostOpens) {
     const gb = S(A).match.g;
     out(`  winner ${gb.nm[gb.win]} | A sees "${D(A).querySelector(".status").textContent}" | B sees "${D(B).querySelector(".status").textContent}"`);
     out(`  records A ${rec(A)} · B ${rec(B)} · C ${rec(C)}`);
+    for (const f of [A, B, C]) btn(f, "Back to lobby").click();
+
+    /* ---------- short-answer race round + answer matching ---------- */
+    await until(() => btn(A, "Open room"), "A lobby again");
+    S(A).form.mode = "race"; S(A).form.n = 5;
+    btn(A, "Open room").click();
+    for (const f of [B, C]) { (await until(() => btn(f, "Join"), "join")).click(); await until(() => S(f).match, "seated"); }
+    await until(() => S(A).match.g.pl.length === 3, "3 seated");
+    W(A).eval('setG({ qs: ["KIN-05"], n: 1 })');
+    (await until(() => btn(A, "Start with 3 players"), "start")).click();
+    await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && D(f).getElementById("sa-in")), "short question shown");
+    const type = (f, v) => { D(f).getElementById("sa-in").value = v; btn(f, "Submit").click(); };
+    type(C, "30"); await sleep(120); type(B, "25 m"); await sleep(120); type(A, "25");
+    await until(() => S(A).match.g.ph === "r", "short reveal", 100000);
+    const gs = S(A).match.g;
+    out(`short race: C "30", B "25 m", A "25" -> winner ${gs.nm[gs.res.w]}, picks ${JSON.stringify(gs.res.c)}`);
+    const chk = (q, r) => W(A).eval("isCorrect")(q, r);
+    const numQ = { type: "short", num: { value: 2.4, tol: 0.05, unit: "V" } }, txtQ = { type: "short", answers: ["Hess's law"] }, o2 = { type: "short", answers: ["oxygen", "O2"] };
+    const cases = [[numQ, "2.4 V", true], [numQ, "2.40", true], [numQ, "2.5", false], [numQ, "", false], [txtQ, "hess’s LAW.", true], [txtQ, "Boyle's law", false], [o2, "O₂", true], [{ a: 2 }, 2, true], [{ a: 2 }, 1, false]];
+    const bad = cases.filter(([q, r, want]) => chk(q, r) !== want);
+    out(`answer matching: ${cases.length - bad.length}/${cases.length} cases right` + (bad.length ? " FAILED " + JSON.stringify(bad) : ""));
     out("players docs: " + Object.keys(store).filter(k => k.startsWith("players/")).length);
     out("DONE");
   } catch (e) { out("FAIL: " + e.message); }

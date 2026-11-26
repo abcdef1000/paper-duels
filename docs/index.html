@@ -198,6 +198,13 @@ details.data summary { cursor: pointer; font: 400 12px/1 var(--label); text-tran
 .timer { height: 12px; background: var(--panel2); }
 .timer i { display: block; height: 100%; width: 100%; background: repeating-linear-gradient(90deg, var(--core) 0 10px, transparent 10px 12px); transition: width .25s steps(2); }
 
+.saform { display: flex; flex-wrap: wrap; gap: 10px; }
+.sa { flex: 1; min-width: 12em; font-size: 20px; padding: 10px 12px; border: 0; background: var(--panel2); box-shadow: inset 0 -4px 0 var(--accent); }
+.sa:disabled { opacity: .85; }
+.sapicks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.sapicks li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--panel2); }
+.sapicks li.ok b { color: var(--good); } .sapicks li.no b { color: var(--bad); }
+
 /* figures (inline SVG from the question banks) */
 .fig { color: var(--ink); margin: 0; padding: 12px; background: var(--panel2); align-self: flex-start; width: 100%; max-width: 440px; }
 .fig svg { display: block; width: 100%; height: auto; }
@@ -378,12 +385,8 @@ function coreSprite() {
 }
 
 /* ---------- question banks ---------- */
-const BANKS = [
-  { key: "h2", file: "questions.json", name: "H2 Physics", tag: "Orbit Station · H2 Physics 9478 · Paper 1 style" },
-  { key: "sci", file: "psle-science.json", name: "PSLE Science", tag: "Orbit Station · PSLE Science · Booklet A style" },
-  { key: "math", file: "psle-maths.json", name: "PSLE Maths", tag: "Orbit Station · PSLE Maths · Paper 1 style" },
-];
-const bankInfo = k => BANKS.find(b => b.key === k) || BANKS[0];
+let BANKS = [];   // loaded from packs.json; player-made packs are appended with key "pk:<id>"
+const bankInfo = k => BANKS.find(b => b.key === k) || { key: k, name: "Unknown pack", tag: "Orbit Station" };
 
 /* ---------- state ---------- */
 const S = {
@@ -405,13 +408,24 @@ const MAX_PLAYERS = 8;
 const P = { q: {}, w: 0, l: 0, d: 0 };
 
 const Q = id => S.byId[id];
+const isShort = q => !!q && q.type === "short";
+const normAns = s => String(s == null ? "" : s).normalize("NFKC").toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ").trim().replace(/^[\s.,;:!?"]+|[\s.,;:!?"]+$/g, "");
+function firstNumber(s) { const m = String(s).replace(/,/g, "").replace(/−/g, "-").match(/[-+]?\d*\.?\d+(?:e[-+]?\d+)?/i); return m ? parseFloat(m[0]) : NaN; }
+function isCorrect(q, resp) {
+  if (!q) return false;
+  if (!isShort(q)) return resp === q.a;
+  if (typeof resp !== "string" || !resp.trim()) return false;
+  if (q.num && Number.isFinite(+q.num.value)) { const v = firstNumber(resp); if (Number.isFinite(v) && Math.abs(v - q.num.value) <= (+q.num.tol || 0) + 1e-9) return true; }
+  return (q.answers || []).some(a => normAns(a) === normAns(resp));
+}
+const shownAnswer = q => isShort(q) ? ((q.answers && q.answers[0]) || (q.num ? `${q.num.value}${q.num.unit ? " " + q.num.unit : ""}` : "")) : q.o[q.a];
 const masteredIn = qs => qs.reduce((n, q) => n + (P.q[q.id]?.last === 1 ? 1 : 0), 0);
 const seenIn = qs => qs.reduce((n, q) => n + (P.q[q.id] ? 1 : 0), 0);
 const allQs = () => Object.values(S.banks).flatMap(b => b.questions);
 const masteredCount = () => masteredIn(S.bank);
 const seenCount = () => seenIn(S.bank);
 function setSubject(k) {
-  const b = S.banks[k] ? k : "h2";
+  const b = S.banks[k] ? k : BANKS[0].key;
   S.subject = b; S.bank = S.banks[b].questions; S.sections = S.banks[b].sections; S.constants = S.banks[b].constants;
   $("#tagline").textContent = bankInfo(b).tag;
   $("#subject").value = b;
@@ -502,8 +516,12 @@ const mySeat = () => S.match ? S.match.g.pl.indexOf(S.myPeer) : -1;
 const seatName = (g, i) => cleanNick(g.nm && g.nm[i]) || "Crew";
 const modeName = m => m === "bomb" ? "Hot Core" : "Race";
 function validAns(a, g) {
-  return a && a.m === g.id && a.k === g.k && Number.isInteger(a.c) && a.c >= 0 && a.c < 4 && typeof a.rt === "number" && a.rt >= 0 ? a : null;
+  if (!a || a.m !== g.id || a.k !== g.k || typeof a.rt !== "number" || a.rt < 0) return null;
+  if (Number.isInteger(a.c) && a.c >= 0 && a.c < 4) return a;
+  if (typeof a.s === "string" && a.s.length > 0 && a.s.length <= 80) return a;
+  return null;
 }
+const respOf = a => a ? (typeof a.s === "string" ? a.s : a.c) : null;
 function seatAnswer(g, s) {
   if (g.pl[s] === S.myPeer && S.match) return validAns(S.match.my, g);
   return validAns(pp(peerOf(g.pl[s])).a, g);
@@ -645,9 +663,9 @@ function hostTick() {
   if (g.mode === "race") {
     if (active.filter(Boolean).length < 2) return setG({ ...patch, ph: "end", ab: 1 });
     if (g.ph === "q") {
-      const right = Q(qidOf(g)).a;
+      const qq = Q(qidOf(g));
       const ans = g.pl.map((_, s) => seatAnswer(g, s));
-      const ok = ans.map(a => !!a && a.c === right);
+      const ok = ans.map(a => !!a && isCorrect(qq, respOf(a)));
       if (ok.some(Boolean)) m.firstOk = m.firstOk || now;
       const allIn = ans.every((a, s) => a || !active[s]);
       const timeUp = now - m.phaseAt > g.lim * 1000 + 1500;
@@ -655,7 +673,7 @@ function hostTick() {
         let w = -1;
         ok.forEach((o, s) => { if (o && (w < 0 || ans[s].rt < ans[w].rt)) w = s; });
         const sc = g.sc.slice(); if (w >= 0) sc[w]++;
-        return setG({ ...patch, ph: "r", sc, res: { w, c: ans.map(a => a ? a.c : null), rt: ans.map(a => a ? a.rt : null) } });
+        return setG({ ...patch, ph: "r", sc, res: { w, c: ans.map(a => a ? respOf(a) : null), rt: ans.map(a => a ? a.rt : null) } });
       }
     } else if (g.ph === "r") {
       const key = g.id + ":" + g.k;
@@ -679,9 +697,9 @@ function hostTick() {
     const a = seatAnswer(g, s);
     const timeUp = now - m.phaseAt > g.lim * 1000 + 800;
     if (a || timeUp) {
-      const ok = !!a && a.c === Q(qidOf(g)).a;
+      const ok = !!a && isCorrect(Q(qidOf(g)), respOf(a));
       if (!ok) lv[s]--;
-      return setG({ ...patch, lv, ph: "r", res: { seat: s, c: a ? a.c : null, rt: a ? a.rt : null, ok, boom: !ok } });
+      return setG({ ...patch, lv, ph: "r", res: { seat: s, c: a ? respOf(a) : null, rt: a ? a.rt : null, ok, boom: !ok } });
     }
   } else if (g.ph === "r") {
     if (now - m.phaseAt > (g.res && g.res.ok ? 2200 : 3800)) {
@@ -708,7 +726,7 @@ function onGameState() {
   if (g.ph === "r" && !m.recorded.has(key)) {
     m.recorded.add(key);
     const qid = qidOf(g);
-    if (g.mode === "race") { const mine = validAns(m.my, g); if (mine) record(qid, mine.c === Q(qid).a); }
+    if (g.mode === "race") { const mine = validAns(m.my, g); if (mine) record(qid, isCorrect(Q(qid), respOf(mine))); }
     else if (g.res && g.res.seat === me && g.res.c != null) record(qid, !!g.res.ok);
   }
   if (g.ph === "end" && !m.ended) {
@@ -725,13 +743,13 @@ function onGameState() {
   }
   if (S.view === "duel") renderMatch();
 }
-function answer(orig) {
+function answer(resp) {
   const m = S.match, g = m.g, key = g.id + ":" + g.k;
   if (g.ph !== "q" || validAns(m.my, g)) return;
   if (g.mode === "bomb" && g.turn !== mySeat()) return;
   const rt = Math.round(performance.now() - (m.qStart[key] || performance.now()));
   if (rt > g.lim * 1000) return;
-  m.my = { m: g.id, k: g.k, c: orig, rt };
+  m.my = typeof resp === "string" ? { m: g.id, k: g.k, s: resp.slice(0, 80), rt } : { m: g.id, k: g.k, c: resp, rt };
   pushPresence({ a: m.my });
   renderMatch();
 }
@@ -821,7 +839,9 @@ function renderLobbyLists() {
 }
 
 function questionCard(q, perm, opts) {
-  // opts: { onPick(orig), disabled, mine (orig|null), reveal, picks: [{orig, label, seat}] }
+  // opts: { onPick(response), disabled, mine (option index | typed text | null), reveal, picks: [{orig, label, seat}] }
+  // A response is an option index for MCQ, or the typed text for a short-answer question.
+  if (isShort(q)) return shortCard(q, opts);
   const list = el("ol", { class: "opts" });
   perm.forEach((orig, k) => {
     const cls = ["opt"];
@@ -841,7 +861,26 @@ function questionCard(q, perm, opts) {
     el("p", { class: "stem" }, q.q),
     fig,
     list,
-    opts.reveal ? el("div", { class: "explain" + (opts.mine === q.a ? "" : " badx") }, el("p", {}, el("b", {}, "Answer " + LETTERS[perm.indexOf(q.a)] + ". "), q.x)) : null,
+    opts.reveal ? el("div", { class: "explain" + (isCorrect(q, opts.mine) ? "" : " badx") }, el("p", {}, el("b", {}, "Answer " + LETTERS[perm.indexOf(q.a)] + ". "), q.x)) : null,
+    (S.banks[q.bk] && S.banks[q.bk].constants) ? el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.banks[q.bk].constants)) : null);
+}
+
+function shortCard(q, opts) {
+  const answered = opts.mine != null && opts.mine !== "";
+  const input = el("input", { id: "sa-in", class: "sa", maxlength: "80", autocomplete: "off", spellcheck: "false", "aria-label": "Your answer",
+    placeholder: q.num && q.num.unit ? `Your answer, in ${q.num.unit}` : "Type your answer", disabled: opts.disabled || answered });
+  if (answered) input.value = String(opts.mine);
+  const form = el("form", { class: "saform", onsubmit: e => { e.preventDefault(); const v = input.value.trim(); if (v && opts.onPick && !input.disabled) opts.onPick(v.slice(0, 80)); } },
+    input, el("button", { class: "btn", type: "submit", disabled: opts.disabled || answered }, answered ? "Locked in" : "Submit"));
+  if (!input.disabled) queueMicrotask(() => { if (document.body.contains(input)) input.focus({ preventScroll: true }); });
+  const mineOk = answered && isCorrect(q, String(opts.mine));
+  const picks = opts.reveal && opts.picks && opts.picks.length ? el("ul", { class: "sapicks" }, opts.picks.map(p => el("li", { class: isCorrect(q, String(p.orig)) ? "ok" : "no" },
+    el("span", { class: "chip", style: `--c:${seatColor(p.seat)}` }, p.label), el("span", {}, String(p.orig)), el("b", {}, isCorrect(q, String(p.orig)) ? "✓" : "✗")))) : null;
+  return el("article", { class: "qcard" },
+    el("div", { class: "qhead" }, el("span", { class: "qid" }, q.id), el("span", { class: "qtopic" }, q.topic + " · short answer")),
+    el("p", { class: "stem" }, q.q),
+    form, picks,
+    opts.reveal ? el("div", { class: "explain" + (mineOk ? "" : " badx") }, el("p", {}, el("b", {}, `Answer: ${shownAnswer(q)}. `), q.x)) : null,
     (S.banks[q.bk] && S.banks[q.bk].constants) ? el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.banks[q.bk].constants)) : null);
 }
 
@@ -873,7 +912,7 @@ function tableView() {
     if (g.ph === "q" && g.mode === "race" && seatAnswer(g, s)) mark = el("span", { class: "mark lock", title: "Locked in" }, "•");
     if (g.ph === "r" && g.mode === "race" && g.res) {
       if (g.res.w === s) mark = el("span", { class: "mark ok", title: "Took the point" }, "✓");
-      else if (g.res.c[s] != null) mark = el("span", { class: "mark no", title: g.res.c[s] === Q(qidOf(g)).a ? "Right, but slower" : "Wrong" }, g.res.c[s] === Q(qidOf(g)).a ? "✓" : "✗");
+      else if (g.res.c[s] != null) { const rightSlow = isCorrect(Q(qidOf(g)), g.res.c[s]); mark = el("span", { class: "mark no", title: rightSlow ? "Right, but slower" : "Wrong" }, rightSlow ? "✓" : "✗"); }
     }
     if (g.ph === "r" && g.mode === "bomb" && g.res && g.res.seat === s) mark = el("span", { class: "mark " + (g.res.ok ? "ok" : "no") }, g.res.ok ? "✓" : "✗");
     let badge;
@@ -942,7 +981,7 @@ function matchView() {
   if (g.mode === "race") {
     if (g.ph === "q") {
       panel.append(el("div", { class: "timer" }, el("i", { id: "tbar" })));
-      panel.append(questionCard(q, perm, { onPick: answer, disabled: !!mine, mine: mine ? mine.c : null }));
+      panel.append(questionCard(q, perm, { onPick: answer, disabled: !!mine, mine: respOf(mine) }));
     } else {
       const res = g.res || { w: -1, c: [], rt: [] };
       const txt = res.w === me ? "You took the point." : res.w >= 0 ? `${seatName(g, res.w)} took the point.` : "Nobody scored.";
@@ -958,7 +997,7 @@ function matchView() {
     const holding = g.turn === me;
     if (g.ph === "q") {
       panel.append(el("p", { class: "status " + (holding ? "lose" : "") }, holding ? "You have the core. Answer before it blows!" : `${seatName(g, g.turn)} has the core.`));
-      panel.append(questionCard(q, perm, { onPick: answer, disabled: !holding || !!mine, mine: holding && mine ? mine.c : null }));
+      panel.append(questionCard(q, perm, { onPick: answer, disabled: !holding || !!mine, mine: holding ? respOf(mine) : null }));
     } else {
       const res = g.res || {};
       const who = res.seat === me ? "You" : seatName(g, res.seat);
@@ -1024,9 +1063,12 @@ const dayKey = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10
 const SPEED_WINDOW = d => 30 * d;
 function dailyPoints(d, ok, sec) { return ok ? Math.round(100 * d * (0.5 + 0.5 * Math.max(0, 1 - sec / SPEED_WINDOW(d)))) : 0; }
 function dailyQuestions(bk, day) {
+  // one question per tier; a pack missing a tier borrows the nearest one
   const qs = S.banks[bk].questions, out = [];
-  for (let d = 1; d <= 4; d++) {
-    const tier = qs.filter(q => q.d === d);
+  for (let d = 1; d <= 4 && out.length < qs.length; d++) {
+    const left = qs.filter(q => !out.includes(q.id));
+    const dist = q => Math.abs((q.d || 2) - d), best = Math.min(...left.map(dist));
+    const tier = left.filter(q => dist(q) === best);
     const r = rng(hash(`daily:${bk}:${day}:${d}`));
     out.push(tier[Math.floor(r() * tier.length)].id);
   }
@@ -1069,11 +1111,11 @@ function subscribeDaily(bk, day) {
 function startDaily() {
   const dl = S.daily; dl.phase = "q"; dl.idx = 0; dl.answers = []; dl.qStart = performance.now(); render();
 }
-function answerDaily(orig) {
+function answerDaily(resp) {
   const dl = S.daily; if (dl.phase !== "q") return;
   const q = Q(dl.qs[dl.idx]), sec = (performance.now() - dl.qStart) / 1000;
-  const ok = orig === q.a, pts = dailyPoints(q.d, ok, sec);
-  dl.answers.push({ c: orig, ok, sec: Math.round(sec * 10) / 10, pts });
+  const ok = isCorrect(q, resp), pts = dailyPoints(q.d || 2, ok, sec);
+  dl.answers.push({ c: resp, ok, sec: Math.round(sec * 10) / 10, pts });
   record(q.id, ok);
   dl.phase = "fb"; render();
 }
@@ -1273,7 +1315,7 @@ function practiceView() {
     card.append(el("div", { class: "dq-meta" }, tierPips(q.d || 1)));
     card.append(questionCard(q, pr.perm, {
       disabled: done, mine: pr.picked, reveal: done,
-      onPick: orig => { if (pr.picked !== null) return; pr.picked = orig; record(q.id, orig === q.a); pushPresence({ mast: masteredIn(allQs()) }); render(); }
+      onPick: resp => { if (pr.picked !== null) return; pr.picked = resp; record(q.id, isCorrect(q, resp)); pushPresence({ mast: masteredIn(allQs()) }); render(); }
     }));
     const st = P.q[q.id];
     card.append(el("div", { class: "row spread" },
@@ -1382,6 +1424,7 @@ async function boot() {
     setNick(v); S.named = true; try { sessionStorage.setItem("p1d.named", "1"); } catch {}
   });
   try {
+    BANKS = (await fetch("packs.json", { cache: "no-cache" }).then(r => r.json())).filter(b => b && b.key && b.file && b.name);
     const loaded = await Promise.all(BANKS.map(b => fetch(b.file, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(b.file); return r.json(); })));
     BANKS.forEach((b, i) => {
       const data = loaded[i];
