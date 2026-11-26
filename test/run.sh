@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Plays a full 5-question duel between two game instances in headless Chrome, using a fake Firebase.
+# Plays a 3-player Race game and a Bomb game in headless Chrome, using a fake Firebase.
 set -euo pipefail
 cd "$(dirname "$0")"
 rm -rf site && mkdir site
-cp ../docs/index.html ../docs/questions.json site/
+cp ../docs/index.html ../docs/*.json site/
 cat > site/firebase-config.js <<'EOF'
 window.FIREBASE_CONFIG = { apiKey: "test" };
 window.firebase = parent.makeFakeFirebase(window);

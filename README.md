@@ -1,11 +1,11 @@
 # Paper One Duel
 
-Party-style multiple-choice game on H2 Physics (9478) Paper 1-style questions, for 2–8 players around a round table, plus solo practice, per-question progress and a leaderboard.
+Party-style multiple-choice game for 2–8 players with three question banks: H2 Physics (9478) Paper 1 style, PSLE Science and PSLE Maths. Players sit around a round table. There is also solo practice, per-question progress and a leaderboard.
 
 - **Race:** everyone gets the same question. The first correct answer scores, and a wrong answer locks you out of that question.
 - **Bomb:** the holder must answer before the fuse runs out. Right passes the bomb on. Wrong or too slow loses a life. The last player standing wins.
 
-- `docs/`: the website GitHub Pages serves (`index.html`, `questions.json`, `firebase-config.js`).
+- `docs/`: the website GitHub Pages serves (`index.html`, `firebase-config.js`, and the banks `questions.json` (H2 Physics), `psle-science.json`, `psle-maths.json`).
 - `database.rules.json`: security rules to paste into Firebase.
 - `test/run.sh`: plays a 3-player Race game and a Bomb game in headless Chrome against a fake Firebase.
 - `claude-artifact/`: the claude.ai-hosted version of the same game.
@@ -38,7 +38,7 @@ Firebase's free Spark plan allows 100 simultaneous connections and 10 GB/month o
 
 ## Editing questions
 
-All questions live in `docs/questions.json`. Questions marked `"quick": true` form the Quick-fire set (mental maths, constants given), which Bomb mode uses by default. A question may carry a `fig`: an inline SVG drawn with `currentColor` and the classes `ac`, `acf`, `guide`, `dim`, `thick`, `hollow` and `solid`, so it follows light and dark mode. Each question has a stable `id`, a `topic` (which must match one listed under `sections`), the stem `q`, four options `o`, the index `a` of the correct option (0–3), and an explanation `x`. Option order is shuffled in play, so explanations shouldn't refer to letters. Progress is keyed by `id`, so don't reuse an id for a different question.
+Questions live in `docs/questions.json` (H2 Physics), `docs/psle-science.json` and `docs/psle-maths.json`. Ids must be unique across all three files. To add a subject, add a file and an entry to `BANKS` in `docs/index.html`. Questions marked `"quick": true` form the Quick-fire set (mental maths, constants given), which Bomb mode uses by default. A question may carry a `fig`: an inline SVG drawn with `currentColor` and the classes `ac`, `acf`, `guide`, `dim`, `thick`, `hollow` and `solid`, so it follows light and dark mode. Each question has a stable `id`, a `topic` (which must match one listed under `sections`), the stem `q`, four options `o`, the index `a` of the correct option (0–3), and an explanation `x`. Option order is shuffled in play, so explanations shouldn't refer to letters. Progress is keyed by `id`, so don't reuse an id for a different question.
 
 ## Testing
 

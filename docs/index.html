@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Paper One Duel</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cellipse cx=%2716%27 cy=%2716%27 rx=%2714%27 ry=%279.5%27 fill=%27%232A2F3B%27 stroke=%27%23C8336A%27 stroke-width=%273%27/%3E%3C/svg%3E">
-<meta name="description" content="Party-style H2 Physics (9478) multiple-choice game: race or pass the bomb with 2–8 players, plus practice and progress tracking.">
+<meta name="description" content="Party-style multiple-choice game for H2 Physics, PSLE Science and PSLE Maths: race or pass the bomb with 2–8 players, plus practice and progress tracking.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
@@ -66,10 +66,13 @@ button, input, select { font: inherit; color: inherit; }
 .who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .who label { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .who input { width: 11em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
-nav.tabs { display: flex; gap: 4px; padding-block: 12px; overflow-x: auto; }
+nav.tabs { display: flex; flex-wrap: wrap; gap: 4px 4px; padding-block: 12px; }
 nav.tabs a { padding: 7px 14px; border-radius: 999px; text-decoration: none; color: var(--muted); font-weight: 500; white-space: nowrap; }
 nav.tabs a[aria-current="page"] { background: var(--graphite); color: var(--on-graphite); }
 nav.tabs a:hover:not([aria-current]) { color: var(--ink); background: var(--sheet); }
+nav.tabs { align-items: center; }
+.subj { margin-left: auto; display: flex; align-items: center; gap: 8px; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.subj select { font: 600 14px/1.2 var(--body); letter-spacing: 0; text-transform: none; color: var(--ink); }
 
 .sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r); padding: 20px; min-width: 0; }
 .eyebrow { font: 500 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--drop); margin: 0 0 6px; }
@@ -254,7 +257,7 @@ tr.me td { background: var(--drop-soft); }
 <div class="wrap">
   <header class="mast">
     <div class="brand">
-      <small>H2 Physics 9478 · Paper 1 style</small>
+      <small id="tagline">H2 Physics 9478 · Paper 1 style</small>
       <h1>Paper One Duel</h1>
     </div>
     <div class="who">
@@ -268,6 +271,7 @@ tr.me td { background: var(--drop-soft); }
     <a href="#practice" data-v="practice">Practice</a>
     <a href="#progress" data-v="progress">Progress</a>
     <a href="#leaderboard" data-v="leaderboard">Leaderboard</a>
+    <label class="subj" for="subject">Subject <select id="subject"></select></label>
   </nav>
   <main id="view"><div class="sheet"><p class="muted">Loading the question bank…</p></div></main>
 </div>
@@ -305,9 +309,18 @@ const cleanNick = s => String(s || "").replace(BAD_CHARS, "").trim().slice(0, 20
 const initials = s => { const w = cleanNick(s).split(/\s+/).filter(Boolean); return ((w[0] || "?")[0] + (w[1] ? w[1][0] : (w[0] || "").slice(1, 2))).toUpperCase(); };
 const seatColor = i => `var(--s${i % 8})`;
 
+/* ---------- question banks ---------- */
+const BANKS = [
+  { key: "h2", file: "questions.json", name: "H2 Physics", tag: "H2 Physics 9478 · Paper 1 style" },
+  { key: "sci", file: "psle-science.json", name: "PSLE Science", tag: "PSLE Science · Booklet A style" },
+  { key: "math", file: "psle-maths.json", name: "PSLE Maths", tag: "PSLE Maths · Paper 1 style" },
+];
+const bankInfo = k => BANKS.find(b => b.key === k) || BANKS[0];
+
 /* ---------- state ---------- */
 const S = {
-  bank: [], byId: {}, sections: [], constants: "",
+  banks: {}, subject: "h2",
+  bank: [], byId: {}, sections: [], constants: "",   // bank/sections/constants follow the selected subject
   view: "duel",
   db: null, uid: null, room: null, roomState: "connecting",
   peers: [], myPeer: null, pres: {},
@@ -323,8 +336,17 @@ const MAX_PLAYERS = 8;
 const P = { q: {}, w: 0, l: 0, d: 0 };
 
 const Q = id => S.byId[id];
-const masteredCount = () => S.bank.reduce((n, q) => n + (P.q[q.id]?.last === 1 ? 1 : 0), 0);
-const seenCount = () => S.bank.reduce((n, q) => n + (P.q[q.id] ? 1 : 0), 0);
+const masteredIn = qs => qs.reduce((n, q) => n + (P.q[q.id]?.last === 1 ? 1 : 0), 0);
+const seenIn = qs => qs.reduce((n, q) => n + (P.q[q.id] ? 1 : 0), 0);
+const allQs = () => Object.values(S.banks).flatMap(b => b.questions);
+const masteredCount = () => masteredIn(S.bank);
+const seenCount = () => seenIn(S.bank);
+function setSubject(k) {
+  const b = S.banks[k] ? k : "h2";
+  S.subject = b; S.bank = S.banks[b].questions; S.sections = S.banks[b].sections; S.constants = S.banks[b].constants;
+  $("#tagline").textContent = bankInfo(b).tag;
+  $("#subject").value = b;
+}
 
 /* ---------- progress storage ---------- */
 let saveTimer = null, saveChain = Promise.resolve(), progRef = null, lastPlayerBody = "";
@@ -347,8 +369,9 @@ function flush() {
 }
 function writePlayer() {
   if (!S.db || !S.uid || S.storeMode !== "db") return;
-  if (!seenCount() && !(P.w + P.l + P.d)) return;   // stay off the board until you have played
-  const body = { nick: S.nick, mastered: masteredCount(), seen: seenCount(), total: S.bank.length, w: P.w, l: P.l, d: P.d };
+  if (!seenIn(allQs()) && !(P.w + P.l + P.d)) return;   // stay off the board until you have played
+  const body = { nick: S.nick, mastered: masteredIn(allQs()), seen: seenIn(allQs()), w: P.w, l: P.l, d: P.d };
+  for (const b of BANKS) if (S.banks[b.key]) body["m_" + b.key] = masteredIn(S.banks[b.key].questions);
   const key = JSON.stringify(body);
   if (key === lastPlayerBody) return;
   lastPlayerBody = key;
@@ -404,7 +427,7 @@ const pp = p => (p && p.presence) || {};
    Host presence carries g = { id, mode: "race"|"bomb", pl: [peer ids by seat], nm: [names], ph: "lobby"|"cd"|"q"|"r"|"end",
    k: question counter, qs: question ids, n: race length, lim: seconds, sc: race scores, lv: bomb lives, lives, turn: bomb holder seat,
    res: last result, win, ab }. Players publish their answer as a = { m: room id, k, c: option index, rt: ms }. */
-const validG = g => g && typeof g === "object" && typeof g.id === "string" && Array.isArray(g.pl) && Array.isArray(g.qs) && g.pl.length <= MAX_PLAYERS && ["race", "bomb"].includes(g.mode);
+const validG = g => g && typeof g === "object" && typeof g.id === "string" && Array.isArray(g.pl) && Array.isArray(g.qs) && g.qs.length > 0 && g.qs.every(id => S.byId[id]) && g.pl.length <= MAX_PLAYERS && ["race", "bomb"].includes(g.mode);
 const qidOf = g => g.qs[g.k % g.qs.length];
 const mySeat = () => S.match ? S.match.g.pl.indexOf(S.myPeer) : -1;
 const seatName = (g, i) => cleanNick(g.nm && g.nm[i]) || "Player";
@@ -422,6 +445,7 @@ function poolFor(key) {
   return s ? S.bank.filter(q => s.topics.includes(q.topic)) : S.bank;
 }
 const poolLabel = key => key === "all" ? "Whole syllabus" : key === "quick" ? "Quick-fire" : key;
+const roomSubject = g => bankInfo(typeof g.bk === "string" ? g.bk : "h2").name;
 
 function withName(then) {
   if (S.named) return then();
@@ -459,7 +483,7 @@ function openRoom() {
   const race = f.mode === "race";
   const g = { id: rid(8), mode: f.mode, pl: [S.myPeer], nm: [S.nick], ph: "lobby", k: 0,
     qs: race ? ids.slice(0, Math.min(f.n, ids.length)) : ids, n: race ? Math.min(f.n, ids.length) : 0,
-    lim: race ? RACE_LIM : f.fuse, lives: f.lives, pool: f.pool, sc: null, lv: null, turn: 0, res: null };
+    lim: race ? RACE_LIM : f.fuse, lives: f.lives, pool: f.pool, bk: S.subject, sc: null, lv: null, turn: 0, res: null };
   S.match = newMatch("host", g, S.myPeer);
   S.lobbyMsg = "";
   pushPresence({ st: "host", g, a: null, rd: null, tgt: null, jm: null, mast: masteredCount() });
@@ -674,7 +698,7 @@ function lobbyView() {
   if (S.lobbyMsg) wrap.append(el("div", { class: "banner" }, S.lobbyMsg));
   const f = S.form;
   const left = el("section", { class: "sheet stack" });
-  left.append(el("p", { class: "eyebrow", style: "margin:0" }, "Host a room · 2–8 players"));
+  left.append(el("p", { class: "eyebrow", style: "margin:0" }, `Host a room · ${bankInfo(S.subject).name} · 2–8 players`));
   if (S.joining) {
     left.append(el("h2", {}, "Joining…"), el("p", { class: "muted pulse" }, "Waiting for the host to seat you."),
       el("div", {}, el("button", { class: "btn ghost", onclick: () => failJoin("") }, "Cancel")));
@@ -719,7 +743,7 @@ function renderLobbyLists() {
     ul.append(el("li", {},
       el("div", { class: "who-col" },
         el("div", { class: "nm" }, el("span", { class: "tag" }, g.mode === "race" ? "Race" : "Bomb"), (cleanNick(pp(p).nick) || "Player") + "'s room", p.isMe ? " (your other tab)" : ""),
-        el("div", { class: "note" }, `${g.pl.length}/${MAX_PLAYERS} seated · ${detail} · ${poolLabel(typeof g.pool === "string" ? g.pool : "all")}`)),
+        el("div", { class: "note" }, `${roomSubject(g)} · ${g.pl.length}/${MAX_PLAYERS} seated · ${detail} · ${poolLabel(typeof g.pool === "string" ? g.pool : "all")}`)),
       el("button", { class: "btn small", onclick: () => withName(() => joinRoom(p)), disabled: full || !!S.joining }, full ? "Full" : "Join")));
   }
   box.replaceChildren(ul);
@@ -747,7 +771,7 @@ function questionCard(q, perm, opts) {
     fig,
     list,
     opts.reveal ? el("div", { class: "explain" + (opts.mine === q.a ? "" : " badx") }, el("p", {}, el("b", {}, "Answer " + LETTERS[perm.indexOf(q.a)] + ". "), q.x)) : null,
-    el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.constants)));
+    (S.banks[q.bk] && S.banks[q.bk].constants) ? el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.banks[q.bk].constants)) : null);
 }
 
 /* the round table */
@@ -812,7 +836,7 @@ function renderTable() {
 function matchView() {
   const m = S.match, g = m.g, me = mySeat(), host = m.role === "host";
   const box = el("section", { class: "sheet stack", id: "matchbox" });
-  const head = g.mode === "race" ? `Race · ${g.n} questions · ${poolLabel(g.pool || "all")}` : `Bomb · ${g.lives} ${g.lives === 1 ? "life" : "lives"} · ${g.lim} s fuse · ${poolLabel(g.pool || "all")}`;
+  const head = `${roomSubject(g)} · ` + (g.mode === "race" ? `Race · ${g.n} questions · ${poolLabel(g.pool || "all")}` : `Bomb · ${g.lives} ${g.lives === 1 ? "life" : "lives"} · ${g.lim} s fuse · ${poolLabel(g.pool || "all")}`);
   box.append(el("div", { class: "row spread" }, el("p", { class: "eyebrow", style: "margin:0" }, head),
     g.ph === "end" ? null : el("button", { class: "btn ghost small", id: "leave", onclick: e => {
       if (e.currentTarget.dataset.armed) return leaveMatch(host ? "You closed your room." : "");
@@ -982,11 +1006,11 @@ function progressView() {
     el("div", { class: "stat" }, el("b", {}, `${mast}/${S.bank.length}`), el("span", {}, "Mastered")),
     el("div", { class: "stat" }, el("b", {}, `${seen}`), el("span", {}, "Attempted")),
     el("div", { class: "stat" }, el("b", {}, n ? Math.round(100 * c / n) + "%" : "–"), el("span", {}, "Accuracy")),
-    el("div", { class: "stat" }, el("b", {}, `${P.w}–${P.l}–${P.d}`), el("span", {}, "Games W–L–D"))));
+    el("div", { class: "stat" }, el("b", {}, `${P.w}–${P.l}–${P.d}`), el("span", {}, "Games W–L–D, all subjects"))));
   const sheet = el("section", { class: "sheet" });
   sheet.append(
     el("p", { class: "eyebrow" }, "Answer sheet"),
-    el("h2", {}, "The question set, by topic"),
+    el("h2", {}, `${bankInfo(S.subject).name}, by topic`),
     el("div", { class: "legend" },
       el("span", {}, el("span", { class: "oval" }), "Not yet answered"),
       el("span", {}, el("span", { class: "oval ok" }), "Right last time"),
@@ -1034,19 +1058,20 @@ function boardView() {
   if (S.boardState === "loading") { sheet.append(el("p", { class: "muted" }, "Loading standings…")); return sheet; }
   if (S.boardState === "slow") sheet.append(el("div", { class: "banner" }, "The standings can't be reached right now. They'll appear when the connection returns."));
   if (S.boardState === "err") { sheet.append(el("div", { class: "empty" }, "The standings couldn't be loaded.")); return sheet; }
-  const rows = S.board.filter(r => Number.isFinite(+r.mastered)).sort((a, b) => (+b.mastered - +a.mastered) || ((+b.w || 0) - (+a.w || 0)));
+  const mf = r => { const v = r["m_" + S.subject]; return Number.isFinite(+v) ? +v : (S.subject === "h2" && Number.isFinite(+r.mastered) ? +r.mastered : 0); };
+  const rows = S.board.filter(r => Number.isFinite(+r.mastered)).sort((a, b) => (mf(b) - mf(a)) || ((+b.w || 0) - (+a.w || 0)));
   if (!rows.length) { sheet.append(el("div", { class: "empty" }, "Nobody is on the board yet. Answer a question or finish a game to get on it.")); return sheet; }
   const tbody = el("tbody");
   rows.forEach((r, i) => {
     tbody.append(el("tr", { class: r.id === S.uid ? "me" : null },
       el("td", { class: "num mono" }, i + 1), el("td", {}, cleanNick(r.nick) || "Player"),
-      el("td", { class: "num" }, `${+r.mastered || 0}/${S.bank.length}`),
+      el("td", { class: "num" }, `${mf(r)}/${S.bank.length}`),
       el("td", { class: "num" }, +r.w || 0), el("td", { class: "num" }, +r.l || 0), el("td", { class: "num" }, +r.d || 0)));
   });
   sheet.append(el("div", { class: "tablewrap" }, el("table", {},
-    el("thead", {}, el("tr", {}, el("th", { class: "num" }, "#"), el("th", {}, "Player"), el("th", { class: "num" }, "Mastered"), el("th", { class: "num" }, "W"), el("th", { class: "num" }, "L"), el("th", { class: "num" }, "D"))),
+    el("thead", {}, el("tr", {}, el("th", { class: "num" }, "#"), el("th", {}, "Player"), el("th", { class: "num" }, "Mastered · " + bankInfo(S.subject).name), el("th", { class: "num" }, "W"), el("th", { class: "num" }, "L"), el("th", { class: "num" }, "D"))),
     tbody)));
-  sheet.append(el("p", { class: "note", style: "margin-top:10px" }, "Mastered means the last answer to that question was right. W–L–D counts finished games: a win is sole first place in Race or last standing in Bomb."));
+  sheet.append(el("p", { class: "note", style: "margin-top:10px" }, "Switch subject at the top right to see each subject's standings. Mastered means the last answer to that question was right. W–L–D counts finished games: a win is sole first place in Race or last standing in Bomb."));
   return sheet;
 }
 
@@ -1070,10 +1095,21 @@ async function boot() {
     setNick(v); S.named = true; try { sessionStorage.setItem("p1d.named", "1"); } catch {}
   });
   try {
-    const res = await fetch("questions.json", { cache: "no-cache" });
-    const data = await res.json();
-    S.bank = data.questions; S.sections = data.sections; S.constants = data.constants;
-    for (const q of S.bank) S.byId[q.id] = q;
+    const loaded = await Promise.all(BANKS.map(b => fetch(b.file, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(b.file); return r.json(); })));
+    BANKS.forEach((b, i) => {
+      const data = loaded[i];
+      for (const q of data.questions) { q.bk = b.key; S.byId[q.id] = q; }
+      S.banks[b.key] = { questions: data.questions, sections: data.sections, constants: data.constants || "" };
+    });
+    const sel = $("#subject");
+    for (const b of BANKS) sel.append(el("option", { value: b.key }, b.name));
+    sel.addEventListener("change", () => {
+      setSubject(sel.value); lsSet("p1d.subject", S.subject);
+      S.prac.topic = "all"; S.prac.qid = null;
+      S.form.pool = S.form.mode === "bomb" ? "quick" : "all";
+      if (S.view === "leaderboard" || S.view === "progress" || S.view === "practice" || !S.match) render();
+    });
+    setSubject(lsGet("p1d.subject") || "h2");
   } catch {
     $("#view").replaceChildren(el("div", { class: "sheet" }, el("p", {}, "The question bank couldn't be loaded. Reload the page to try again.")));
     return;
