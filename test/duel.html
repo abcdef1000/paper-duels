@@ -79,7 +79,7 @@ setTimeout(() => { B.src = "site/index.html#duel"; }, 300);
 setTimeout(() => { C.src = "site/index.html#duel"; }, 600);
 const W = f => f.contentWindow, D = f => f.contentDocument;
 const S = f => W(f).eval("S");
-const btn = (f, text) => [...D(f).querySelectorAll("button")].find(b => b.textContent.trim() === text && !b.disabled);
+const btn = (f, text) => text === "Join" ? D(f).querySelector("#openlist button.port.docked:not(:disabled)") : [...D(f).querySelectorAll("button")].find(b => b.textContent.trim() === text && !b.disabled);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function until(fn, what, ms = 30000) {
   const t0 = Date.now();

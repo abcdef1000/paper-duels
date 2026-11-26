@@ -373,35 +373,44 @@ nav.tabs a { display: inline-flex; align-items: center; gap: 8px; }
 .launchbtn .ico { width: 22px; height: 22px; }
 .aboard { display: inline-flex; align-items: center; gap: 6px; font: 700 13px/1 var(--label); color: var(--muted); }
 .aboard svg { width: 18px; height: 18px; }
-.ports { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 14px; }
-.port { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 10px 12px; min-height: 196px; text-align: center; background: #0E1230; box-shadow: inset 0 0 0 3px var(--line); }
-.bayhead { align-self: stretch; height: 10px; margin: 0 -10px; background: repeating-linear-gradient(-45deg, var(--gold) 0 8px, #141414 8px 16px); }
-.pad { position: relative; width: 100%; height: 70px; display: grid; place-items: center; }
-.pad::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 4px; background: var(--line); }
-.pad .lights { position: absolute; left: 12%; right: 12%; bottom: 10px; display: flex; justify-content: space-between; }
-.pad .lights i { width: 6px; height: 6px; background: var(--accent); animation: blink 1.4s steps(2, start) infinite; }
-.pad .lights i:nth-child(2n) { animation-delay: .7s; }
-.port.docked .pad .lights i { background: var(--c); animation: none; opacity: .8; }
-.shipico { width: 88px !important; height: auto !important; filter: drop-shadow(0 0 6px var(--c)); animation: hover 1.6s steps(2) infinite; }
-@keyframes hover { 50% { transform: translateY(-4px); } }
-:root[data-motion="off"] .shipico, :root[data-motion="off"] .pad .lights i { animation: none; }
-.portinfo { display: flex; flex-direction: column; gap: 4px; min-width: 0; width: 100%; }
-.portinfo b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.portmeta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; justify-content: center; font-size: 13px; color: var(--muted); }
-.portmeta span { display: inline-flex; align-items: center; gap: 4px; }
-.seatlights { display: flex; gap: 3px; }
-.seatlights i { width: 8px; height: 8px; background: var(--line); }
+.ports { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-top: 14px; }
+.port { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 7px; padding: 0 12px 12px; min-height: 236px; border: 0; cursor: pointer;
+  color: var(--ink); text-align: left; font: inherit; background: #0E1230; box-shadow: inset 0 0 0 3px var(--line); transition: transform .12s steps(2); }
+.port:hover:not(:disabled), .port:focus-visible { transform: translateY(-3px); box-shadow: inset 0 0 0 3px var(--c, var(--accent)); }
+.port:active:not(:disabled) { transform: translateY(0); }
+.port:disabled { cursor: not-allowed; opacity: .6; }
+.bayhead { display: block; height: 10px; margin: 0 -12px 2px; background: repeating-linear-gradient(-45deg, var(--gold) 0 8px, #141414 8px 16px); }
+.porttop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.modebadge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 7px; font: 700 11px/1 var(--label); text-transform: uppercase; background: var(--space); color: var(--accent); }
+.modebadge.bomb { color: var(--core); }
+.shipcode { font: 400 11px/1 var(--display); color: var(--gold); letter-spacing: .12em; }
+.pad { display: grid; place-items: center; height: 54px; }
+.shipico { width: 92px !important; height: auto !important; animation: hover 1.8s steps(2) infinite; }
+@keyframes hover { 50% { transform: translateY(-3px); } }
+:root[data-motion="off"] .shipico { animation: none; }
+.portname { font-size: 19px; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pline { display: inline-flex; align-items: center; gap: 7px; font-size: 16px; color: var(--muted); min-width: 0; }
+.pline > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pstats { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.seatlights { display: flex; gap: 3px; margin-top: 2px; }
+.seatlights i { width: 10px; height: 8px; background: var(--line); }
 .seatlights i.on { background: var(--c); }
-.port.vacant { opacity: .7; justify-content: flex-start; }
+.joinlabel { margin-top: auto; align-self: stretch; text-align: center; padding: 8px; font: 700 13px/1 var(--label); text-transform: uppercase; color: var(--space); background: var(--accent);
+  box-shadow: inset -3px -3px 0 rgba(0,0,0,.25), inset 3px 3px 0 rgba(255,255,255,.2); }
+.port:disabled .joinlabel { background: var(--line); color: var(--muted); }
+.port.vacant { align-items: center; justify-content: flex-start; text-align: center; background: transparent; box-shadow: inset 0 0 0 3px var(--line); opacity: .75; }
+.port.vacant .bayhead { align-self: stretch; opacity: .6; }
+.port.vacant .pad { height: 110px; }
+.plusico { width: 34px !important; height: 34px !important; }
+.port.vacant:hover, .port.vacant:focus-visible { opacity: 1; box-shadow: inset 0 0 0 3px var(--core); }
+.port.vacant:hover .plusico rect, .port.vacant:focus-visible .plusico rect { fill: var(--core) !important; }
 .port.vacant .vac { font: 700 11px/1 var(--label); text-transform: uppercase; color: var(--muted); }
-
-/* room codes */
 .roomcode { display: inline-flex; align-items: center; gap: 8px; font: 400 12px/1 var(--label); text-transform: uppercase; color: var(--muted); }
 .roomcode b { font: 400 14px/1 var(--display); color: var(--gold); letter-spacing: .12em; padding: 6px 8px; background: var(--space); }
-.shipcode { font: 400 10px/1 var(--display); color: var(--gold); letter-spacing: .12em; }
 .codeform { display: flex; gap: 6px; }
-.codeform input { width: 6.2em; padding: 6px 8px; border: 0; background: var(--panel2); box-shadow: inset 0 -3px 0 var(--line); font: 400 13px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; }
+.codeform input { width: 6.4em; padding: 6px 8px; border: 0; background: var(--panel2); color: var(--ink); box-shadow: inset 0 -3px 0 var(--line); font: 400 13px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; }
 .codeform input::placeholder { color: var(--muted); }
+.launch.glow { box-shadow: 0 -4px 0 0 var(--core), 0 4px 0 0 var(--core), -4px 0 0 0 var(--core), 4px 0 0 0 var(--core); }
 
 /* the two modes */
 .matchbox.mode-race::before, .matchbox.mode-bomb::before { content: ""; display: block; height: 10px; margin: -20px -20px 0; }
@@ -579,6 +588,8 @@ const ICONS = {
   medal:  ["X.......X", ".X.....X.", "..X...X..", "...XXX...", "..XYYYX..", ".XYYWYYX.", ".XYYYYYX.", "..XYYYX..", "...XXX..."],
   caret:  ["XXXXXXX", ".XXXXX.", "..XXX..", "...X..."],
   ship:   [".....XX.......", "....XXXX......", "..XXXXXXXXX...", "YXXXXDWDXXXXX.", "YXXXXDDDXXXXXX", "YXXXXXXXXXXXX.", "..XXXXXXXXX...", "....XXXX......", ".....XX......."],
+  shuttle: ["......XXXXX.......", "....XXWWWWXX......", "..XXXXXXXXXXXXX...", "YXXXXXXXXXXXXXXXX.", "YXXDDXDDXDDXXXXXXX", "YXXXXXXXXXXXXXXXX.", "..XXXXXXXXXXXXX...", "....XX......XX....", "...XXXX....XXXX..."],
+  plus:   ["...XXX...", "...XXX...", "XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX", "...XXX...", "...XXX..."],
 };
 function icon(name, o = {}) {
   const rows = ICONS[name]; if (!rows) return null;
@@ -1281,7 +1292,7 @@ function lobbyView() {
     const pool = poolSelect("pool", f.pool, v => { f.pool = v; render(); }); pool.setAttribute("aria-labelledby", "pool-l");
     chips.append(chip(icon("book"), `Question set: ${bankInfo(S.subject).name}`, "pool-l", pool, true));
     host.append(chips, el("div", { class: "row" },
-      el("button", { class: "btn launchbtn", onclick: () => withName(openRoom), disabled: S.roomState !== "on" }, icon("rocket", { c: "#0B0E24", c2: "#FFF3C4" }), "Open room"),
+      el("button", { class: "btn launchbtn", id: "openbtn", onclick: () => withName(openRoom), disabled: S.roomState !== "on" }, icon("plus", { c: "#0B0E24" }), "Open room"),
       el("span", { class: "note" }, `${bankInfo(S.subject).name} · 2–8 crew`)));
   }
   const bay = el("section", { class: "sheet" },
@@ -1298,30 +1309,44 @@ function lobbyView() {
 }
 function dockedShip(p) {
   const g = pp(p).g, full = g.pl.length >= MAX_PLAYERS, col = `var(--s${hash(p.peer) % 8})`;
-  const meta = g.mode === "race"
-    ? [el("span", { title: "Race" }, icon("flag", { cls: "mini" })), el("span", { title: "Questions" }, icon("hash", { cls: "mini" }), String(Math.min(MAX_RACE, +g.n || 0)))]
-    : [el("span", { title: "Hot Core" }, icon("core", { cls: "mini", c: "var(--core)", c2: "var(--gold)" })), el("span", { title: "Lives" }, icon("heart", { cls: "mini", c: "var(--bad)" }), String(Math.min(3, +g.lives || 1))), el("span", { title: "Fuse" }, icon("clock", { cls: "mini" }), Math.min(60, +g.lim || 30) + "s")];
-  return el("div", { class: "port docked", style: `--c:${col}` },
-    el("div", { class: "bayhead" }),
-    el("div", { class: "pad" }, el("span", { class: "lights" }, el("i"), el("i"), el("i"), el("i")), icon("ship", { c: col, cls: "shipico" })),
-    el("div", { class: "portinfo" },
-      el("b", {}, (cleanNick(pp(p).nick) || "Crew") + (p.isMe ? " (tab 2)" : "")),
-      typeof g.code === "string" && CODE_RE.test(g.code) ? el("span", { class: "shipcode" }, g.code) : null,
-      el("span", { class: "portmeta" }, ...meta),
-      el("span", { class: "portmeta" }, roomSubject(g))),
-    el("span", { class: "seatlights", role: "img", "aria-label": `${g.pl.length} of ${MAX_PLAYERS} seats taken` }, Array.from({ length: MAX_PLAYERS }, (_, i) => el("i", { class: i < g.pl.length ? "on" : "" }))),
-    el("button", { class: "btn small teal", onclick: () => withName(() => joinRoom(p)), disabled: full || !!S.joining }, full ? "Full" : "Join"));
+  const race = g.mode === "race", host = cleanNick(pp(p).nick) || "Crew";
+  const line = (ico, text) => el("span", { class: "pline" }, ico, el("span", {}, text));
+  const stats = race
+    ? [line(icon("hash", { cls: "mini" }), `${Math.min(MAX_RACE, +g.n || 0)} questions`)]
+    : [line(icon("heart", { cls: "mini", c: "var(--bad)" }), `${Math.min(3, +g.lives || 1)} ${+g.lives === 1 ? "life" : "lives"}`), line(icon("clock", { cls: "mini" }), `${Math.min(60, +g.lim || 30)} s fuse`)];
+  const bk = typeof g.bk === "string" ? g.bk : "h2";
+  return el("button", { type: "button", class: "port docked", style: `--c:${col}`, disabled: full || !!S.joining,
+    "aria-label": `Join ${host}'s ${modeName(g.mode)} room: ${roomSubject(g)}, ${g.pl.length} of ${MAX_PLAYERS} crew`, onclick: () => withName(() => joinRoom(p)) },
+    el("span", { class: "bayhead" }),
+    el("span", { class: "porttop" },
+      el("span", { class: "modebadge " + g.mode }, race ? icon("flag", { cls: "mini" }) : icon("core", { cls: "mini", c: "var(--core)", c2: "var(--gold)" }), modeName(g.mode)),
+      typeof g.code === "string" && CODE_RE.test(g.code) ? el("span", { class: "shipcode", title: "Room code" }, g.code) : null),
+    el("span", { class: "pad" }, icon("shuttle", { c: col, cls: "shipico" })),
+    el("span", { class: "portname" }, `${host}'s room` + (p.isMe ? " (tab 2)" : "")),
+    line(icon(subjIcon(bk), { cls: "mini", c: "var(--gold)", c2: "var(--accent)" }), roomSubject(g)),
+    el("span", { class: "pstats" }, line(icon("crew", { cls: "mini", c: col }), `${g.pl.length}/${MAX_PLAYERS} crew`), ...stats),
+    el("span", { class: "seatlights", "aria-hidden": "true" }, Array.from({ length: MAX_PLAYERS }, (_, i) => el("i", { class: i < g.pl.length ? "on" : "" }))),
+    el("span", { class: "joinlabel" }, full ? "Full" : "Join"));
+}
+function vacantBay() {
+  const glow = on => { const l = $(".launch"); if (l) l.classList.toggle("glow", on); };
+  return el("button", { type: "button", class: "port vacant", "aria-label": "Open a room in this bay",
+    onmouseenter: () => glow(true), onmouseleave: () => glow(false), onfocus: () => glow(true), onblur: () => glow(false),
+    onclick: () => { const l = $(".launch"); if (l) { l.scrollIntoView({ behavior: "smooth", block: "center" }); l.classList.add("glow"); setTimeout(() => l.classList.remove("glow"), 1500); } const b = $("#openbtn"); if (b) b.focus({ preventScroll: true }); } },
+    el("span", { class: "bayhead" }),
+    el("span", { class: "pad" }, icon("plus", { c: "var(--line)", cls: "plusico" })),
+    el("span", { class: "vac" }, "Vacant bay"), el("span", { class: "note" }, "Open a room"));
 }
 function renderLobbyLists() {
   const box = $("#openlist"); if (!box) return;
   const online = $("#online"), note = $("#baynote");
-  if (online) online.replaceChildren(...(S.roomState === "on" ? [icon("crew", { c: "var(--accent)" }), String(S.peers.length)] : []));
+  if (online) online.replaceChildren(...(S.roomState === "on" ? [icon("crew", { c: "var(--accent)" }), `${S.peers.length} online`] : []));
   if (S.roomState !== "on") { box.replaceChildren(el("div", { class: "empty", style: "grid-column:1/-1" }, "Bay offline.")); if (note) note.textContent = ""; return; }
   for (const p of S.peers) { const g = pp(p).g; if (pp(p).st === "host" && g && typeof g.bk === "string" && g.bk.startsWith("pk:")) ensurePack(g.bk.slice(3)); }
   const open = S.peers.filter(p => !p.sameTab && pp(p).st === "host" && validG(pp(p).g) && pp(p).g.ph === "lobby");
   const ships = open.map(dockedShip);
-  const vacant = Math.max(4 - ships.length, ships.length % 2);
-  for (let i = 0; i < vacant; i++) ships.push(el("div", { class: "port vacant", "aria-hidden": "true" }, el("div", { class: "bayhead" }), el("div", { class: "pad" }, el("span", { class: "lights" }, el("i"), el("i"), el("i"), el("i"))), el("span", { class: "vac" }, "Vacant")));
+  const vacant = Math.max(3, Math.ceil(ships.length / 3) * 3) - ships.length;   // whole rows of three
+  for (let i = 0; i < vacant; i++) ships.push(vacantBay());
   box.replaceChildren(...ships);
   if (note) note.textContent = open.length ? "" : "No ships docked. Open a room, or open the site in a second tab to try it alone.";
 }
