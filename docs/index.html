@@ -4,250 +4,294 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Paper One Duel</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cellipse cx=%2716%27 cy=%2716%27 rx=%2714%27 ry=%279.5%27 fill=%27%232A2F3B%27 stroke=%27%23C8336A%27 stroke-width=%273%27/%3E%3C/svg%3E">
-<meta name="description" content="Party-style multiple-choice game for H2 Physics, PSLE Science and PSLE Maths: race or pass the bomb with 2–8 players, plus practice and progress tracking.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 8 8%27 shape-rendering=%27crispEdges%27%3E%3Crect width=%278%27 height=%278%27 fill=%27%230B0E24%27/%3E%3Crect x=%272%27 y=%271%27 width=%274%27 height=%276%27 fill=%27%23FF7A45%27/%3E%3Crect x=%271%27 y=%272%27 width=%276%27 height=%274%27 fill=%27%23FF7A45%27/%3E%3Crect x=%273%27 y=%273%27 width=%272%27 height=%272%27 fill=%27%23FFD166%27/%3E%3C/svg%3E">
+<meta name="description" content="Orbit Station: a pixel-art party quiz for H2 Physics, PSLE Science and PSLE Maths. Race or pass the Hot Core with 2–8 crew, take the Daily Test, practise and track progress.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: an optical answer sheet. Paper-white sheets on a cool desk, drop-out pink printing for structure,
-   graphite for marks you make. In a room, players sit around a round table with the question below it. */
+/* Orbit Station: a pixel-art space station. Deep-space background with a pixel starfield, panels with notched
+   pixel borders, crew drawn as 10×10 astronaut helmets, the bomb is a flickering reactor core.
+   Deliberately one dark theme: it is space. */
 :root {
-  --desk: #EEF0F4;
-  --sheet: #FFFFFF;
-  --ink: #1B2030;
-  --muted: #5B6377;
-  --rule: #DADDE6;
-  --drop: #C8336A;          /* OMR drop-out ink: structure only */
-  --drop-soft: #FBE6EE;
-  --graphite: #2A2F3B;      /* a shaded bubble */
-  --on-graphite: #FFFFFF;
-  --good: #1D7F52;
-  --good-soft: #E1F3EA;
-  --bad: #B83A12;
-  --bad-soft: #FBE9E1;
-  --s0: #3446C4; --s1: #0B7B84; --s2: #B5531A; --s3: #7A3FB8; --s4: #1D7F52; --s5: #B8336A; --s6: #8A6D00; --s7: #44515F;
-  --on-seat: #FFFFFF;
-  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --r: 10px;
-  color-scheme: light;
+  --space: #0B0E24;         /* page */
+  --panel: #141938;         /* sheets */
+  --panel2: #1C2250;        /* inset areas */
+  --line: #2E3672;          /* pixel borders */
+  --ink: #E8ECFF;
+  --muted: #8C96C4;
+  --accent: #5EEAD4;        /* station teal */
+  --core: #FF7A45;          /* the hot core */
+  --gold: #FFD166;
+  --good: #7CE678;
+  --bad: #FF5C7A;
+  --real: #1FAF9C;          /* chart: real players */
+  --sim: #8C7FD9;           /* chart: simulated players */
+  --s0: #5EEAD4; --s1: #FFD166; --s2: #FF7A45; --s3: #C49BF5; --s4: #7CE678; --s5: #FF5C7A; --s6: #78AAFF; --s7: #E6E6F0;
+  --display: "Press Start 2P", "Courier New", monospace;
+  --label: "Silkscreen", "Courier New", monospace;
+  --body: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --px: 4px;
+  color-scheme: dark;
   padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --desk: #10131B; --sheet: #191D28; --ink: #E8EAF1; --muted: #9AA1B4; --rule: #2C3243;
-    --drop: #F0709E; --drop-soft: #3A1F2C; --graphite: #E8EAF1; --on-graphite: #10131B;
-    --good: #4CC48C; --good-soft: #15301F; --bad: #F2865C; --bad-soft: #3A2016;
-    --s0: #93A0FF; --s1: #46C9D3; --s2: #F29A5E; --s3: #C39BF5; --s4: #4CC48C; --s5: #F0709E; --s6: #E2C24E; --s7: #A9B6C4;
-    --on-seat: #10131B;
-    color-scheme: dark;
-  }
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 img { max-width: 100%; }
 body {
-  margin: 0; background: var(--desk); color: var(--ink); font: 15px/1.55 var(--body);
+  margin: 0; background: var(--space); color: var(--ink); font: 17px/1.5 var(--body);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 0 48px;
 }
+/* pixel starfield */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--muted), var(--muted)),
+    linear-gradient(var(--muted), var(--muted)), linear-gradient(var(--ink), var(--ink));
+  background-size: 3px 3px, 2px 2px, 3px 3px, 2px 2px, 2px 2px, 2px 2px, 3px 3px, 2px 2px;
+  background-repeat: no-repeat;
+  background-position: 8% 12%, 23% 70%, 41% 22%, 63% 81%, 77% 9%, 88% 48%, 14% 92%, 52% 55%;
+  opacity: .7;
+}
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(var(--muted) 1px, transparent 1.5px);
+  background-size: 97px 89px; opacity: .25;
+}
 button, input, select { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--s0); outline-offset: 2px; }
-.mono { font-family: var(--mono); }
-.wrap { max-width: 1040px; margin: 0 auto; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.wrap { max-width: 1060px; margin: 0 auto; }
 
 /* masthead */
-.mast { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; padding-block: 22px 14px; border-bottom: 2px solid var(--drop); }
-.brand { display: flex; flex-direction: column; gap: 2px; }
-.brand small { font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--drop); }
-.brand h1 { margin: 0; font: 800 clamp(26px, 4.4vw, 38px)/1 var(--display); letter-spacing: -.02em; text-wrap: balance; }
-.who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.who label { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.who input { width: 11em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
-nav.tabs { display: flex; flex-wrap: wrap; gap: 4px 4px; padding-block: 12px; }
-nav.tabs a { padding: 7px 14px; border-radius: 999px; text-decoration: none; color: var(--muted); font-weight: 500; white-space: nowrap; }
-nav.tabs a[aria-current="page"] { background: var(--graphite); color: var(--on-graphite); }
-nav.tabs a:hover:not([aria-current]) { color: var(--ink); background: var(--sheet); }
-nav.tabs { align-items: center; }
-.subj { margin-left: auto; display: flex; align-items: center; gap: 8px; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-.subj select { font: 600 14px/1.2 var(--body); letter-spacing: 0; text-transform: none; color: var(--ink); }
+.mast { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 14px 24px; padding-block: 26px 16px; border-bottom: 4px solid var(--line); }
+.brand { display: flex; flex-direction: column; gap: 10px; }
+.brand small { font: 400 12px/1 var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.brand h1 { margin: 0; font: 400 clamp(20px, 4.2vw, 34px)/1.15 var(--display); letter-spacing: 0; color: var(--ink); text-shadow: 3px 3px 0 var(--core); text-wrap: balance; }
+.who { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.who label { font: 400 12px/1 var(--label); text-transform: uppercase; color: var(--muted); }
+.who input { width: 11em; padding: 7px 10px; border: 0; background: var(--panel2); }
+nav.tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-block: 16px; }
+nav.tabs a { padding: 8px 12px; text-decoration: none; color: var(--muted); font: 700 13px/1 var(--label); text-transform: uppercase; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { background: var(--accent); color: var(--space); box-shadow: 0 -4px 0 0 var(--accent), 0 4px 0 0 var(--accent), -4px 0 0 0 var(--accent), 4px 0 0 0 var(--accent); }
+nav.tabs a:hover:not([aria-current]) { color: var(--ink); }
+.subj { margin-left: auto; display: flex; align-items: center; gap: 8px; font: 400 12px/1 var(--label); text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.subj select { font: 600 15px/1.2 var(--body); text-transform: none; }
 
-.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r); padding: 20px; min-width: 0; }
-.eyebrow { font: 500 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--drop); margin: 0 0 6px; }
-h2 { font: 700 22px/1.2 var(--display); margin: 0 0 12px; text-wrap: balance; }
-h3 { font: 700 17px/1.25 var(--display); margin: 0 0 8px; }
+/* panels with a notched pixel border */
+.sheet { background: var(--panel); padding: 20px; min-width: 0; margin: var(--px); box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line); }
+.eyebrow { font: 400 12px/1.3 var(--label); text-transform: uppercase; color: var(--accent); margin: 0 0 8px; letter-spacing: .04em; }
+h2 { font: 400 clamp(15px, 2.6vw, 19px)/1.4 var(--display); margin: 0 0 14px; text-wrap: balance; }
+h3 { font: 700 15px/1.3 var(--label); text-transform: uppercase; margin: 0 0 8px; }
 p { margin: 0 0 10px; }
 .muted { color: var(--muted); }
-.note { font-size: 13px; color: var(--muted); }
-.banner { padding: 10px 14px; border-radius: 8px; background: var(--drop-soft); color: var(--ink); font-size: 14px; margin-bottom: 14px; }
-.grid2 { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 16px; align-items: start; }
+.note { font-size: 14px; color: var(--muted); }
+.banner { padding: 10px 14px; background: var(--panel2); border-left: 6px solid var(--gold); color: var(--ink); font-size: 15px; margin-bottom: 14px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 20px; align-items: start; }
 @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
-.stack { display: flex; flex-direction: column; gap: 14px; }
-.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .spread { justify-content: space-between; }
-.field { display: flex; flex-direction: column; gap: 4px; }
-.field span { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-select, .field input { padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); min-width: 0; max-width: 100%; }
-.btn { appearance: none; border: 1px solid var(--graphite); background: var(--graphite); color: var(--on-graphite); padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
-.btn:hover { filter: brightness(1.12); }
-.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
-.btn.ghost:hover { border-color: var(--ink); }
-.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
-.btn.small { padding: 5px 12px; font-size: 13px; }
-.btn.danger { background: var(--bad); border-color: var(--bad); color: var(--sheet); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field span { font: 400 11px/1 var(--label); text-transform: uppercase; color: var(--muted); }
+select, .field input { padding: 8px 10px; border: 0; background: var(--panel2); min-width: 0; max-width: 100%; box-shadow: inset 0 -3px 0 var(--line); }
+.btn { appearance: none; border: 0; background: var(--core); color: var(--space); padding: 10px 16px; font: 700 14px/1 var(--label); text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-block;
+  box-shadow: inset -4px -4px 0 rgba(0,0,0,.28), inset 4px 4px 0 rgba(255,255,255,.22); }
+.btn:hover { filter: brightness(1.1); }
+.btn:active { transform: translateY(2px); box-shadow: inset 4px 4px 0 rgba(0,0,0,.28); }
+.btn.ghost { background: var(--panel2); color: var(--ink); }
+.btn.teal { background: var(--accent); }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; transform: none; }
+.btn.small { padding: 7px 11px; font-size: 12px; }
+.btn.danger { background: var(--bad); color: var(--space); }
 
 /* mode picker */
-.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 0; padding: 0; margin: 0; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; border: 0; padding: 0; margin: 0; }
 @media (max-width: 460px) { .modes { grid-template-columns: 1fr; } }
-.mode { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1.5px solid var(--rule); border-radius: 10px; cursor: pointer; }
+.mode { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; background: var(--panel2); cursor: pointer; }
 .mode input { position: absolute; opacity: 0; pointer-events: none; }
-.mode b { font: 700 17px/1.2 var(--display); }
-.mode span { font-size: 13px; color: var(--muted); line-height: 1.4; }
-.mode:has(input:checked) { border-color: var(--drop); background: var(--drop-soft); }
-.mode:has(input:focus-visible) { outline: 2px solid var(--s0); outline-offset: 2px; }
+.mode b { font: 400 13px/1.3 var(--display); }
+.mode span { font-size: 14px; color: var(--muted); line-height: 1.4; }
+.mode:has(input:checked) { background: #2A2160; box-shadow: 0 -4px 0 0 var(--core), 0 4px 0 0 var(--core), -4px 0 0 0 var(--core), 4px 0 0 0 var(--core); }
+.mode:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: 6px; }
 
 /* lobby */
 .lobby-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.lobby-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule); }
+.lobby-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 3px dotted var(--line); }
 .lobby-list li:first-child { border-top: 0; }
 .lobby-list .who-col { flex: 1; min-width: 0; }
 .lobby-list .nm { font-weight: 600; overflow-wrap: anywhere; }
-.tag { font: 600 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; background: var(--drop-soft); color: var(--drop); margin-right: 6px; vertical-align: 1px; }
-.empty { padding: 18px; border: 1px dashed var(--rule); border-radius: 8px; color: var(--muted); font-size: 14px; }
-.pulse { animation: pulse 1.6s ease-in-out infinite; }
-@keyframes pulse { 50% { opacity: .45; } }
+.tag { font: 700 11px/1 var(--label); text-transform: uppercase; padding: 3px 6px; background: var(--core); color: var(--space); margin-right: 8px; vertical-align: 2px; }
+.tag.race { background: var(--accent); }
+.empty { padding: 18px; border: 3px dashed var(--line); color: var(--muted); font-size: 15px; }
+.blink { animation: blink 1.2s steps(2, start) infinite; }
+@keyframes blink { to { visibility: hidden; } }
 
 /* the round table */
-.table { position: relative; width: min(100%, 390px); aspect-ratio: 1; margin: 4px auto 8px; }
-.table::before { content: ""; position: absolute; inset: 17%; border-radius: 50%; border: 2px dashed var(--rule); }
-.seat { position: absolute; transform: translate(-50%, -50%); width: 96px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; transition: left .4s, top .4s, opacity .3s; }
-.av { --c: var(--s0); position: relative; width: 58px; height: 58px; border-radius: 50%; background: var(--c); color: var(--on-seat); display: grid; place-items: center; font: 800 20px/1 var(--display); box-shadow: 0 0 0 3px var(--sheet); transition: transform .25s, box-shadow .25s; }
-.seat.me .av { box-shadow: 0 0 0 3px var(--sheet), 0 0 0 5px var(--c); }
-.seat.holder .av { transform: scale(1.18); box-shadow: 0 0 0 3px var(--sheet), 0 0 0 6px var(--drop); }
+.table { position: relative; width: min(100%, 400px); aspect-ratio: 1; margin: 6px auto 10px; }
+.table::before { content: ""; position: absolute; inset: 17%; border-radius: 50%; border: 4px dotted var(--line); }
+.seat { position: absolute; transform: translate(-50%, -50%); width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; transition: left .4s steps(6), top .4s steps(6); }
+.av { --c: var(--s0); position: relative; width: 56px; height: 56px; display: grid; place-items: center; transition: transform .2s steps(3); }
+.av svg { width: 100%; height: 100%; image-rendering: pixelated; }
+.seat.holder .av { transform: scale(1.2); }
+.seat.holder .av::after { content: ""; position: absolute; inset: -8px; border: 4px dashed var(--core); animation: spin 2s steps(8) infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .seat.out { opacity: .35; filter: grayscale(1); }
 .seat.gone .av { opacity: .4; }
-.sn { font-size: 13px; font-weight: 600; max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sb { font: 600 12px/1.2 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.sn { font: 700 12px/1.2 var(--label); max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
+.seat.me .sn { color: var(--gold); }
+.sb { font: 500 13px/1.2 var(--body); color: var(--muted); font-variant-numeric: tabular-nums; }
 .sb.hearts { color: var(--bad); letter-spacing: .1em; }
-.mark { position: absolute; right: -5px; bottom: -5px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 13px/1 var(--mono); background: var(--sheet); border: 2px solid var(--rule); color: var(--ink); }
-.mark.lock { border-color: var(--c); color: var(--c); }
-.mark.ok { background: var(--good); border-color: var(--good); color: var(--sheet); }
-.mark.no { background: var(--bad); border-color: var(--bad); color: var(--sheet); }
-@media (max-width: 480px) { .seat { width: 74px; } .av { width: 44px; height: 44px; font-size: 16px; } .sn { max-width: 74px; font-size: 12px; } }
-.hub { position: absolute; left: 50%; top: 50%; width: 40%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; display: grid; place-items: center; text-align: center; }
+.mark { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; display: grid; place-items: center; font: 700 12px/1 var(--label); background: var(--panel); color: var(--ink); box-shadow: 0 0 0 3px var(--line); }
+.mark.lock { color: var(--c); box-shadow: 0 0 0 3px var(--c); }
+.mark.ok { background: var(--good); color: var(--space); box-shadow: none; }
+.mark.no { background: var(--bad); color: var(--space); box-shadow: none; }
+@media (max-width: 480px) { .seat { width: 74px; } .av { width: 44px; height: 44px; } .sn { max-width: 74px; font-size: 11px; } }
+.hub { position: absolute; left: 50%; top: 50%; width: 42%; aspect-ratio: 1; transform: translate(-50%, -50%); display: grid; place-items: center; text-align: center; }
 .hub > * { grid-area: 1 / 1; }
-.hub .ring { width: 100%; height: 100%; transform: rotate(-90deg); }
-.hub .ring circle { fill: none; stroke-width: 5; }
-.hub .ring .track { stroke: var(--rule); }
-.hub .ring .prog { stroke: var(--drop); stroke-linecap: round; transition: stroke-dashoffset .25s linear; }
-.hub .big { font: 800 clamp(30px, 9vw, 46px)/1 var(--display); color: var(--drop); }
-.hub .lbl { font: 600 12px/1.3 var(--mono); color: var(--muted); letter-spacing: .06em; }
-.pointer { width: 100%; height: 100%; transition: transform .55s cubic-bezier(.3,1.4,.5,1); }
-.pointer::after { content: ""; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); border: 11px solid transparent; border-left: 16px solid var(--drop); border-right: 0; }
-.bomb { width: 62%; height: 62%; }
-.bomb .body { fill: #262B36; stroke: var(--ink); stroke-width: 2; }
-.bomb .shine { fill: #FFFFFF; opacity: .3; }
-.bomb .cap { fill: var(--muted); }
-.bomb .fuse { fill: none; stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
-.bomb .spark { fill: var(--drop); transform-origin: 76px 14px; animation: spark .35s ease-in-out infinite alternate; }
-@keyframes spark { from { transform: scale(.7); opacity: .7; } to { transform: scale(1.25); opacity: 1; } }
-.hub.urgent .bomb { animation: shake .18s linear infinite; }
-@keyframes shake { 25% { transform: translate(-2px, 1px) rotate(-3deg); } 75% { transform: translate(2px, -1px) rotate(3deg); } }
-.hub.boom .bomb .body { fill: var(--bad); }
-.hub .count { position: absolute; bottom: 8%; font: 700 13px/1 var(--mono); color: var(--drop); font-variant-numeric: tabular-nums; }
+.hub .ring { width: 100%; height: 100%; }
+.hub .ring rect { fill: var(--line); }
+.hub .ring rect.on { fill: var(--accent); }
+.hub.hot .ring rect.on { fill: var(--core); }
+.hub .big { font: 400 clamp(20px, 6vw, 30px)/1 var(--display); color: var(--gold); }
+.hub .lbl { font: 400 11px/1.4 var(--label); color: var(--muted); text-transform: uppercase; margin-top: 6px; }
+.pointer { width: 100%; height: 100%; transition: transform .5s steps(8); }
+.pointer::after { content: ""; position: absolute; right: -12px; top: 50%; width: 12px; height: 12px; transform: translateY(-50%); background: var(--core); box-shadow: 4px 0 0 var(--core), -4px -4px 0 var(--core), -4px 4px 0 var(--core); }
+.corepx { width: 58%; height: 58%; image-rendering: pixelated; animation: flick .5s steps(2) infinite; }
+@keyframes flick { 50% { filter: brightness(1.25); } }
+.hub.urgent .corepx { animation: shake .16s steps(2) infinite; }
+@keyframes shake { 50% { transform: translate(3px, -2px); } }
+.hub.boom .corepx { animation: none; filter: hue-rotate(-40deg) saturate(1.6); }
+.hub .count { position: absolute; bottom: 4%; font: 700 13px/1 var(--label); color: var(--core); font-variant-numeric: tabular-nums; }
 
 /* question card */
 .panel { display: flex; flex-direction: column; gap: 14px; }
-.status { font: 700 19px/1.3 var(--display); }
+.status { font: 400 clamp(12px, 2.3vw, 15px)/1.5 var(--display); }
 .status.win { color: var(--good); } .status.lose { color: var(--bad); }
 .qcard { display: flex; flex-direction: column; gap: 14px; }
 .qhead { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
-.qid { font: 600 13px/1 var(--mono); color: var(--drop); letter-spacing: .06em; }
-.qtopic { font-size: 13px; color: var(--muted); }
-.stem { font-size: 17px; line-height: 1.6; margin: 0; max-width: 68ch; }
-.opts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.opt { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; text-align: left; padding: 10px 14px 10px 10px; border: 1px solid var(--rule); border-radius: 8px; background: transparent; cursor: pointer; }
-.opt:hover:not(:disabled) { border-color: var(--drop); background: var(--drop-soft); }
+.qid { font: 700 13px/1 var(--label); color: var(--gold); }
+.qtopic { font: 400 13px/1.2 var(--label); color: var(--muted); text-transform: uppercase; }
+.stem { font-size: 19px; line-height: 1.55; margin: 0; max-width: 66ch; }
+.opts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.opt { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; text-align: left; padding: 10px 14px 10px 10px; border: 0; background: var(--panel2); cursor: pointer; font-size: 17px;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.3); }
+.opt:hover:not(:disabled) { background: #2A3172; }
 .opt:disabled { cursor: default; }
-.bubble { width: 38px; height: 26px; border-radius: 50%; border: 1.5px solid var(--drop); color: var(--drop); display: grid; place-items: center; font: 600 13px/1 var(--mono); transition: background .15s, color .15s; }
-.opt.mine .bubble { background: var(--graphite); border-color: var(--graphite); color: var(--on-graphite); }
-.opt.correct { border-color: var(--good); background: var(--good-soft); }
-.opt.correct .bubble { border-color: var(--good); color: var(--good); }
-.opt.correct.mine .bubble { background: var(--good); color: var(--on-graphite); }
-.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
-.opt.wrong .bubble { background: var(--bad); border-color: var(--bad); color: var(--on-graphite); }
+.bubble { width: 32px; height: 32px; display: grid; place-items: center; font: 400 12px/1 var(--display); color: var(--accent); background: var(--space); box-shadow: 0 0 0 3px var(--accent); }
+.opt.mine .bubble { background: var(--gold); color: var(--space); box-shadow: 0 0 0 3px var(--gold); }
+.opt.correct { background: #1E4A3A; }
+.opt.correct .bubble { color: var(--good); box-shadow: 0 0 0 3px var(--good); }
+.opt.correct.mine .bubble { background: var(--good); color: var(--space); }
+.opt.wrong { background: #4A1E33; }
+.opt.wrong .bubble { background: var(--bad); color: var(--space); box-shadow: 0 0 0 3px var(--bad); }
 .otext { overflow-wrap: anywhere; }
 .marks { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
-.chip { --c: var(--s0); font: 600 11px/1 var(--mono); padding: 4px 7px; border-radius: 999px; letter-spacing: .04em; white-space: nowrap; background: var(--c); color: var(--on-seat); }
-.explain { border-left: 3px solid var(--good); padding: 8px 14px; background: var(--good-soft); border-radius: 0 8px 8px 0; }
-.explain.badx { border-left-color: var(--bad); background: var(--bad-soft); }
+.chip { --c: var(--s0); font: 700 11px/1 var(--label); padding: 4px 6px; white-space: nowrap; background: var(--c); color: var(--space); }
+.explain { border-left: 6px solid var(--good); padding: 10px 14px; background: var(--panel2); }
+.explain.badx { border-left-color: var(--bad); }
 .explain p:last-child { margin: 0; }
-details.data { font-size: 12px; color: var(--muted); }
-details.data summary { cursor: pointer; font-family: var(--mono); letter-spacing: .06em; }
-.timer { height: 6px; background: var(--rule); border-radius: 999px; overflow: hidden; }
-.timer i { display: block; height: 100%; background: var(--drop); width: 100%; transition: width .25s linear; }
+details.data { font-size: 14px; color: var(--muted); }
+details.data summary { cursor: pointer; font: 400 12px/1 var(--label); text-transform: uppercase; }
+.timer { height: 12px; background: var(--panel2); }
+.timer i { display: block; height: 100%; width: 100%; background: repeating-linear-gradient(90deg, var(--core) 0 10px, transparent 10px 12px); transition: width .25s steps(2); }
 
-/* figures (inline SVG from questions.json) */
-.fig { color: var(--ink); margin: 0; padding: 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); align-self: flex-start; width: 100%; max-width: 440px; }
+/* figures (inline SVG from the question banks) */
+.fig { color: var(--ink); margin: 0; padding: 12px; background: var(--panel2); align-self: flex-start; width: 100%; max-width: 440px; }
 .fig svg { display: block; width: 100%; height: auto; }
 .fig line, .fig path, .fig polyline, .fig .hollow { stroke: currentColor; stroke-width: 1.5; fill: none; }
 .fig .solid, .fig .hd { fill: currentColor; stroke: none; }
-.fig .ac { stroke: var(--drop); }
-.fig .hd.ac, .fig .acf { fill: var(--drop); stroke: none; }
+.fig .ac { stroke: var(--core); }
+.fig .hd.ac, .fig .acf { fill: var(--core); stroke: none; }
 .fig .thick { stroke-width: 3; }
 .fig .guide { stroke: var(--muted); stroke-dasharray: 4 4; }
 .fig .guide.solidline { stroke-dasharray: none; }
 .fig .hd.guide, .fig .hd.dim { fill: var(--muted); }
 .fig .dash { stroke-dasharray: 5 4; }
 .fig .dim { stroke: var(--muted); stroke-width: 1; }
-.fig text { fill: currentColor; stroke: none; font: 12px var(--mono); }
+.fig text { fill: currentColor; stroke: none; font: 13px var(--body); }
 .fig text.muted { fill: var(--muted); }
-.fig text.acfill { fill: var(--drop); font-weight: 600; font-size: 15px; }
+.fig text.acfill { fill: var(--core); font-weight: 700; font-size: 15px; }
 
 /* standings */
-.standings { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.standings li { display: grid; grid-template-columns: 2em 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; }
-.standings li.first { border-color: var(--good); background: var(--good-soft); }
-.standings .pos { font: 700 15px/1 var(--mono); color: var(--muted); }
-.standings .mini { width: 36px; height: 36px; font-size: 14px; box-shadow: none; }
+.standings { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.standings li { display: grid; grid-template-columns: 2em 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; background: var(--panel2); }
+.standings li.first { background: #1E4A3A; }
+.standings .pos { font: 400 12px/1 var(--display); color: var(--gold); }
+.standings .av { width: 36px; height: 36px; }
 .standings .pn { font-weight: 600; overflow-wrap: anywhere; }
-.standings .pv { font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.standings .pv { font: 700 13px/1 var(--label); }
 
 /* name prompt */
-.modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: max(16px, env(safe-area-inset-left, 0px)); background: color-mix(in srgb, var(--desk) 70%, transparent); backdrop-filter: blur(3px); }
-.modal form { width: min(420px, 100%); display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
-.modal input { font-size: 20px; padding: 10px 12px; border: 1.5px solid var(--drop); border-radius: 8px; background: var(--sheet); }
+.modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(11, 14, 36, .82); }
+.modal form { width: min(440px, 100%); display: flex; flex-direction: column; gap: 14px; }
+.modal input { font-size: 20px; padding: 10px 12px; border: 0; background: var(--panel2); box-shadow: inset 0 -4px 0 var(--accent); }
 
 /* progress */
-.stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; margin-bottom: 18px; }
 @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-.stat { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r); padding: 14px; }
-.stat b { display: block; font: 800 30px/1.1 var(--display); font-variant-numeric: tabular-nums; }
-.stat span { font: 500 11px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stat { background: var(--panel); padding: 14px; box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line); margin: var(--px); }
+.stat b { display: block; font: 400 clamp(15px, 3vw, 20px)/1.3 var(--display); color: var(--gold); font-variant-numeric: tabular-nums; }
+.stat span { font: 400 11px/1.3 var(--label); text-transform: uppercase; color: var(--muted); }
 .sec { margin-bottom: 18px; }
-.sec h3 { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--drop); padding-bottom: 6px; }
-.sec h3 small { font: 500 12px/1.4 var(--mono); color: var(--muted); }
-.trow { display: grid; grid-template-columns: minmax(0, 14em) minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rule); }
+.sec h3 { display: flex; justify-content: space-between; gap: 10px; border-bottom: 4px solid var(--line); padding-bottom: 6px; color: var(--accent); }
+.sec h3 small { font: 400 12px/1.4 var(--label); color: var(--muted); }
+.trow { display: grid; grid-template-columns: minmax(0, 14em) minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 3px dotted var(--line); }
 @media (max-width: 560px) { .trow { grid-template-columns: minmax(0,1fr) auto; } .trow .ovals { grid-column: 1 / -1; } }
-.trow .tn { font-size: 14px; overflow-wrap: anywhere; }
-.ovals { display: flex; flex-wrap: wrap; gap: 6px; }
-.oval { width: 34px; height: 22px; border-radius: 50%; border: 1.5px solid var(--drop); background: transparent; color: var(--drop); font: 600 10px/1 var(--mono); cursor: pointer; padding: 0; }
-.oval.ok { background: var(--graphite); border-color: var(--graphite); color: var(--on-graphite); }
-.oval.no { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); text-decoration: line-through; }
-.oval:hover { transform: translateY(-1px); }
-.tpct { font: 600 12px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); align-items: center; margin-bottom: 14px; }
-.legend .oval { cursor: default; width: 26px; height: 17px; vertical-align: middle; margin-right: 4px; }
+.trow .tn { font-size: 15px; overflow-wrap: anywhere; }
+.ovals { display: flex; flex-wrap: wrap; gap: 8px; }
+.oval { width: 26px; height: 26px; border: 0; background: var(--space); color: var(--muted); font: 700 10px/1 var(--label); cursor: pointer; padding: 0; box-shadow: 0 0 0 3px var(--line); }
+.oval.ok { background: var(--accent); color: var(--space); box-shadow: 0 0 0 3px var(--accent); }
+.oval.no { background: #4A1E33; color: var(--bad); box-shadow: 0 0 0 3px var(--bad); }
+.oval:hover { transform: translateY(-2px); }
+.tpct { font: 700 12px/1 var(--label); color: var(--muted); font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; color: var(--muted); align-items: center; margin-bottom: 14px; }
+.legend .oval { cursor: default; width: 18px; height: 18px; vertical-align: middle; margin-right: 6px; }
+
+/* daily test */
+.dq-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.tier { font: 700 12px/1 var(--label); text-transform: uppercase; color: var(--gold); }
+.tier i { display: inline-block; width: 10px; height: 10px; margin-right: 3px; background: var(--line); }
+.tier i.on { background: var(--gold); }
+.worth { font: 700 13px/1 var(--label); color: var(--core); font-variant-numeric: tabular-nums; }
+.steps { display: flex; gap: 8px; }
+.steps span { width: 34px; height: 10px; background: var(--line); }
+.steps span.done { background: var(--accent); }
+.steps span.now { background: var(--gold); }
+.breakdown { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.breakdown li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; background: var(--panel2); }
+.breakdown .pts { font: 400 12px/1 var(--display); color: var(--gold); }
+.headline { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: end; }
+.headline .score { font: 400 clamp(28px, 7vw, 44px)/1 var(--display); color: var(--gold); text-shadow: 3px 3px 0 var(--core); }
+.headline .facts { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.headline .facts b { display: block; font: 400 14px/1.4 var(--display); color: var(--ink); }
+.headline .facts span { font: 400 11px/1.2 var(--label); text-transform: uppercase; color: var(--muted); }
+.chartwrap { position: relative; overflow-x: auto; }
+.chart { width: 100%; min-width: 520px; height: auto; display: block; }
+.chart text { fill: var(--muted); font: 12px var(--body); }
+.chart .axis { stroke: var(--line); stroke-width: 2; }
+.chart .grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+.chart .real { fill: var(--real); }
+.chart .sim { fill: var(--sim); }
+.chart .fit { fill: none; stroke: var(--gold); stroke-width: 2; }
+.chart .you { stroke: var(--core); stroke-width: 3; stroke-dasharray: 6 4; }
+.chart .youlbl { fill: var(--ink); font: 700 12px var(--label); }
+.chart .hit { fill: transparent; }
+.chart g.bin:hover rect.real, .chart g.bin:hover rect.sim { filter: brightness(1.25); }
+.tip { position: absolute; pointer-events: none; background: var(--space); color: var(--ink); padding: 6px 9px; font-size: 13px; box-shadow: 0 0 0 3px var(--line); white-space: nowrap; transform: translate(-50%, -110%); }
+.key { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--muted); }
+.key i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
 
 /* leaderboard */
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
-th { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 3px dotted var(--line); white-space: nowrap; }
+th { font: 400 11px/1 var(--label); text-transform: uppercase; color: var(--muted); }
 td.num, th.num { text-align: right; }
-tr.me td { background: var(--drop-soft); }
+tr.me td { background: #2A2160; }
+tr.sim td { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 <script src="firebase-config.js"></script>
@@ -257,23 +301,24 @@ tr.me td { background: var(--drop-soft); }
 <div class="wrap">
   <header class="mast">
     <div class="brand">
-      <small id="tagline">H2 Physics 9478 · Paper 1 style</small>
+      <small id="tagline">Orbit Station · H2 Physics</small>
       <h1>Paper One Duel</h1>
     </div>
     <div class="who">
-      <label for="nick">Name</label>
+      <label for="nick">Callsign</label>
       <input id="nick" maxlength="20" autocomplete="off" spellcheck="false">
       <button id="acct" class="btn ghost small" hidden></button>
     </div>
   </header>
   <nav class="tabs" id="tabs">
     <a href="#duel" data-v="duel">Play</a>
+    <a href="#daily" data-v="daily">Daily test</a>
     <a href="#practice" data-v="practice">Practice</a>
     <a href="#progress" data-v="progress">Progress</a>
     <a href="#leaderboard" data-v="leaderboard">Leaderboard</a>
     <label class="subj" for="subject">Subject <select id="subject"></select></label>
   </nav>
-  <main id="view"><div class="sheet"><p class="muted">Loading the question bank…</p></div></main>
+  <main id="view"><div class="sheet"><p class="muted">Docking… loading the question banks.</p></div></main>
 </div>
 
 <script>
@@ -309,11 +354,34 @@ const cleanNick = s => String(s || "").replace(BAD_CHARS, "").trim().slice(0, 20
 const initials = s => { const w = cleanNick(s).split(/\s+/).filter(Boolean); return ((w[0] || "?")[0] + (w[1] ? w[1][0] : (w[0] || "").slice(1, 2))).toUpperCase(); };
 const seatColor = i => `var(--s${i % 8})`;
 
+/* pixel sprites */
+const HELMET = ["..XXXXXX..", ".XXXXXXXX.", "XXVVVVVVXX", "XVWWVVVVVX", "XVWVVVVVVX", "XVVVVVVVVX", "XXVVVVVVXX", ".XXXXXXXX.", "..XX..XX..", ".XXX..XXX."];
+function helmet(seat) {
+  let r = "";
+  HELMET.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    const fill = ch === "X" ? `var(--s${seat % 8})` : ch === "V" ? "#0B0E24" : "#E8ECFF";
+    r += `<rect x="${x}" y="${y}" width="1" height="1" style="fill:${fill}"/>`;
+  }));
+  return svgEl(`<svg viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`);
+}
+function coreSprite() {
+  let r = "";
+  for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
+    const d = Math.hypot(x - 5.5, y - 5.5);
+    if (d > 5.6) continue;
+    const fill = d < 2 ? "#FFF3C4" : d < 3.6 ? "#FFD166" : d < 4.8 ? "#FF7A45" : "#C23B4A";
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${fill}"/>`;
+  }
+  r += `<rect x="8" y="2" width="1" height="1" fill="#FFF"/><rect x="9" y="1" width="1" height="1" fill="#FFD166"/>`;
+  return svgEl(`<svg class="corepx" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`);
+}
+
 /* ---------- question banks ---------- */
 const BANKS = [
-  { key: "h2", file: "questions.json", name: "H2 Physics", tag: "H2 Physics 9478 · Paper 1 style" },
-  { key: "sci", file: "psle-science.json", name: "PSLE Science", tag: "PSLE Science · Booklet A style" },
-  { key: "math", file: "psle-maths.json", name: "PSLE Maths", tag: "PSLE Maths · Paper 1 style" },
+  { key: "h2", file: "questions.json", name: "H2 Physics", tag: "Orbit Station · H2 Physics 9478 · Paper 1 style" },
+  { key: "sci", file: "psle-science.json", name: "PSLE Science", tag: "Orbit Station · PSLE Science · Booklet A style" },
+  { key: "math", file: "psle-maths.json", name: "PSLE Maths", tag: "Orbit Station · PSLE Maths · Paper 1 style" },
 ];
 const bankInfo = k => BANKS.find(b => b.key === k) || BANKS[0];
 
@@ -328,6 +396,7 @@ const S = {
   joining: null, match: null, lobbyMsg: "",
   form: { mode: "race", n: 10, pool: "all", lives: 2, fuse: 30 },
   prac: { topic: "all", mode: "smart", qid: null, perm: null, picked: null },
+  daily: null, dailyEntries: [], dailyState: "idle", dailyKey: "",
   board: [], boardState: "idle",
 };
 const RACE_LIM = 60;     // seconds per question in Race
@@ -417,20 +486,21 @@ function initRoom(room) {
     if (me) S.myPeer = me.peer;
     onPeersChanged();
   }, onRoomErr);
-  pushPresence({ v: 2, nick: S.nick, mast: masteredCount(), st: "idle" });
+  pushPresence({ v: 2, nick: S.nick, mast: masteredIn(allQs()), st: "idle" });
   render();
 }
 const peerOf = id => S.peers.find(p => p.peer === id);
 const pp = p => (p && p.presence) || {};
 
 /* ---------- rooms: one host runs the game, everyone follows its state ----------
-   Host presence carries g = { id, mode: "race"|"bomb", pl: [peer ids by seat], nm: [names], ph: "lobby"|"cd"|"q"|"r"|"end",
-   k: question counter, qs: question ids, n: race length, lim: seconds, sc: race scores, lv: bomb lives, lives, turn: bomb holder seat,
+   Host presence carries g = { id, mode: "race"|"bomb", bk: subject, pl: [peer ids by seat], nm: [names], ph: "lobby"|"cd"|"q"|"r"|"end",
+   k: question counter, qs: question ids, n: race length, lim: seconds, sc: race scores, lv: core lives, lives, turn: core holder seat,
    res: last result, win, ab }. Players publish their answer as a = { m: room id, k, c: option index, rt: ms }. */
 const validG = g => g && typeof g === "object" && typeof g.id === "string" && Array.isArray(g.pl) && Array.isArray(g.qs) && g.qs.length > 0 && g.qs.every(id => S.byId[id]) && g.pl.length <= MAX_PLAYERS && ["race", "bomb"].includes(g.mode);
 const qidOf = g => g.qs[g.k % g.qs.length];
 const mySeat = () => S.match ? S.match.g.pl.indexOf(S.myPeer) : -1;
-const seatName = (g, i) => cleanNick(g.nm && g.nm[i]) || "Player";
+const seatName = (g, i) => cleanNick(g.nm && g.nm[i]) || "Crew";
+const modeName = m => m === "bomb" ? "Hot Core" : "Race";
 function validAns(a, g) {
   return a && a.m === g.id && a.k === g.k && Number.isInteger(a.c) && a.c >= 0 && a.c < 4 && typeof a.rt === "number" && a.rt >= 0 ? a : null;
 }
@@ -449,7 +519,7 @@ const roomSubject = g => bankInfo(typeof g.bk === "string" ? g.bk : "h2").name;
 
 function withName(then) {
   if (S.named) return then();
-  const input = el("input", { id: "nm-in", maxlength: "20", autocomplete: "off", spellcheck: "false", value: /^Player \d+$/.test(S.nick) ? "" : S.nick, placeholder: "e.g. Wei Ling" });
+  const input = el("input", { id: "nm-in", maxlength: "20", autocomplete: "off", spellcheck: "false", value: /^Cadet \d+$/.test(S.nick) ? "" : S.nick, placeholder: "e.g. Wei Ling" });
   const err = el("p", { class: "note", hidden: true }, "Enter at least one character.");
   const box = el("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "nm-h" },
     el("form", { class: "sheet", onsubmit: e => {
@@ -459,8 +529,8 @@ function withName(then) {
       setNick(v); S.named = true; try { sessionStorage.setItem("p1d.named", "1"); } catch {}
       box.remove(); then();
     } },
-      el("p", { class: "eyebrow" }, "Before you sit down"),
-      el("h2", { id: "nm-h", style: "margin:0" }, "What should the table call you?"),
+      el("p", { class: "eyebrow" }, "Boarding the station"),
+      el("h2", { id: "nm-h", style: "margin:0" }, "What's your callsign?"),
       input, err,
       el("div", { class: "row spread" },
         el("button", { type: "button", class: "btn ghost", onclick: () => box.remove() }, "Cancel"),
@@ -486,7 +556,7 @@ function openRoom() {
     lim: race ? RACE_LIM : f.fuse, lives: f.lives, pool: f.pool, bk: S.subject, sc: null, lv: null, turn: 0, res: null };
   S.match = newMatch("host", g, S.myPeer);
   S.lobbyMsg = "";
-  pushPresence({ st: "host", g, a: null, rd: null, tgt: null, jm: null, mast: masteredCount() });
+  pushPresence({ st: "host", g, a: null, rd: null, tgt: null, jm: null, mast: masteredIn(allQs()) });
   S.hostTimer = setInterval(hostTick, 200);
   render();
 }
@@ -496,13 +566,13 @@ function joinRoom(p) {
   S.lobbyMsg = "";
   pushPresence({ st: "join", tgt: p.peer, jm: g.id, g: null, a: null, rd: null });
   render();
-  setTimeout(() => { if (S.joining && S.joining.id === g.id && !S.match) failJoin("The host didn't respond. Try another room."); }, 9000);
+  setTimeout(() => { if (S.joining && S.joining.id === g.id && !S.match) failJoin("The captain didn't respond. Try another room."); }, 9000);
 }
 function failJoin(msg) { S.joining = null; S.lobbyMsg = msg; pushPresence({ st: "idle", tgt: null, jm: null }); render(); }
 function leaveMatch(msg) {
   clearInterval(S.hostTimer);
   S.match = null; S.joining = null; S.lobbyMsg = msg || "";
-  pushPresence({ st: "idle", g: null, a: null, rd: null, tgt: null, jm: null, mast: masteredCount() });
+  pushPresence({ st: "idle", g: null, a: null, rd: null, tgt: null, jm: null, mast: masteredIn(allQs()) });
   render();
 }
 
@@ -510,10 +580,10 @@ function onPeersChanged() {
   const me = S.myPeer;
   if (S.joining && !S.match) {
     const host = peerOf(S.joining.host), g = pp(host).g;
-    if (!host) failJoin("That room's host left.");
+    if (!host) failJoin("That room's captain left.");
     else if (validG(g) && g.id === S.joining.id) {
       if (g.pl.includes(me)) { S.match = newMatch("guest", g, host.peer); S.joining = null; pushPresence({ st: "play" }); onGameState(); return; }
-      if (g.ph !== "lobby") failJoin("That game has already started.");
+      if (g.ph !== "lobby") failJoin("That game has already launched.");
       else if (g.pl.length >= MAX_PLAYERS) failJoin("That room is full.");
     } else failJoin("That room has closed.");
   }
@@ -523,7 +593,7 @@ function onPeersChanged() {
     if (host) {
       m.hostGone = null;
       const g = pp(host).g;
-      if (!validG(g) || g.id !== m.id) { if (m.g.ph === "lobby") return leaveMatch("The host closed the room."); m.g = { ...m.g, ph: "end", ab: 1 }; onGameState(); return; }
+      if (!validG(g) || g.id !== m.id) { if (m.g.ph === "lobby") return leaveMatch("The captain closed the room."); m.g = { ...m.g, ph: "end", ab: 1 }; onGameState(); return; }
       if (!g.pl.includes(me)) return leaveMatch("You left the room.");
       const key = JSON.stringify(g);
       if (key !== m.gKey) { m.gKey = key; m.g = g; onGameState(); return; }
@@ -554,7 +624,7 @@ function hostTick() {
   g.pl.forEach((p, s) => { if (present(s)) delete m.gone[p]; else m.gone[p] = m.gone[p] || now; });
   const goneFor = s => m.gone[g.pl[s]] ? now - m.gone[g.pl[s]] : 0;
   const patch = {};
-  const nm = g.pl.map((p, s) => s === 0 ? S.nick : (cleanNick(pp(peerOf(p)).nick) || g.nm[s] || "Player"));
+  const nm = g.pl.map((p, s) => s === 0 ? S.nick : (cleanNick(pp(peerOf(p)).nick) || g.nm[s] || "Crew"));
   if (JSON.stringify(nm) !== JSON.stringify(g.nm)) patch.nm = nm;
 
   if (g.ph === "lobby") {
@@ -564,7 +634,7 @@ function hostTick() {
     for (const p of S.peers) {
       if (pl.length >= MAX_PLAYERS) break;
       const pr = pp(p);
-      if (!p.sameTab && pr.st === "join" && pr.tgt === S.myPeer && pr.jm === g.id && !pl.includes(p.peer)) { pl.push(p.peer); names.push(cleanNick(pr.nick) || "Player"); }
+      if (!p.sameTab && pr.st === "join" && pr.tgt === S.myPeer && pr.jm === g.id && !pl.includes(p.peer)) { pl.push(p.peer); names.push(cleanNick(pr.nick) || "Crew"); }
     }
     if (pl.length !== g.pl.length || JSON.stringify(names) !== JSON.stringify(g.nm)) setG({ pl, nm: names });
     return;
@@ -596,7 +666,7 @@ function hostTick() {
     return;
   }
 
-  // Bomb
+  // Hot Core
   let lv = g.lv.slice(), lvChanged = false;
   g.pl.forEach((_, s) => { if (!active[s] && lv[s] > 0) { lv[s] = 0; lvChanged = true; } });
   const alive = lv.map((l, s) => l > 0 ? s : -1).filter(s => s >= 0);
@@ -627,7 +697,7 @@ setInterval(() => {
   const m = S.match; if (!m || m.role !== "guest" || m.ended) return;
   if (!peerOf(m.host)) {
     m.hostGone = m.hostGone || Date.now();
-    if (Date.now() - m.hostGone > 6000) { if (m.g.ph === "lobby") leaveMatch("The host left, so the room closed."); else { m.g = { ...m.g, ph: "end", ab: 1 }; onGameState(); } }
+    if (Date.now() - m.hostGone > 6000) { if (m.g.ph === "lobby") leaveMatch("The captain left, so the room closed."); else { m.g = { ...m.g, ph: "end", ab: 1 }; onGameState(); } }
   }
 }, 1000);
 
@@ -651,7 +721,7 @@ function onGameState() {
       } else if (g.win === me) P.w++; else P.l++;
       scheduleSave();
     }
-    pushPresence({ mast: masteredCount() });
+    pushPresence({ mast: masteredIn(allQs()) });
   }
   if (S.view === "duel") renderMatch();
 }
@@ -679,8 +749,9 @@ function setTabs() {
 function render() {
   setTabs();
   const v = $("#view"); v.replaceChildren();
-  if (!S.bank.length) { v.append(el("div", { class: "sheet" }, el("p", { class: "muted" }, "Loading the question bank…"))); return; }
+  if (!S.bank.length) { v.append(el("div", { class: "sheet" }, el("p", { class: "muted" }, "Docking… loading the question banks."))); return; }
   if (S.view === "duel") v.append(S.match ? matchView() : lobbyView());
+  else if (S.view === "daily") v.append(dailyView());
   else if (S.view === "practice") v.append(practiceView());
   else if (S.view === "progress") v.append(progressView());
   else if (S.view === "leaderboard") v.append(boardView());
@@ -694,21 +765,21 @@ function poolSelect(id, value, onchange) {
 }
 function lobbyView() {
   const wrap = el("div", { class: "stack" });
-  if (S.roomState === "off") wrap.append(el("div", { class: "banner" }, S.setupMissing ? "Live games aren't set up yet: add your Firebase settings to firebase-config.js (see README). Practice and progress tracking still work." : "Live games can't connect right now. Practice and progress tracking still work."));
+  if (S.roomState === "off") wrap.append(el("div", { class: "banner" }, S.setupMissing ? "Live games aren't set up yet: add your Firebase settings to firebase-config.js (see README). Practice and the Daily test still work." : "Live games can't connect right now. Practice and the Daily test still work."));
   if (S.lobbyMsg) wrap.append(el("div", { class: "banner" }, S.lobbyMsg));
   const f = S.form;
   const left = el("section", { class: "sheet stack" });
-  left.append(el("p", { class: "eyebrow", style: "margin:0" }, `Host a room · ${bankInfo(S.subject).name} · 2–8 players`));
+  left.append(el("p", { class: "eyebrow", style: "margin:0" }, `Host a room · ${bankInfo(S.subject).name} · 2–8 crew`));
   if (S.joining) {
-    left.append(el("h2", {}, "Joining…"), el("p", { class: "muted pulse" }, "Waiting for the host to seat you."),
+    left.append(el("h2", {}, "Docking…"), el("p", { class: "muted blink" }, "Waiting for the captain to seat you."),
       el("div", {}, el("button", { class: "btn ghost", onclick: () => failJoin("") }, "Cancel")));
   } else {
     const modeCard = (val, title, desc) => el("label", { class: "mode" },
       el("input", { type: "radio", name: "mode", value: val, checked: f.mode === val, onchange: () => { f.mode = val; if (val === "bomb" && f.pool === "all") f.pool = "quick"; render(); } }),
       el("b", {}, title), el("span", {}, desc));
-    left.append(el("fieldset", { class: "modes" }, el("legend", { class: "note", style: "margin-bottom:6px" }, "Game mode"),
+    left.append(el("fieldset", { class: "modes" }, el("legend", { class: "note", style: "margin-bottom:10px" }, "Game mode"),
       modeCard("race", "Race", "Everyone gets the same question. The first correct answer scores. Answer wrong and you're out for that question."),
-      modeCard("bomb", "Bomb", "Pass the bomb round the table. Answer right to pass it on. Answer wrong or run out of time and it blows: you lose a life.")));
+      modeCard("bomb", "Hot Core", "Pass the unstable core round the ring. Answer right to pass it on. Answer wrong or too slowly and it blows: you lose a life.")));
     const settings = el("div", { class: "row" });
     if (f.mode === "race") {
       settings.append(el("label", { class: "field" }, el("span", {}, "Length"),
@@ -722,9 +793,9 @@ function lobbyView() {
     left.append(settings, el("div", {}, el("button", { class: "btn", onclick: () => withName(openRoom), disabled: S.roomState !== "on" }, "Open room")));
   }
   const right = el("section", { class: "sheet" },
-    el("p", { class: "eyebrow" }, "Lobby"),
+    el("p", { class: "eyebrow" }, "Docking bay"),
     el("div", { class: "row spread" }, el("h2", { style: "margin:0" }, "Open rooms"), el("span", { class: "note", id: "online" })),
-    el("div", { id: "openlist", style: "margin-top:10px" }));
+    el("div", { id: "openlist", style: "margin-top:12px" }));
   wrap.append(el("div", { class: "grid2" }, left, right));
   queueMicrotask(renderLobbyLists);
   return wrap;
@@ -732,19 +803,19 @@ function lobbyView() {
 function renderLobbyLists() {
   const box = $("#openlist"); if (!box) return;
   const online = $("#online");
-  if (online) online.textContent = S.roomState === "on" ? `${S.peers.length} online` : "";
-  if (S.roomState !== "on") { box.replaceChildren(el("div", { class: "empty" }, "The lobby isn't connected.")); return; }
+  if (online) online.textContent = S.roomState === "on" ? `${S.peers.length} aboard` : "";
+  if (S.roomState !== "on") { box.replaceChildren(el("div", { class: "empty" }, "The docking bay isn't connected.")); return; }
   const open = S.peers.filter(p => !p.sameTab && pp(p).st === "host" && validG(pp(p).g) && pp(p).g.ph === "lobby");
-  if (!open.length) { box.replaceChildren(el("div", { class: "empty" }, "No open rooms right now. Host one and anyone with this page open can join. To try it alone, open the page in a second tab.")); return; }
+  if (!open.length) { box.replaceChildren(el("div", { class: "empty" }, "No open rooms right now. Host one and anyone aboard can join. To try it alone, open the page in a second tab.")); return; }
   const ul = el("ul", { class: "lobby-list" });
   for (const p of open) {
     const g = pp(p).g, full = g.pl.length >= MAX_PLAYERS;
     const detail = g.mode === "race" ? `${Math.min(15, +g.n || 0)} questions` : `${Math.min(3, +g.lives || 1)} ${+g.lives === 1 ? "life" : "lives"} · ${Math.min(60, +g.lim || 30)} s fuse`;
     ul.append(el("li", {},
       el("div", { class: "who-col" },
-        el("div", { class: "nm" }, el("span", { class: "tag" }, g.mode === "race" ? "Race" : "Bomb"), (cleanNick(pp(p).nick) || "Player") + "'s room", p.isMe ? " (your other tab)" : ""),
+        el("div", { class: "nm" }, el("span", { class: "tag" + (g.mode === "race" ? " race" : "") }, modeName(g.mode)), (cleanNick(pp(p).nick) || "Crew") + "'s room", p.isMe ? " (your other tab)" : ""),
         el("div", { class: "note" }, `${roomSubject(g)} · ${g.pl.length}/${MAX_PLAYERS} seated · ${detail} · ${poolLabel(typeof g.pool === "string" ? g.pool : "all")}`)),
-      el("button", { class: "btn small", onclick: () => withName(() => joinRoom(p)), disabled: full || !!S.joining }, full ? "Full" : "Join")));
+      el("button", { class: "btn small teal", onclick: () => withName(() => joinRoom(p)), disabled: full || !!S.joining }, full ? "Full" : "Join")));
   }
   box.replaceChildren(ul);
 }
@@ -764,7 +835,7 @@ function questionCard(q, perm, opts) {
     }, el("span", { class: "bubble" }, LETTERS[k]), el("span", { class: "otext" }, q.o[orig]), marks)));
   });
   const fig = q.fig ? el("figure", { class: "fig" }) : null;
-  if (fig) fig.append(svgEl(q.fig));   // figures are our own SVG from questions.json
+  if (fig) fig.append(svgEl(q.fig));   // figures are our own SVG from the question banks
   return el("article", { class: "qcard" },
     el("div", { class: "qhead" }, el("span", { class: "qid" }, q.id), el("span", { class: "qtopic" }, q.topic)),
     el("p", { class: "stem" }, q.q),
@@ -775,10 +846,20 @@ function questionCard(q, perm, opts) {
 }
 
 /* the round table */
-const RING = 2 * Math.PI * 46;
+const RING_N = 24;
 function seatAngle(g, s) {
   const base = Math.max(0, g.pl.indexOf(S.myPeer));
   return 90 + 360 * (s - base) / g.pl.length;   // you sit at the bottom
+}
+function ringSvg(frac) {
+  let r = "";
+  const on = Math.round(frac * RING_N);
+  for (let i = 0; i < RING_N; i++) {
+    const a = -Math.PI / 2 + 2 * Math.PI * i / RING_N;
+    const x = 50 + 44 * Math.cos(a) - 3, y = 50 + 44 * Math.sin(a) - 3;
+    r += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="6" height="6"${i < on ? ' class="on"' : ""}/>`;
+  }
+  return svgEl(`<svg class="ring" id="ring" viewBox="0 0 100 100" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`);
 }
 function tableView() {
   const m = S.match, g = m.g;
@@ -796,15 +877,13 @@ function tableView() {
     }
     if (g.ph === "r" && g.mode === "bomb" && g.res && g.res.seat === s) mark = el("span", { class: "mark " + (g.res.ok ? "ok" : "no") }, g.res.ok ? "✓" : "✗");
     let badge;
-    if (g.mode === "race") badge = el("span", { class: "sb" }, g.sc ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === 0 ? "host" : "ready"));
+    if (g.mode === "race") badge = el("span", { class: "sb" }, g.sc ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === 0 ? "captain" : "ready"));
     else badge = el("span", { class: "sb hearts", "aria-label": `${g.lv ? g.lv[s] : g.lives} lives` }, g.lv ? "♥".repeat(Math.max(0, g.lv[s])) + "♡".repeat(Math.max(0, g.lives - g.lv[s])) : "♥".repeat(g.lives));
+    const av = el("div", { class: "av", style: `--c:${seatColor(s)}`, title: seatName(g, s) }, helmet(s), mark);
     t.append(el("div", {
       class: "seat" + (isMe ? " me" : "") + (holder ? " holder" : "") + (out ? " out" : "") + (present ? "" : " gone"),
       style: `left:${(50 + 41 * Math.cos(ang)).toFixed(2)}%;top:${(50 + 41 * Math.sin(ang)).toFixed(2)}%`
-    },
-      el("div", { class: "av", style: `--c:${seatColor(s)}` }, initials(seatName(g, s)), mark),
-      el("span", { class: "sn" }, isMe ? "You" : seatName(g, s)),
-      badge));
+    }, av, el("span", { class: "sn" }, isMe ? "You" : seatName(g, s)), badge));
   });
   t.append(hubView());
   return t;
@@ -812,20 +891,17 @@ function tableView() {
 function hubView() {
   const m = S.match, g = m.g;
   const hub = el("div", { class: "hub", id: "hub" });
-  const ring = prog => svgEl(`<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="46"/><circle class="prog" id="ringprog" cx="50" cy="50" r="46" stroke-dasharray="${RING.toFixed(1)}" stroke-dashoffset="${(RING * (1 - prog)).toFixed(1)}"/></svg>`);
-  if (g.ph === "lobby") { hub.append(el("div", {}, el("div", { class: "big" }, `${g.pl.length}/${MAX_PLAYERS}`), el("div", { class: "lbl" }, "SEATED"))); return hub; }
+  if (g.ph === "lobby") { hub.append(el("div", {}, el("div", { class: "big" }, `${g.pl.length}/${MAX_PLAYERS}`), el("div", { class: "lbl" }, "crew aboard"))); return hub; }
   if (g.ph === "cd") { hub.append(el("div", { class: "big", id: "cd" }, "3")); return hub; }
-  if (g.ph === "end") { hub.append(el("div", { class: "lbl" }, "FINAL")); return hub; }
+  if (g.ph === "end") { hub.append(el("div", { class: "lbl" }, "mission over")); return hub; }
   if (g.mode === "race") {
-    hub.append(ring(g.ph === "q" ? 1 : 0), el("div", {}, el("div", { class: "big" }, g.k + 1), el("div", { class: "lbl" }, `OF ${g.n}`)));
+    hub.append(ringSvg(g.ph === "q" ? 1 : 0), el("div", {}, el("div", { class: "big" }, g.k + 1), el("div", { class: "lbl" }, `of ${g.n}`)));
     return hub;
   }
+  hub.classList.add("hot");
   if (g.ph === "r" && g.res && g.res.boom) hub.classList.add("boom");
   const ang = seatAngle(g, g.turn);
-  hub.append(ring(g.ph === "q" ? 1 : 0),
-    el("div", { class: "pointer", style: `transform:rotate(${ang}deg)` }),
-    svgEl(`<svg class="bomb" viewBox="0 0 100 100" aria-hidden="true"><path class="fuse" d="M58 30 Q66 12 76 14"/><rect class="cap" x="46" y="26" width="16" height="10" rx="2" transform="rotate(20 54 31)"/><circle class="body" cx="46" cy="60" r="30"/><ellipse class="shine" cx="36" cy="49" rx="8" ry="5" transform="rotate(-35 36 49)"/>${g.ph === "q" ? '<circle class="spark" cx="76" cy="14" r="6"/>' : ""}</svg>`),
-    el("span", { class: "count", id: "fusecount" }, ""));
+  hub.append(ringSvg(g.ph === "q" ? 1 : 0), el("div", { class: "pointer", style: `transform:rotate(${ang}deg)` }), coreSprite(), el("span", { class: "count", id: "fusecount" }, ""));
   return hub;
 }
 function renderTable() {
@@ -836,7 +912,7 @@ function renderTable() {
 function matchView() {
   const m = S.match, g = m.g, me = mySeat(), host = m.role === "host";
   const box = el("section", { class: "sheet stack", id: "matchbox" });
-  const head = `${roomSubject(g)} · ` + (g.mode === "race" ? `Race · ${g.n} questions · ${poolLabel(g.pool || "all")}` : `Bomb · ${g.lives} ${g.lives === 1 ? "life" : "lives"} · ${g.lim} s fuse · ${poolLabel(g.pool || "all")}`);
+  const head = `${roomSubject(g)} · ${modeName(g.mode)} · ` + (g.mode === "race" ? `${g.n} questions · ${poolLabel(g.pool || "all")}` : `${g.lives} ${g.lives === 1 ? "life" : "lives"} · ${g.lim} s fuse · ${poolLabel(g.pool || "all")}`);
   box.append(el("div", { class: "row spread" }, el("p", { class: "eyebrow", style: "margin:0" }, head),
     g.ph === "end" ? null : el("button", { class: "btn ghost small", id: "leave", onclick: e => {
       if (e.currentTarget.dataset.armed) return leaveMatch(host ? "You closed your room." : "");
@@ -849,14 +925,14 @@ function matchView() {
 
   if (g.ph === "lobby") {
     if (host) panel.append(
-      el("p", { class: "status" }, g.pl.length < 2 ? "Waiting for players to join…" : `${g.pl.length} players seated.`),
-      el("p", { class: "muted" }, "Your room is listed in the lobby. Anyone with this page open can join, up to 8 players."),
+      el("p", { class: "status" }, g.pl.length < 2 ? "Waiting for crew to board…" : `${g.pl.length} crew seated.`),
+      el("p", { class: "muted" }, "Your room is listed in the docking bay. Anyone aboard can join, up to 8 crew."),
       el("div", {}, el("button", { class: "btn", onclick: startGame, disabled: g.pl.length < 2 }, g.pl.length < 2 ? "Need at least 2 players" : `Start with ${g.pl.length} players`)));
-    else panel.append(el("p", { class: "status pulse" }, `Waiting for ${seatName(g, 0)} to start…`), el("p", { class: "muted" }, `${g.pl.length} of ${MAX_PLAYERS} seats taken.`));
+    else panel.append(el("p", { class: "status blink" }, `Waiting for ${seatName(g, 0)} to launch…`), el("p", { class: "muted" }, `${g.pl.length} of ${MAX_PLAYERS} seats taken.`));
     return box;
   }
   if (g.ph === "cd") {
-    panel.append(el("p", { class: "status", style: "text-align:center" }, g.mode === "race" ? "First correct answer scores." : `${seatName(g, g.turn)} starts with the bomb.`));
+    panel.append(el("p", { class: "status", style: "text-align:center" }, g.mode === "race" ? "First correct answer scores." : `${seatName(g, g.turn)} starts with the core.`));
     return box;
   }
   if (g.ph === "end") { panel.append(endView()); return box; }
@@ -874,20 +950,20 @@ function matchView() {
       panel.append(el("div", { class: "row spread" },
         el("div", {}, el("div", { class: "status " + (res.w === me ? "win" : "") }, txt),
           res.w >= 0 ? el("div", { class: "note" }, `in ${(res.rt[res.w] / 1000).toFixed(1)} s`) : null),
-        m.readyKey === key ? el("span", { class: "note pulse" }, "Waiting for the others…") : el("button", { class: "btn", onclick: ready }, g.k + 1 < g.n ? "Next question" : "See results")));
+        m.readyKey === key ? el("span", { class: "note blink" }, "Waiting for the others…") : el("button", { class: "btn teal", onclick: ready }, g.k + 1 < g.n ? "Next question" : "See results")));
       const picks = g.pl.map((p, s) => ({ orig: res.c[s], seat: s, label: s === me ? "YOU" : initials(seatName(g, s)) })).filter(p => p.orig != null);
       panel.append(questionCard(q, perm, { disabled: true, mine: me >= 0 ? res.c[me] : null, reveal: true, picks }));
     }
   } else {
     const holding = g.turn === me;
     if (g.ph === "q") {
-      panel.append(el("p", { class: "status " + (holding ? "lose" : "") }, holding ? "You have the bomb. Answer before it blows!" : `${seatName(g, g.turn)} has the bomb.`));
+      panel.append(el("p", { class: "status " + (holding ? "lose" : "") }, holding ? "You have the core. Answer before it blows!" : `${seatName(g, g.turn)} has the core.`));
       panel.append(questionCard(q, perm, { onPick: answer, disabled: !holding || !!mine, mine: holding && mine ? mine.c : null }));
     } else {
       const res = g.res || {};
       const who = res.seat === me ? "You" : seatName(g, res.seat);
       const lost = g.lv && g.lv[res.seat] <= 0;
-      const txt = res.ok ? `${who} got it. The bomb moves on.` : `BOOM! ${who} ${res.c == null ? "ran out of time" : "picked the wrong answer"}${lost ? (res.seat === me ? " and you're out." : " and is out.") : " and lost a life."}`;
+      const txt = res.ok ? `${who} got it. The core moves on.` : `BOOM! ${who} ${res.c == null ? "ran out of time" : "picked the wrong answer"}${lost ? (res.seat === me ? " and you're out." : " and is out.") : " and lost a life."}`;
       panel.append(el("p", { class: "status " + (res.ok ? "win" : "lose") }, txt));
       panel.append(questionCard(q, perm, { disabled: true, mine: res.seat === me ? res.c : null, reveal: true,
         picks: res.c != null ? [{ orig: res.c, seat: res.seat, label: res.seat === me ? "YOU" : initials(seatName(g, res.seat)) }] : [] }));
@@ -899,37 +975,39 @@ function endView() {
   const m = S.match, g = m.g, me = mySeat();
   const wrap = el("div", { class: "stack" });
   let head, order;
-  if (g.ab) head = m.role === "guest" && !peerOf(m.host) ? "The host left, so the game ended." : "Everyone else left, so the game ended.";
+  if (g.ab) head = m.role === "guest" && !peerOf(m.host) ? "The captain left, so the game ended." : "Everyone else left, so the game ended.";
   if (g.mode === "race") {
     order = g.pl.map((_, s) => s).sort((a, b) => (g.sc[b] - g.sc[a]) || a - b);
     const best = Math.max(...g.sc), tops = g.sc.filter(x => x === best).length;
     if (!head) head = g.sc[me] === best ? (tops === 1 ? "You win!" : "You share first place.") : `${order.filter(s => g.sc[s] === best).map(s => seatName(g, s)).join(" and ")} ${tops === 1 ? "wins" : "share first place"}.`;
   } else {
     order = g.pl.map((_, s) => s).sort((a, b) => (b === g.win) - (a === g.win) || (g.lv[b] - g.lv[a]) || a - b);
-    if (!head) head = g.win === me ? "You're the last one standing!" : g.win >= 0 ? `${seatName(g, g.win)} is the last one standing.` : "Nobody survived.";
+    if (!head) head = g.win === me ? "You're the last one standing!" : g.win >= 0 ? `${seatName(g, g.win)} is the last one standing.` : "Nobody survived the core.";
   }
   wrap.append(el("p", { class: "status " + ((g.mode === "race" ? g.sc[me] === Math.max(...g.sc) : g.win === me) && !g.ab ? "win" : "") }, head));
   wrap.append(el("ol", { class: "standings" }, order.map((s, i) => el("li", { class: i === 0 && !g.ab ? "first" : "" },
     el("span", { class: "pos" }, i + 1),
-    el("span", { class: "av mini", style: `--c:${seatColor(s)}` }, initials(seatName(g, s))),
+    el("span", { class: "av" }, helmet(s)),
     el("span", { class: "pn" }, s === me ? `${seatName(g, s)} (you)` : seatName(g, s)),
     el("span", { class: "pv" }, g.mode === "race" ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === g.win ? "survived" : "out"))))));
   wrap.append(el("p", { class: "note" }, g.ab ? "This game isn't counted. Your answers are still saved to Progress." : "Your answers are saved to Progress."));
-  wrap.append(el("div", { class: "row" }, el("button", { class: "btn", onclick: () => leaveMatch() }, "Back to lobby"),
+  wrap.append(el("div", { class: "row" }, el("button", { class: "btn teal", onclick: () => leaveMatch() }, "Back to lobby"),
     el("a", { class: "btn ghost", href: "#progress", onclick: () => leaveMatch() }, "View progress")));
   return wrap;
 }
 function renderMatch() { if (S.view !== "duel") return; $("#view").replaceChildren(S.match ? matchView() : lobbyView()); }
 
-// Timers: question bar, hub ring, bomb fuse, countdown.
+// Timers: question bar, hub ring, core fuse, countdown, daily speed bonus.
 setInterval(() => {
+  if (S.view === "daily") return tickDaily();
   const m = S.match; if (!m || S.view !== "duel") return;
   const g = m.g, key = g.id + ":" + g.k;
   if (g.ph === "q") {
     const elapsed = (performance.now() - (m.qStart[key] || performance.now())) / 1000;
     const frac = Math.max(0, 1 - elapsed / g.lim);
     const bar = $("#tbar"); if (bar) bar.style.width = (frac * 100).toFixed(1) + "%";
-    const rp = $("#ringprog"); if (rp) rp.setAttribute("stroke-dashoffset", (RING * (1 - frac)).toFixed(1));
+    const ring = $("#ring");
+    if (ring) { const on = Math.round(frac * RING_N); ring.querySelectorAll("rect").forEach((r, i) => r.classList.toggle("on", i < on)); }
     const fc = $("#fusecount"); if (fc) fc.textContent = Math.ceil(frac * g.lim) + " s";
     const hub = $("#hub"); if (hub && g.mode === "bomb") hub.classList.toggle("urgent", frac * g.lim < 6);
     if (frac === 0 && !validAns(m.my, g)) for (const b of document.querySelectorAll("#matchbox .opt")) b.disabled = true;
@@ -937,6 +1015,214 @@ setInterval(() => {
     const cd = $("#cd"); if (cd && m.cdAt) cd.textContent = Math.max(1, 3 - Math.floor((performance.now() - m.cdAt) / 1000));
   }
 }, 250);
+
+/* ---------- daily test ----------
+   Four questions a day per subject, one from each difficulty tier (d = 1..4), the same for everyone (seeded by the
+   Singapore date). Each correct answer scores 100·d points × a speed multiplier that drains from 1.0 to 0.5 over
+   30·d seconds, so the maximum is 1000. Wrong answers score 0. One attempt per subject per day. */
+const dayKey = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);   // Singapore time
+const SPEED_WINDOW = d => 30 * d;
+function dailyPoints(d, ok, sec) { return ok ? Math.round(100 * d * (0.5 + 0.5 * Math.max(0, 1 - sec / SPEED_WINDOW(d)))) : 0; }
+function dailyQuestions(bk, day) {
+  const qs = S.banks[bk].questions, out = [];
+  for (let d = 1; d <= 4; d++) {
+    const tier = qs.filter(q => q.d === d);
+    const r = rng(hash(`daily:${bk}:${day}:${d}`));
+    out.push(tier[Math.floor(r() * tier.length)].id);
+  }
+  return out;
+}
+function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); while (v === 0) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+// Simulated crew fill the curve until enough real players have taken today's test: scores drawn from a normal
+// distribution (mean 470, s.d. 170), seeded by subject and date so everyone sees the same ones.
+function simEntries(bk, day, n) {
+  const r = rng(hash(`sim:${bk}:${day}`)), out = [];
+  for (let i = 0; i < n; i++) {
+    const score = Math.round(Math.max(0, Math.min(1000, 470 + 170 * gauss(r))));
+    const correct = Math.max(0, Math.min(4, Math.round(score / 250 + 0.4 * gauss(r))));
+    const time = Math.round(Math.max(20, 160 - score / 8 + 25 * gauss(r)));
+    out.push({ id: "sim" + i, nick: "Sim cadet " + String(i + 1).padStart(3, "0"), score, correct, time, sim: true });
+  }
+  return out;
+}
+const dailyLocalKey = (bk, day) => `p1d.daily.${bk}.${day}`;
+function loadDaily() {
+  const bk = S.subject, day = dayKey(), key = bk + ":" + day;
+  if (S.daily && S.daily.key === key) return;
+  const saved = lsGet(dailyLocalKey(bk, day));
+  S.daily = saved && saved.done ? { ...saved, key, phase: "done" } : { key, bk, day, qs: dailyQuestions(bk, day), idx: 0, answers: [], phase: "intro", perms: [0, 1, 2, 3].map(() => shuffle([0, 1, 2, 3])) };
+  subscribeDaily(bk, day);
+}
+let dailyUnsub = null;
+function subscribeDaily(bk, day) {
+  const key = bk + ":" + day;
+  if (S.dailyKey === key) return;
+  if (dailyUnsub) { dailyUnsub(); dailyUnsub = null; }
+  S.dailyKey = key; S.dailyEntries = []; S.dailyState = S.db ? "loading" : "offline";
+  if (!S.db) return;
+  dailyUnsub = S.db.collection(`daily/${bk}/${day}`).onSnapshot(snap => {
+    S.dailyEntries = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(e => Number.isFinite(+e.score)).map(e => ({ id: e.id, nick: cleanNick(e.nick) || "Crew", score: Math.max(0, Math.min(1000, +e.score)), correct: +e.correct || 0, time: +e.time || 0 }));
+    S.dailyState = "ok";
+    if (S.view === "daily" && S.daily && S.daily.phase === "done") render();
+  }, () => { S.dailyState = "error"; if (S.view === "daily") render(); });
+}
+function startDaily() {
+  const dl = S.daily; dl.phase = "q"; dl.idx = 0; dl.answers = []; dl.qStart = performance.now(); render();
+}
+function answerDaily(orig) {
+  const dl = S.daily; if (dl.phase !== "q") return;
+  const q = Q(dl.qs[dl.idx]), sec = (performance.now() - dl.qStart) / 1000;
+  const ok = orig === q.a, pts = dailyPoints(q.d, ok, sec);
+  dl.answers.push({ c: orig, ok, sec: Math.round(sec * 10) / 10, pts });
+  record(q.id, ok);
+  dl.phase = "fb"; render();
+}
+function nextDaily() {
+  const dl = S.daily;
+  if (dl.idx < 3) { dl.idx++; dl.phase = "q"; dl.qStart = performance.now(); render(); return; }
+  dl.phase = "done"; dl.done = true;
+  dl.score = dl.answers.reduce((s, a) => s + a.pts, 0);
+  dl.correct = dl.answers.filter(a => a.ok).length;
+  dl.time = Math.round(dl.answers.reduce((s, a) => s + a.sec, 0));
+  lsSet(dailyLocalKey(dl.bk, dl.day), { done: true, bk: dl.bk, day: dl.day, qs: dl.qs, answers: dl.answers, score: dl.score, correct: dl.correct, time: dl.time, perms: dl.perms, nick: S.nick });
+  if (S.db && S.uid) {
+    S.db.doc(`daily/${dl.bk}/${dl.day}/${S.uid}`).set({ nick: S.nick, score: dl.score, correct: dl.correct, time: dl.time, t: Date.now() })
+      .then(() => { dl.posted = true; })
+      .catch(() => { dl.postFailed = true; if (S.view === "daily") render(); });
+  }
+  render();
+}
+function tickDaily() {
+  const dl = S.daily; if (!dl || dl.phase !== "q") return;
+  const q = Q(dl.qs[dl.idx]), sec = (performance.now() - dl.qStart) / 1000;
+  const w = $("#worth"); if (w) w.textContent = `Worth ${dailyPoints(q.d, true, sec)} / ${100 * q.d} pts`;
+  const bar = $("#tbar"); if (bar) bar.style.width = (100 * Math.max(0, 1 - sec / SPEED_WINDOW(q.d))).toFixed(1) + "%";
+}
+function tierPips(d) { return el("span", { class: "tier" }, [1, 2, 3, 4].map(i => el("i", { class: i <= d ? "on" : "" })), ` Tier ${d}`); }
+function dailyView() {
+  loadDaily();
+  const dl = S.daily, wrap = el("div", { class: "stack" });
+  const steps = el("div", { class: "steps", "aria-hidden": "true" }, [0, 1, 2, 3].map(i => el("span", { class: dl.phase === "done" || i < dl.idx || (i === dl.idx && dl.phase === "fb") ? "done" : i === dl.idx && dl.phase === "q" ? "now" : "" })));
+  const head = el("section", { class: "sheet" },
+    el("div", { class: "row spread" },
+      el("div", {}, el("p", { class: "eyebrow" }, `Daily test · ${bankInfo(dl.bk).name} · ${dl.day}`), el("h2", { style: "margin:0" }, dl.phase === "done" ? "Today's results" : "Four questions, rising difficulty")),
+      steps));
+  wrap.append(head);
+  if (dl.phase === "intro") {
+    head.append(el("div", { class: "stack", style: "margin-top:14px" },
+      el("p", {}, "Everyone gets the same four questions today, one from each difficulty tier. A correct answer on tier d is worth up to 100 × d points. The speed bonus drains over 30 × d seconds, down to half points. A wrong answer scores 0. The maximum is 1000."),
+      el("p", { class: "muted" }, "You get one attempt per subject per day. It resets at midnight, Singapore time. Your score is placed on today's bell curve with everyone else's."),
+      el("div", {}, el("button", { class: "btn", onclick: startDaily }, "Start the test"))));
+    return wrap;
+  }
+  if (dl.phase === "q" || dl.phase === "fb") {
+    const q = Q(dl.qs[dl.idx]), perm = dl.perms[dl.idx], a = dl.answers[dl.idx];
+    const card = el("section", { class: "sheet stack" });
+    card.append(el("div", { class: "dq-meta" }, tierPips(q.d), el("span", { class: "note" }, `Question ${dl.idx + 1} of 4`),
+      dl.phase === "q" ? el("span", { class: "worth", id: "worth" }, `Worth ${100 * q.d} / ${100 * q.d} pts`) : el("span", { class: "worth" }, a.ok ? `+${a.pts} pts in ${a.sec} s` : `0 pts · ${a.sec} s`)));
+    if (dl.phase === "q") card.append(el("div", { class: "timer" }, el("i", { id: "tbar" })));
+    card.append(questionCard(q, perm, { onPick: answerDaily, disabled: dl.phase !== "q", mine: a ? a.c : null, reveal: dl.phase === "fb" }));
+    if (dl.phase === "fb") card.append(el("div", {}, el("button", { class: "btn teal", onclick: nextDaily }, dl.idx < 3 ? "Next question" : "See my result")));
+    wrap.append(card);
+    return wrap;
+  }
+  wrap.append(dailyResults());
+  return wrap;
+}
+function dailyResults() {
+  const dl = S.daily;
+  const real = S.dailyEntries.slice();
+  const meId = S.uid || "me";
+  if (!real.some(e => e.id === meId)) real.push({ id: meId, nick: S.nick, score: dl.score, correct: dl.correct, time: dl.time });
+  const simCount = Math.max(0, 100 - real.length);
+  const all = real.concat(simEntries(dl.bk, dl.day, simCount));
+  const scores = all.map(e => e.score);
+  const n = all.length, mean = scores.reduce((a, b) => a + b, 0) / n;
+  const sd = Math.sqrt(scores.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, n - 1)) || 1;
+  const rank = 1 + all.filter(e => e.score > dl.score).length;
+  const below = all.filter(e => e.score < dl.score).length, ties = all.filter(e => e.score === dl.score).length - 1;
+  const pct = Math.round(100 * (below + ties / 2) / Math.max(1, n - 1));
+  const z = (dl.score - mean) / sd;
+
+  const box = el("section", { class: "sheet stack" });
+  box.append(el("div", { class: "headline" },
+    el("div", {}, el("p", { class: "eyebrow" }, "Your score"), el("div", { class: "score" }, dl.score), el("div", { class: "note" }, "out of 1000")),
+    el("div", { class: "facts" },
+      el("div", {}, el("b", {}, `#${rank} of ${n}`), el("span", {}, "rank today")),
+      el("div", {}, el("b", {}, `${pct}th`), el("span", {}, "percentile")),
+      el("div", {}, el("b", {}, (z >= 0 ? "+" : "") + z.toFixed(2)), el("span", {}, "z-score")),
+      el("div", {}, el("b", {}, `${dl.correct}/4 · ${dl.time} s`), el("span", {}, "correct · time")))));
+  box.append(el("ol", { class: "breakdown" }, dl.qs.map((id, i) => {
+    const q = Q(id), a = dl.answers[i];
+    return el("li", {}, tierPips(q.d), el("span", {}, `${q.id} · ${a.ok ? "correct" : "wrong"} · ${a.sec} s`), el("span", { class: "pts" }, `+${a.pts}`));
+  })));
+  box.append(el("h3", { style: "margin-top:6px" }, "Today's bell curve"));
+  box.append(bellCurve(all, dl.score, mean, sd));
+  box.append(el("div", { class: "key" },
+    el("span", {}, el("i", { style: "background:var(--real)" }), `Real crew (${real.length})`),
+    simCount ? el("span", {}, el("i", { style: "background:var(--sim)" }), `Simulated crew (${simCount}), filling the curve until 100 real players take today's test`) : null,
+    el("span", {}, el("i", { style: "background:var(--gold);height:3px;vertical-align:4px" }), `Normal fit · mean ${Math.round(mean)}, s.d. ${Math.round(sd)}`),
+    el("span", {}, el("i", { style: "background:var(--core);width:4px" }), "You")));
+  if (S.dailyState === "loading") box.append(el("p", { class: "note blink" }, "Loading real scores…"));
+  if (S.dailyState === "offline" || S.dailyState === "error" || dl.postFailed) box.append(el("div", { class: "banner" }, dl.postFailed || S.dailyState === "error" ? "Your score is saved on this device, but it couldn't be posted to today's board. The database rules may need the daily section from database.rules.json." : "Offline: you're compared against simulated crew only."));
+  const top = all.slice().sort((a, b) => b.score - a.score || a.time - b.time);
+  const myIdx = top.findIndex(e => e.id === meId);
+  const shown = top.slice(0, 10);
+  if (myIdx >= 10) shown.push(top[myIdx]);
+  box.append(el("div", { class: "tablewrap" }, el("table", {},
+    el("thead", {}, el("tr", {}, el("th", { class: "num" }, "#"), el("th", {}, "Crew"), el("th", { class: "num" }, "Score"), el("th", { class: "num" }, "Correct"), el("th", { class: "num" }, "Time"))),
+    el("tbody", {}, shown.map(e => el("tr", { class: e.id === meId ? "me" : e.sim ? "sim" : null },
+      el("td", { class: "num" }, 1 + top.filter(x => x.score > e.score).length), el("td", {}, e.id === meId ? `${e.nick} (you)` : e.nick + (e.sim ? " · sim" : "")),
+      el("td", { class: "num" }, e.score), el("td", { class: "num" }, `${e.correct}/4`), el("td", { class: "num" }, `${e.time} s`)))))));
+  return box;
+}
+function bellCurve(all, myScore, mean, sd) {
+  const W = 640, H = 270, L = 44, R = 16, T = 26, B = 40, BIN = 50, NB = 20;
+  const bins = Array.from({ length: NB }, () => ({ real: 0, sim: 0 }));
+  for (const e of all) { const b = Math.min(NB - 1, Math.floor(e.score / BIN)); bins[b][e.sim ? "sim" : "real"]++; }
+  const n = all.length;
+  const pdf = x => Math.exp(-0.5 * ((x - mean) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI));
+  const peakFit = n * BIN * pdf(mean);
+  const maxC = Math.max(4, peakFit, ...bins.map(b => b.real + b.sim));
+  const yMax = Math.ceil(maxC / 4) * 4;
+  const X = v => L + (W - L - R) * v / 1000, Y = c => H - B - (H - B - T) * c / yMax;
+  const bw = (W - L - R) / NB;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogram of today's daily test scores with a normal curve; your score is ${myScore}">`;
+  for (let c = 0; c <= yMax; c += yMax / 4) s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(c)}" y2="${Y(c)}"/><text x="${L - 8}" y="${Y(c) + 4}" text-anchor="end">${c}</text>`;
+  bins.forEach((b, i) => {
+    const x = X(i * BIN) + 1, w = bw - 2;   // 2px gap between bars
+    const yr = Y(b.real), ys = Y(b.real + b.sim);
+    s += `<g class="bin" data-i="${i}">`;
+    if (b.real) s += `<rect class="real" x="${x.toFixed(1)}" y="${yr.toFixed(1)}" width="${w.toFixed(1)}" height="${(Y(0) - yr).toFixed(1)}"/>`;
+    if (b.sim) s += `<rect class="sim" x="${x.toFixed(1)}" y="${ys.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0, yr - ys - (b.real ? 2 : 0)).toFixed(1)}"/>`;
+    s += `<rect class="hit" x="${X(i * BIN).toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${H - B - T}"/></g>`;
+  });
+  // stepped (pixel) normal curve
+  let d = "";
+  for (let v = 0; v <= 1000; v += 10) { const y = Y(n * BIN * pdf(v)); d += (v === 0 ? `M${X(v).toFixed(1)} ${y.toFixed(1)}` : ` H${X(v).toFixed(1)} V${y.toFixed(1)}`); }
+  s += `<path class="fit" d="${d}"/>`;
+  s += `<line class="axis" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  for (let v = 0; v <= 1000; v += 200) s += `<text x="${X(v)}" y="${H - B + 18}" text-anchor="middle">${v}</text>`;
+  s += `<text x="${W - R}" y="${H - 6}" text-anchor="end">score</text><text x="${L}" y="${T - 10}" text-anchor="start">players</text>`;
+  const xm = X(myScore);
+  s += `<line class="you" x1="${xm}" x2="${xm}" y1="${T}" y2="${Y(0)}"/><text class="youlbl" x="${Math.min(W - R - 4, Math.max(L + 4, xm))}" y="${T - 10}" text-anchor="${xm > W - 80 ? "end" : xm < L + 60 ? "start" : "middle"}">YOU ${myScore}</text>`;
+  s += `</svg>`;
+  const wrap = el("div", { class: "chartwrap" });
+  const svg = svgEl(s); wrap.append(svg);
+  const tip = el("div", { class: "tip", hidden: true }); wrap.append(tip);
+  svg.querySelectorAll("g.bin").forEach(g => {
+    const i = +g.dataset.i, b = bins[i];
+    g.addEventListener("pointerenter", () => {
+      tip.textContent = `${i * BIN}–${i * BIN + BIN - 1} pts: ${b.real} real, ${b.sim} simulated`;
+      const r = g.getBoundingClientRect(), wr = wrap.getBoundingClientRect(), sr = svg.getBoundingClientRect();
+      tip.style.left = (r.left - wr.left + wrap.scrollLeft + r.width / 2) + "px";
+      tip.style.top = (sr.top - wr.top + sr.height * (Y(b.real + b.sim) / H)) + "px";
+      tip.hidden = false;
+    });
+    g.addEventListener("pointerleave", () => { tip.hidden = true; });
+  });
+  return wrap;
+}
 
 /* practice */
 function practicePool(topic) {
@@ -977,21 +1263,22 @@ function practiceView() {
   const wrap = el("div", { class: "stack" });
   wrap.append(el("section", { class: "sheet" },
     el("div", { class: "row spread", style: "align-items:end" },
-      el("div", {}, el("p", { class: "eyebrow" }, "Solo practice"), el("h2", { style: "margin:0" }, "Work through the question set")),
+      el("div", {}, el("p", { class: "eyebrow" }, "Solo practice · simulator deck"), el("h2", { style: "margin:0" }, "Work through the question set")),
       el("div", { class: "row" }, el("label", { class: "field" }, el("span", {}, "Topic"), tSel), el("label", { class: "field" }, el("span", {}, "Order"), mSel)))));
   const card = el("section", { class: "sheet stack" });
   if (!pr.qid) {
     card.append(el("p", {}, pr.mode === "mistakes" ? "No mistakes to retry here. Every question you've answered in this set was right last time." : "No questions match."));
   } else {
     const q = Q(pr.qid), done = pr.picked !== null;
+    card.append(el("div", { class: "dq-meta" }, tierPips(q.d || 1)));
     card.append(questionCard(q, pr.perm, {
       disabled: done, mine: pr.picked, reveal: done,
-      onPick: orig => { if (pr.picked !== null) return; pr.picked = orig; record(q.id, orig === q.a); pushPresence({ mast: masteredCount() }); render(); }
+      onPick: orig => { if (pr.picked !== null) return; pr.picked = orig; record(q.id, orig === q.a); pushPresence({ mast: masteredIn(allQs()) }); render(); }
     }));
     const st = P.q[q.id];
     card.append(el("div", { class: "row spread" },
       el("span", { class: "note" }, st ? `Answered ${st.n}× · correct ${st.c}×` : "First attempt"),
-      done ? el("button", { class: "btn", onclick: () => { nextPractice(); render(); } }, "Next question") : el("span", { class: "note" }, `${masteredCount()} / ${S.bank.length} mastered`)));
+      done ? el("button", { class: "btn teal", onclick: () => { nextPractice(); render(); } }, "Next question") : el("span", { class: "note" }, `${masteredCount()} / ${S.bank.length} mastered`)));
   }
   wrap.append(card);
   return wrap;
@@ -1009,13 +1296,13 @@ function progressView() {
     el("div", { class: "stat" }, el("b", {}, `${P.w}–${P.l}–${P.d}`), el("span", {}, "Games W–L–D, all subjects"))));
   const sheet = el("section", { class: "sheet" });
   sheet.append(
-    el("p", { class: "eyebrow" }, "Answer sheet"),
+    el("p", { class: "eyebrow" }, "Mission log"),
     el("h2", {}, `${bankInfo(S.subject).name}, by topic`),
     el("div", { class: "legend" },
       el("span", {}, el("span", { class: "oval" }), "Not yet answered"),
       el("span", {}, el("span", { class: "oval ok" }), "Right last time"),
       el("span", {}, el("span", { class: "oval no" }), "Wrong last time"),
-      el("span", {}, "Click a bubble to practise that question.")));
+      el("span", {}, "Click a square to practise that question.")));
   for (const s of S.sections) {
     const qs = S.bank.filter(q => s.topics.includes(q.topic));
     const sm = qs.filter(q => P.q[q.id]?.last === 1).length;
@@ -1027,7 +1314,7 @@ function progressView() {
         el("span", { class: "tn" }, t),
         el("div", { class: "ovals" }, tq.map((q, i) => {
           const r = P.q[q.id];
-          return el("button", { class: "oval" + (r ? (r.last === 1 ? " ok" : " no") : ""), title: `${q.id}${q.fig ? " (picture)" : ""}${r ? ` · ${r.c}/${r.n} correct` : " · not yet answered"}`, "aria-label": `${q.id}, practise`,
+          return el("button", { class: "oval" + (r ? (r.last === 1 ? " ok" : " no") : ""), title: `${q.id} · tier ${q.d || "?"}${q.fig ? " · picture" : ""}${r ? ` · ${r.c}/${r.n} correct` : " · not yet answered"}`, "aria-label": `${q.id}, practise`,
             onclick: () => { S.prac.topic = t; nextPractice(q.id); location.hash = "practice"; } }, i + 1);
         })),
         el("span", { class: "tpct" }, `${tm}/${tq.length}`)));
@@ -1055,7 +1342,7 @@ function subscribeBoard() {
 function boardView() {
   const sheet = el("section", { class: "sheet" }, el("p", { class: "eyebrow" }, "Standings"), el("h2", {}, "Leaderboard"));
   if (!S.db) { sheet.append(el("div", { class: "empty" }, "The leaderboard isn't connected. It needs the Firebase setup described in the README.")); return sheet; }
-  if (S.boardState === "loading") { sheet.append(el("p", { class: "muted" }, "Loading standings…")); return sheet; }
+  if (S.boardState === "loading") { sheet.append(el("p", { class: "muted blink" }, "Loading standings…")); return sheet; }
   if (S.boardState === "slow") sheet.append(el("div", { class: "banner" }, "The standings can't be reached right now. They'll appear when the connection returns."));
   if (S.boardState === "err") { sheet.append(el("div", { class: "empty" }, "The standings couldn't be loaded.")); return sheet; }
   const mf = r => { const v = r["m_" + S.subject]; return Number.isFinite(+v) ? +v : (S.subject === "h2" && Number.isFinite(+r.mastered) ? +r.mastered : 0); };
@@ -1064,19 +1351,19 @@ function boardView() {
   const tbody = el("tbody");
   rows.forEach((r, i) => {
     tbody.append(el("tr", { class: r.id === S.uid ? "me" : null },
-      el("td", { class: "num mono" }, i + 1), el("td", {}, cleanNick(r.nick) || "Player"),
+      el("td", { class: "num" }, i + 1), el("td", {}, cleanNick(r.nick) || "Crew"),
       el("td", { class: "num" }, `${mf(r)}/${S.bank.length}`),
       el("td", { class: "num" }, +r.w || 0), el("td", { class: "num" }, +r.l || 0), el("td", { class: "num" }, +r.d || 0)));
   });
   sheet.append(el("div", { class: "tablewrap" }, el("table", {},
-    el("thead", {}, el("tr", {}, el("th", { class: "num" }, "#"), el("th", {}, "Player"), el("th", { class: "num" }, "Mastered · " + bankInfo(S.subject).name), el("th", { class: "num" }, "W"), el("th", { class: "num" }, "L"), el("th", { class: "num" }, "D"))),
+    el("thead", {}, el("tr", {}, el("th", { class: "num" }, "#"), el("th", {}, "Crew"), el("th", { class: "num" }, "Mastered · " + bankInfo(S.subject).name), el("th", { class: "num" }, "W"), el("th", { class: "num" }, "L"), el("th", { class: "num" }, "D"))),
     tbody)));
-  sheet.append(el("p", { class: "note", style: "margin-top:10px" }, "Switch subject at the top right to see each subject's standings. Mastered means the last answer to that question was right. W–L–D counts finished games: a win is sole first place in Race or last standing in Bomb."));
+  sheet.append(el("p", { class: "note", style: "margin-top:10px" }, "Switch subject at the top right to see each subject's standings. Mastered means the last answer to that question was right. W–L–D counts finished games: a win is sole first place in Race, or last standing in Hot Core."));
   return sheet;
 }
 
 /* ---------- routing ---------- */
-const VIEWS = ["duel", "practice", "progress", "leaderboard"];
+const VIEWS = ["duel", "daily", "practice", "progress", "leaderboard"];
 function route() {
   const h = location.hash.replace("#", "");
   S.view = VIEWS.includes(h) ? h : "duel";
@@ -1087,7 +1374,7 @@ window.addEventListener("hashchange", route);
 
 /* ---------- boot ---------- */
 async function boot() {
-  S.nick = cleanNick(lsGet("p1d.nick")) || "Player " + Math.floor(100 + Math.random() * 900);
+  S.nick = cleanNick(lsGet("p1d.nick")) || "Cadet " + Math.floor(100 + Math.random() * 900);
   try { S.named = sessionStorage.getItem("p1d.named") === "1"; } catch {}
   const nickIn = $("#nick"); nickIn.value = S.nick;
   nickIn.addEventListener("change", () => {
@@ -1107,11 +1394,11 @@ async function boot() {
       setSubject(sel.value); lsSet("p1d.subject", S.subject);
       S.prac.topic = "all"; S.prac.qid = null;
       S.form.pool = S.form.mode === "bomb" ? "quick" : "all";
-      if (S.view === "leaderboard" || S.view === "progress" || S.view === "practice" || !S.match) render();
+      if (S.view !== "duel" || !S.match) render();
     });
     setSubject(lsGet("p1d.subject") || "h2");
   } catch {
-    $("#view").replaceChildren(el("div", { class: "sheet" }, el("p", {}, "The question bank couldn't be loaded. Reload the page to try again.")));
+    $("#view").replaceChildren(el("div", { class: "sheet" }, el("p", {}, "The question banks couldn't be loaded. Reload the page to try again.")));
     return;
   }
   route();
@@ -1122,9 +1409,11 @@ async function boot() {
     const first = cleanNick(fb.user.displayName.split(/\s+/)[0]);
     if (first) { S.nick = first; nickIn.value = first; }
   }
+  S.dailyKey = "";   // resubscribe now that the database is available
   await initStore();
   initRoom(fb.room);
   if (S.view === "leaderboard") subscribeBoard();
+  if (S.view === "daily") { S.daily = null; render(); }
 }
 
 /* ---------- Firebase backend ----------

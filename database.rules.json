@@ -17,10 +17,23 @@
     },
     "players": {
       ".read": "auth != null",
-      ".indexOn": ["mastered"],
+      ".indexOn": [
+        "mastered"
+      ],
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.child('nick').isString() && newData.child('nick').val().length <= 20 && newData.child('mastered').isNumber()"
+      }
+    },
+    "daily": {
+      ".read": "auth != null",
+      "$bk": {
+        "$day": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !data.exists()",
+            ".validate": "newData.child('score').isNumber() && newData.child('score').val() >= 0 && newData.child('score').val() <= 1000 && newData.child('nick').isString() && newData.child('nick').val().length <= 20"
+          }
+        }
       }
     }
   }

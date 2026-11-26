@@ -1,14 +1,15 @@
 # Paper One Duel
 
-Party-style multiple-choice game for 2–8 players with three question banks: H2 Physics (9478) Paper 1 style, PSLE Science and PSLE Maths. Players sit around a round table. There is also solo practice, per-question progress and a leaderboard.
+Party-style multiple-choice game for 2–8 players with three question banks: H2 Physics (9478) Paper 1 style, PSLE Science and PSLE Maths. Players sit around a round table on **Orbit Station**, a pixel-art space station. There is also a **Daily Test** (four questions of rising difficulty, scored on accuracy and speed and ranked on a bell curve), solo practice, per-question progress and a leaderboard.
 
 - **Race:** everyone gets the same question. The first correct answer scores, and a wrong answer locks you out of that question.
-- **Bomb:** the holder must answer before the fuse runs out. Right passes the bomb on. Wrong or too slow loses a life. The last player standing wins.
+- **Hot Core:** the holder must answer before the fuse runs out. Right passes the bomb on. Wrong or too slow loses a life. The last player standing wins.
 
 - `docs/`: the website GitHub Pages serves (`index.html`, `firebase-config.js`, and the banks `questions.json` (H2 Physics), `psle-science.json`, `psle-maths.json`).
 - `database.rules.json`: security rules to paste into Firebase.
 - `test/run.sh`: plays a 3-player Race game and a Bomb game in headless Chrome against a fake Firebase.
-- `claude-artifact/`: the claude.ai-hosted version of the same game.
+- `claude-artifact/`: the older claude.ai-hosted 1v1 version.
+- `roblox/`: the Roblox version (Rojo project). See `roblox/README.md` for setting it up on Ubuntu.
 
 ## Setup (about 10 minutes, all free)
 
@@ -31,6 +32,10 @@ The config values are safe to publish. Access is controlled by the rules you pas
 2. In the repo: **Settings → Pages → Build and deployment → Deploy from a branch**, branch `main`, folder **`/docs`**. Save.
 3. After a minute the site is live at `https://<your-username>.github.io/<repo-name>/`.
 4. If you enabled Google sign-in: Firebase console → **Authentication → Settings → Authorized domains → Add domain** → `<your-username>.github.io`.
+
+## Updating the database rules
+
+Whenever `database.rules.json` changes, paste it into Firebase console → Realtime Database → Rules → Publish again. The Daily Test needs the `daily` section to post scores. Without it, scores stay on each player's device and are compared against simulated players only.
 
 ## Free-tier limits
 
