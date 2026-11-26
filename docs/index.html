@@ -211,6 +211,8 @@ select, .field input { padding: 8px 10px; border: 0; background: var(--panel2); 
 .howto .ico.big { width: 32px; height: 32px; color: var(--accent); }
 .howto b { display: block; font: 400 11px/1.4 var(--display); margin-bottom: 4px; }
 .howto span { font-size: 16px; color: var(--muted); line-height: 1.3; }
+.howto span.hi { display: block; color: var(--ink); }
+.howto li { align-items: center; }
 .pick { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 3px; background: var(--space); box-shadow: inset 0 0 0 2px var(--c); color: var(--c); font: 700 11px/1 var(--label); text-transform: uppercase; white-space: nowrap; }
 .pick svg { width: 20px; height: 20px; image-rendering: pixelated; }
 .chip { --c: var(--s0); font: 700 11px/1 var(--label); padding: 4px 6px; white-space: nowrap; background: var(--c); color: var(--space); }
@@ -1758,18 +1760,18 @@ function raceTrack(g) {
       icon("flag"))));
 }
 function howToPlay(g) {
-  const step = (ico, title, text) => el("li", {}, ico, el("div", {}, el("b", {}, title), el("span", {}, text)));
-  const race = g.mode === "race";
-  const steps = race ? [
-    step(icon("flag", { cls: "big" }), "Same question for everyone", "Pick an answer, or type one for short-answer questions."),
-    step(icon("trophy", { cls: "big", c: "var(--gold)" }), "Fastest right answer scores", "Speed is timed on your own screen, so a slow connection doesn't cost you."),
-    step(icon("clock", { cls: "big" }), "Then the clock starts", `First answer right: everyone else has ${cutRight(g)} s (red). Wrong: ${cutWrong(g)} s (yellow).`),
-    step(icon("heart", { cls: "big", c: "var(--bad)" }), "Don't just guess", "Every second wrong answer costs a point."),
+  const NB = String.fromCharCode(160), sec = n => n + NB + "s";   // keep "30 s" together
+  const step = (ico, title, ...detail) => el("li", {}, ico, el("div", {}, el("b", {}, title), ...detail.map(d => el("span", { class: "hi" }, d))));
+  const steps = g.mode === "race" ? [
+    step(icon("flag", { cls: "big" }), "Same question for everyone"),
+    step(icon("trophy", { cls: "big", c: "var(--gold)" }), "Correct answer scores"),
+    step(icon("clock", { cls: "big" }), "Then the clock starts", `✓ Right → ${sec(cutRight(g))} left`, `✗ Wrong → ${sec(cutWrong(g))} left`),
+    step(icon("heart", { cls: "big", c: "var(--bad)" }), "2 wrong = −1 point"),
   ] : [
-    step(icon("core", { cls: "big", c: "var(--core)", c2: "var(--gold)" }), "Hold the core, answer the question", `Only the holder answers. The fuse is ${g.lim} s.`),
-    step(icon("rocket", { cls: "big" }), "Right answer passes it on", "The core moves to the next crew member round the table."),
-    step(icon("heart", { cls: "big", c: "var(--bad)" }), "Wrong or too slow: BOOM", `You lose a life. Everyone starts with ${g.lives}.`),
-    step(icon("trophy", { cls: "big", c: "var(--gold)" }), "Last one standing wins", "Out of lives? Stay and watch, or chat."),
+    step(icon("core", { cls: "big", c: "var(--core)", c2: "var(--gold)" }), `Holder answers in ${sec(g.lim)}`),
+    step(icon("rocket", { cls: "big" }), "Right: pass the core on"),
+    step(icon("heart", { cls: "big", c: "var(--bad)" }), "Wrong or slow: BOOM, −1 life", `Everyone starts with ${g.lives}`),
+    step(icon("trophy", { cls: "big", c: "var(--gold)" }), "Last one standing wins"),
   ];
   return el("section", { class: "howto", "aria-label": "How to play" },
     el("p", { class: "eyebrow", style: "margin:0" }, `How to play ${modeName(g.mode)}`),
