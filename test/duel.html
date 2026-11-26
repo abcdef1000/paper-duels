@@ -74,6 +74,8 @@ const A = document.getElementById("A"), B = document.getElementById("B"), C = do
 const F = { A, B, C };
 const IW = new URLSearchParams(location.search).get("w");   // e.g. ?w=1400 tests the wide arena layout
 if (IW) for (const f of [A, B, C]) f.width = IW;
+const IH = new URLSearchParams(location.search).get("h");   // taller frames for screenshots
+if (IH) for (const f of [A, B, C]) f.height = IH;
 A.src = "site/index.html#duel";
 setTimeout(() => { B.src = "site/index.html#duel"; }, 300);
 setTimeout(() => { C.src = "site/index.html#duel"; }, 600);
@@ -136,15 +138,20 @@ async function seatEveryone(hostOpens) {
     const plan = [[["A","r"],["B","w"],["C","r"]], [["A","w"],["B","w"],["C","w"]], [["B","w"],["A","w"],["C","r"]], [["C","r"],["A","r"],["B","r"]], [["B","r"],["A","w"],["C","w"]]];   // length 7 - 2 = 5
     for (let i = 0; i < plan.length; i++) {
       await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && S(f).match.g.k === i && D(f).querySelector("#matchbox .opt, #matchbox #sa-in")), "race q" + i);
-      if (i === 1) {   // the 10 s clock: after the first answer, the others see the red vignette
+      if (i === 0) {   // first answer right: red 8 s for the rest, and everyone is told
+        pick(A, true);
+        await until(() => D(C).querySelector("#vignette.on:not(.yellow)") && /Ann got it right/.test(D(B).getElementById("cutcount").textContent), "red clock on B and C", 8000);
+        out(`  first answer right: B reads "${D(B).getElementById("cutcount").textContent}", red vignette on C ${!!D(C).querySelector("#vignette.on:not(.yellow)")}, on A ${!!D(A).querySelector("#vignette.on")}; A reads "${D(A).getElementById("cutcount").textContent}"`);
+        await sleep(120); pick(B, false); await sleep(120); pick(C, true);
+      } else if (i === 1) {   // first answer wrong: yellow 15 s
         pick(A, false);
-        await until(() => D(B).querySelector("#vignette.on") && D(C).querySelector("#vignette.on"), "vignette on B and C", 8000);
-        out(`  10 s clock: vignette on B ${!!D(B).querySelector("#vignette.on")}, on C ${!!D(C).querySelector("#vignette.on")}, on A (answered) ${!!D(A).querySelector("#vignette.on")}; B reads "${D(B).getElementById("cutcount").textContent}"`);
+        await until(() => D(B).querySelector("#vignette.on.yellow") && D(C).querySelector("#vignette.on.yellow"), "yellow clock on B and C", 8000);
+        out(`  first answer wrong: B reads "${D(B).getElementById("cutcount").textContent}", yellow on B ${!!D(B).querySelector("#vignette.on.yellow")}, on C ${!!D(C).querySelector("#vignette.on.yellow")}`);
         await sleep(120); pick(B, false); await sleep(120); pick(C, false);
       } else for (const [who, how] of plan[i]) { pick(F[who], how === "r"); await sleep(120); }
       await until(() => [A, B, C].every(f => S(f).match.g.ph === "r"), "race reveal " + i, 100000);
       const g = S(A).match.g;
-      out(`  Q${i + 1} ${plan[i].map(x => x.join(":")).join(" ")} -> winner seat ${g.res.w}, scores ${g.sc.join("-")}`);
+      out(`  Q${i + 1} ${plan[i].map(x => x.join(":")).join(" ")} -> winner seat ${g.res.w}, scores ${g.sc.join("-")}` + (i === 0 ? `; picks shown: ${[...D(B).querySelectorAll("#matchbox .pick")].map(e => e.textContent).join(", ")}` : ""));
       const label = i < plan.length - 1 ? "Next question" : "See results";
       for (const f of [A, B, C]) (await until(() => btn(f, label), "next"))?.click();
     }

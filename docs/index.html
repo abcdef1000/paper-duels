@@ -200,6 +200,8 @@ select, .field input { padding: 8px 10px; border: 0; background: var(--panel2); 
 .optfig .thick { stroke-width: 3; }
 .optfig text { fill: var(--muted); stroke: none; font: 13px var(--body); }
 .marks { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.pick { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 3px; background: var(--space); box-shadow: inset 0 0 0 2px var(--c); color: var(--c); font: 700 11px/1 var(--label); text-transform: uppercase; white-space: nowrap; }
+.pick svg { width: 20px; height: 20px; image-rendering: pixelated; }
 .chip { --c: var(--s0); font: 700 11px/1 var(--label); padding: 4px 6px; white-space: nowrap; background: var(--c); color: var(--space); }
 .explain { border-left: 6px solid var(--good); padding: 10px 14px; background: var(--panel2); }
 .explain.badx { border-left-color: var(--bad); }
@@ -426,7 +428,9 @@ nav.tabs a { display: inline-flex; align-items: center; gap: 8px; }
 @keyframes vig { 0% { opacity: .55; } 50% { opacity: 1; } }
 :root[data-motion="off"] #vignette.on { animation: none; opacity: .8; }
 @media (prefers-reduced-motion: reduce) { #vignette.on { opacity: .8; } }
+#vignette.yellow { background: radial-gradient(ellipse at center, rgba(255, 209, 102, 0) 55%, rgba(255, 209, 102, .34) 100%); box-shadow: inset 0 0 0 6px rgba(255, 209, 102, .6); }
 .cutcount { margin: 0; min-height: 1.2em; font: 400 13px/1.4 var(--display); color: var(--bad); }
+.cutcount.yellow { color: var(--gold); }
 .thinking { margin: 0; font-size: 18px; color: var(--muted); }
 .dots i { font-style: normal; animation: dot 1.2s steps(1) infinite; }
 .dots i:nth-child(2) { animation-delay: .3s; } .dots i:nth-child(3) { animation-delay: .6s; }
@@ -702,7 +706,8 @@ const S = {
 };
 const RACE_LIM = 60;     // seconds per question in Race
 const GRACE = 1000;
-const CUT_MS = 10000;    // Race: once anyone answers, the others have this long left      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
+const CUT_RIGHT_MS = 8000;   // Race: after the first correct answer, the others have this long (red)
+const CUT_WRONG_MS = 15000;  // Race: after a wrong first answer, the others have this long (yellow)      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
 const MAX_PLAYERS = 8;
 const IDLE_ROOM_MS = 30 * 60 * 1000;   // a room still waiting with only its captain closes after this
 const MAX_RACE = 50;      // longest Race a host can pick; each game draws this many at random from the pack or topic
@@ -1111,7 +1116,7 @@ function onPeersChanged() {
 function setG(patch) {
   const m = S.match, prev = m.g;
   m.g = { ...prev, ...patch };
-  if (m.g.ph !== prev.ph || m.g.k !== prev.k) { m.phaseAt = Date.now(); m.firstOk = null; m.firstAns = null; }
+  if (m.g.ph !== prev.ph || m.g.k !== prev.k) { m.phaseAt = Date.now(); m.firstOk = null; m.cutEnd = null; }
   m.gKey = JSON.stringify(m.g);
   pushPresence({ g: m.g });
   onGameState();
@@ -1154,11 +1159,21 @@ function hostTick() {
       const qq = Q(qidOf(g));
       const ans = g.pl.map((_, s) => seatAnswer(g, s));
       const ok = ans.map(a => !!a && isCorrect(qq, respOf(a)));
-      if (ok.some(Boolean)) m.firstOk = m.firstOk || now;
-      if (ans.some(Boolean) && !m.firstAns) { m.firstAns = now; if (g.cut !== g.k) return setG({ ...patch, cut: g.k }); }
+      const fastest = pred => { let b = -1; ans.forEach((a, s) => { if (a && pred(s) && (b < 0 || a.rt < ans[b].rt)) b = s; }); return b; };
+      const cut = g.cut && g.cut.k === g.k ? g.cut : null;
+      if (!cut && ans.some(Boolean)) {   // first answer in: tell everyone how it went and start the clock
+        const s0 = fastest(() => true), right = ok[s0], len = right ? CUT_RIGHT_MS : CUT_WRONG_MS;
+        m.cutEnd = now + len;
+        return setG({ ...patch, cut: { k: g.k, id: 1, s: s0, ok: right, red: right, cs: right ? s0 : -1, len } });
+      }
+      if (cut && !cut.red && ok.some(Boolean)) {   // a correct answer after a wrong first one: switch to the red 8 s
+        const end = Math.min(m.cutEnd || now + CUT_RIGHT_MS, now + CUT_RIGHT_MS);
+        m.cutEnd = end;
+        return setG({ ...patch, cut: { ...cut, id: cut.id + 1, red: true, cs: fastest(s => ok[s]), len: end - now } });
+      }
       const allIn = ans.every((a, s) => a || !active[s]);
-      const timeUp = now - m.phaseAt > g.lim * 1000 + 1500 || (m.firstAns && now - m.firstAns > CUT_MS + 700);
-      if (allIn || (m.firstOk && now - m.firstOk > GRACE) || timeUp) {
+      const timeUp = now - m.phaseAt > g.lim * 1000 + 1500 || (m.cutEnd && now > m.cutEnd + 700);
+      if (allIn || timeUp) {
         let w = -1;
         ok.forEach((o, s) => { if (o && (w < 0 || ans[s].rt < ans[w].rt)) w = s; });
         const sc = g.sc.slice(); if (w >= 0) sc[w]++;
@@ -1235,8 +1250,11 @@ function onGameState() {
   gameSounds(m, g, me);
   if (g.ph === "cd" && !m.cdAt) m.cdAt = performance.now();
   if (g.ph === "q" && !m.qStart[key]) m.qStart[key] = performance.now();
-  m.cutStart = m.cutStart || {};
-  if (g.ph === "q" && g.mode === "race" && g.cut === g.k && !m.cutStart[key]) m.cutStart[key] = performance.now();
+  if (g.ph === "q" && g.mode === "race" && g.cut && g.cut.k === g.k && !(m.cut && m.cut.key === key && m.cut.id === g.cut.id)) {
+    m.cut = { key, id: g.cut.id, start: performance.now(), len: +g.cut.len || CUT_WRONG_MS, red: !!g.cut.red };
+    m.lastCut = null;
+    if (g.cut.id === 1 || g.cut.red) sfx(g.cut.red ? (g.cut.cs === me ? "point" : "other") : (g.cut.s === me ? "wrong" : "none"));
+  }
   setVignette(false);
   if (g.ph === "r" && !m.recorded.has(key)) {
     m.recorded.add(key);
@@ -1424,7 +1442,7 @@ function questionCard(q, perm, opts) {
     if (opts.mine === orig) cls.push("mine");
     if (opts.reveal && orig === q.a) cls.push("correct");
     if (opts.reveal && opts.mine === orig && orig !== q.a) cls.push("wrong");
-    const marks = el("span", { class: "marks" }, opts.reveal ? (opts.picks || []).filter(p => p.orig === orig).map(p => el("span", { class: "chip", style: `--c:${seatColor(p.seat)}` }, p.label)) : null);
+    const marks = el("span", { class: "marks" }, opts.reveal ? (opts.picks || []).filter(p => p.orig === orig).map(pickTag) : null);
     list.append(el("li", {}, el("button", {
       class: cls.join(" "), disabled: opts.disabled, onclick: () => opts.onPick && opts.onPick(orig),
       "aria-label": `Option ${LETTERS[k]}: ${q.o[orig]}`
@@ -1442,6 +1460,8 @@ function questionCard(q, perm, opts) {
     (S.banks[q.bk] && S.banks[q.bk].constants) ? el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.banks[q.bk].constants)) : null);
 }
 
+// who picked this: their helmet sprite and name
+const pickTag = p => el("span", { class: "pick", style: `--c:${seatColor(p.seat)}` }, helmet(p.seat), el("span", {}, p.label));
 function shortCard(q, opts) {
   const answered = opts.mine != null && opts.mine !== "";
   const input = el("input", { id: "sa-in", class: "sa", maxlength: "80", autocomplete: "off", spellcheck: "false", "aria-label": "Your answer",
@@ -1452,7 +1472,7 @@ function shortCard(q, opts) {
   if (!input.disabled) queueMicrotask(() => { if (document.body.contains(input)) input.focus({ preventScroll: true }); });
   const mineOk = answered && isCorrect(q, String(opts.mine));
   const picks = opts.reveal && opts.picks && opts.picks.length ? el("ul", { class: "sapicks" }, opts.picks.map(p => el("li", { class: isCorrect(q, String(p.orig)) ? "ok" : "no" },
-    el("span", { class: "chip", style: `--c:${seatColor(p.seat)}` }, p.label), el("span", {}, String(p.orig)), el("b", {}, isCorrect(q, String(p.orig)) ? "✓" : "✗")))) : null;
+    pickTag(p), el("span", {}, String(p.orig)), el("b", {}, isCorrect(q, String(p.orig)) ? "✓" : "✗")))) : null;
   return el("article", { class: "qcard" },
     el("div", { class: "qhead" }, el("span", { class: "qid" }, q.id), el("span", { class: "qtopic" }, q.topic + " · short answer")),
     el("p", { class: "stem" }, q.q),
@@ -1648,7 +1668,7 @@ function matchView() {
           res.w >= 0 ? el("div", { class: "note" }, `in ${(res.rt[res.w] / 1000).toFixed(1)} s`) : null,
           penNote ? el("div", { class: "note", style: "color:var(--bad)" }, penNote) : null),
         m.readyKey === key ? el("span", { class: "note blink" }, "Waiting for the others…") : el("button", { class: "btn teal", onclick: ready }, g.k + 1 < g.n ? "Next question" : "See results")));
-      const picks = g.pl.map((p, s) => ({ orig: res.c[s], seat: s, label: s === me ? "YOU" : initials(seatName(g, s)) })).filter(p => p.orig != null);
+      const picks = g.pl.map((p, s) => ({ orig: res.c[s], seat: s, label: s === me ? "You" : seatName(g, s) })).filter(p => p.orig != null);
       panel.append(questionCard(q, perm, { disabled: true, mine: me >= 0 ? res.c[me] : null, reveal: true, picks }));
     }
   } else {
@@ -1663,7 +1683,7 @@ function matchView() {
       const txt = res.ok ? `${who} got it. The core moves on.` : `BOOM! ${who} ${res.c == null ? "ran out of time" : "picked the wrong answer"}${lost ? (res.seat === me ? " and you're out." : " and is out.") : " and lost a life."}`;
       panel.append(el("p", { class: "status " + (res.ok ? "win" : "lose") }, txt));
       panel.append(questionCard(q, perm, { disabled: true, mine: res.seat === me ? res.c : null, reveal: true,
-        picks: res.c != null ? [{ orig: res.c, seat: res.seat, label: res.seat === me ? "YOU" : initials(seatName(g, res.seat)) }] : [] }));
+        picks: res.c != null ? [{ orig: res.c, seat: res.seat, label: res.seat === me ? "You" : seatName(g, res.seat) }] : [] }));
     }
   }
   return box;
@@ -1716,10 +1736,11 @@ function endView() {
   return wrap;
 }
 // pulsing red edge while you're on someone else's 10 s clock
-function setVignette(on) {
+function setVignette(on, tone) {
   let v = $("#vignette");
   if (!v) { v = el("div", { id: "vignette", "aria-hidden": "true" }); document.body.append(v); }
   v.classList.toggle("on", !!on && S.view === "duel");
+  v.classList.toggle("yellow", tone === "yellow");
 }
 function renderMatch() { if (S.view !== "duel") return; $("#view").replaceChildren(S.match ? matchView() : lobbyView()); }
 
@@ -1731,18 +1752,20 @@ setInterval(() => {
   if (g.ph === "q") {
     const elapsed = (performance.now() - (m.qStart[key] || performance.now())) / 1000;
     let frac = Math.max(0, 1 - elapsed / g.lim);
-    const cutAt = m.cutStart && m.cutStart[key];
-    if (cutAt && g.mode === "race") {   // someone has answered: the rest are on a 10 s clock
-      const left = Math.max(0, CUT_MS / 1000 - (performance.now() - cutAt) / 1000);
+    const cut = m.cut && m.cut.key === key && g.mode === "race" && g.cut && g.cut.k === g.k ? m.cut : null;
+    if (cut) {   // the first answer is in: announce it, and the rest are on the clock
+      const left = Math.max(0, (cut.len - (performance.now() - cut.start)) / 1000);
       frac = Math.min(frac, left / g.lim);
-      const waiting = !validAns(m.my, g) && mySeat() >= 0;
-      setVignette(waiting && left > 0);
+      const me = mySeat(), waiting = !validAns(m.my, g) && me >= 0;
+      setVignette(waiting && left > 0, cut.red ? "red" : "yellow");
       const cd = $("#cutcount");
-      if (waiting && left > 0) {
-        const n = Math.ceil(left);
-        if (cd) cd.textContent = `Someone's locked in. ${n} s left!`;
-        if (n !== m.lastCut) { m.lastCut = n; sfx("tickHot"); }
-      } else if (cd) cd.textContent = "";
+      if (cd) {
+        const who = s => s === me ? "You" : seatName(g, s);
+        const news = g.cut.red ? `${who(g.cut.cs)} got it right!` : `${who(g.cut.s)} got it wrong.`;
+        cd.className = "cutcount " + (cut.red ? "red" : "yellow");
+        cd.textContent = waiting && left > 0 ? `${news} ${Math.ceil(left)} s left to answer.` : news;
+      }
+      if (waiting && left > 0) { const n = Math.ceil(left); if (n !== m.lastCut) { m.lastCut = n; sfx(cut.red ? "tickHot" : "tick"); } }
       if (left === 0 && !validAns(m.my, g)) for (const b of document.querySelectorAll("#matchbox .opt, #matchbox #sa-in, #matchbox .saform button")) b.disabled = true;
     }
     const bar = $("#tbar"); if (bar) bar.style.width = (frac * 100).toFixed(1) + "%";
@@ -1750,7 +1773,7 @@ setInterval(() => {
     if (ring) { const on = Math.round(frac * RING_N); ring.querySelectorAll("rect").forEach((r, i) => r.classList.toggle("on", i < on)); }
     const fc = $("#fusecount"); if (fc) fc.textContent = Math.ceil(frac * g.lim) + " s";
     const left = Math.ceil(frac * g.lim);
-    if (left !== m.lastTick && left > 0 && !(m.cutStart && m.cutStart[key])) {
+    if (left !== m.lastTick && left > 0 && !(m.cut && m.cut.key === key)) {
       m.lastTick = left;
       if (g.mode === "bomb" && left <= 6) sfx("tickHot");
       else if (g.mode === "race" && left <= 5 && !validAns(m.my, g)) sfx("tick");
