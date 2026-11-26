@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Paper One Duel</title>
+<title>Orbit Duels</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 8 8%27 shape-rendering=%27crispEdges%27%3E%3Crect width=%278%27 height=%278%27 fill=%27%230B0E24%27/%3E%3Crect x=%272%27 y=%271%27 width=%274%27 height=%276%27 fill=%27%23FF7A45%27/%3E%3Crect x=%271%27 y=%272%27 width=%276%27 height=%274%27 fill=%27%23FF7A45%27/%3E%3Crect x=%273%27 y=%273%27 width=%272%27 height=%272%27 fill=%27%23FFD166%27/%3E%3C/svg%3E">
-<meta name="description" content="Orbit Station: a pixel-art party quiz for H2 Physics, PSLE Science and PSLE Maths. Race or pass the Hot Core with 2–8 crew, take the Daily Test, practise and track progress.">
+<meta name="description" content="Orbit Duels: a pixel-art party quiz for H2 Physics, PSLE Science and PSLE Maths. Race or pass the Hot Core with 2–8 crew, take the Daily Test, practise and track progress.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;500;600;700&display=swap">
@@ -46,23 +46,8 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 0 48px;
 }
-/* pixel starfield */
-body::before {
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background-image:
-    linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--gold), var(--gold)),
-    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--muted), var(--muted)),
-    linear-gradient(var(--muted), var(--muted)), linear-gradient(var(--ink), var(--ink));
-  background-size: 3px 3px, 2px 2px, 3px 3px, 2px 2px, 2px 2px, 2px 2px, 3px 3px, 2px 2px;
-  background-repeat: no-repeat;
-  background-position: 8% 12%, 23% 70%, 41% 22%, 63% 81%, 77% 9%, 88% 48%, 14% 92%, 52% 55%;
-  opacity: .7;
-}
-body::after {
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background-image: radial-gradient(var(--muted) 1px, transparent 1.5px);
-  background-size: 97px 89px; opacity: .25;
-}
+/* moving space: a low-res canvas of drifting pixel asteroids and stars, scaled up with crisp pixels */
+#space { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; image-rendering: pixelated; pointer-events: none; }
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .wrap { max-width: 1060px; margin: 0 auto; }
@@ -71,7 +56,7 @@ button, input, select { font: inherit; color: inherit; }
 .mast { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 14px 24px; padding-block: 26px 16px; border-bottom: 4px solid var(--line); }
 .brand { display: flex; flex-direction: column; gap: 10px; }
 .brand small { font: 400 12px/1 var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-.brand h1 { margin: 0; font: 400 clamp(20px, 4.2vw, 34px)/1.15 var(--display); letter-spacing: 0; color: var(--ink); text-shadow: 3px 3px 0 var(--core); text-wrap: balance; }
+.brand h1 { display: flex; align-items: center; gap: 14px; margin: 0; font: 400 clamp(20px, 4.2vw, 34px)/1.15 var(--display); letter-spacing: 0; color: var(--ink); text-shadow: 3px 3px 0 var(--core); text-wrap: balance; }
 .who { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .who label { font: 400 12px/1 var(--label); text-transform: uppercase; color: var(--muted); }
 .who input { width: 11em; padding: 7px 10px; border: 0; background: var(--panel2); }
@@ -330,6 +315,73 @@ textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 0; backgr
 .chat .quick { gap: 6px; }
 .chat .quick .btn { padding: 5px 8px; font-size: 11px; }
 
+/* pixel icons */
+.ico { width: 18px; height: 18px; flex: none; image-rendering: pixelated; }
+.ico.mini { width: 14px; height: 14px; }
+.logo .ico { width: clamp(34px, 6vw, 52px); height: auto; filter: drop-shadow(3px 3px 0 var(--core)); }
+nav.tabs a { display: inline-flex; align-items: center; gap: 8px; }
+.iconbtn { display: inline-grid; place-items: center; padding: 6px 8px; }
+.iconbtn .ico { width: 20px; height: 20px; }
+
+/* front page: mode tiles, setting chips, docking bay */
+.launch .modes { grid-template-columns: 1fr 1fr; }
+.tile { align-items: center; text-align: center; padding: 18px 12px 14px; gap: 10px; }
+.tile .ico.big, .tile .corepx { width: 60px; height: 60px; }
+.tile b { font: 400 14px/1.2 var(--display); }
+.tile span { font-size: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip-field { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--panel2); min-width: 0; }
+.chip-field .ico { width: 20px; height: 20px; color: var(--accent); }
+.chip-field select { background: transparent; box-shadow: none; padding: 6px 2px; max-width: 15em; }
+.chip-field.wide { flex: 1; min-width: 14em; }
+.chip-field.wide select { flex: 1; max-width: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.launchbtn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; font-size: 15px; }
+.launchbtn .ico { width: 22px; height: 22px; }
+.aboard { display: inline-flex; align-items: center; gap: 6px; font: 700 13px/1 var(--label); color: var(--muted); }
+.aboard svg { width: 18px; height: 18px; }
+.ports { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 14px; }
+.port { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 10px 12px; min-height: 196px; text-align: center; background: #0E1230; box-shadow: inset 0 0 0 3px var(--line); }
+.bayhead { align-self: stretch; height: 10px; margin: 0 -10px; background: repeating-linear-gradient(-45deg, var(--gold) 0 8px, #141414 8px 16px); }
+.pad { position: relative; width: 100%; height: 70px; display: grid; place-items: center; }
+.pad::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 4px; background: var(--line); }
+.pad .lights { position: absolute; left: 12%; right: 12%; bottom: 10px; display: flex; justify-content: space-between; }
+.pad .lights i { width: 6px; height: 6px; background: var(--accent); animation: blink 1.4s steps(2, start) infinite; }
+.pad .lights i:nth-child(2n) { animation-delay: .7s; }
+.port.docked .pad .lights i { background: var(--c); animation: none; opacity: .8; }
+.shipico { width: 88px !important; height: auto !important; filter: drop-shadow(0 0 6px var(--c)); animation: hover 1.6s steps(2) infinite; }
+@keyframes hover { 50% { transform: translateY(-4px); } }
+:root[data-motion="off"] .shipico, :root[data-motion="off"] .pad .lights i { animation: none; }
+.portinfo { display: flex; flex-direction: column; gap: 4px; min-width: 0; width: 100%; }
+.portinfo b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portmeta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; justify-content: center; font-size: 13px; color: var(--muted); }
+.portmeta span { display: inline-flex; align-items: center; gap: 4px; }
+.seatlights { display: flex; gap: 3px; }
+.seatlights i { width: 8px; height: 8px; background: var(--line); }
+.seatlights i.on { background: var(--c); }
+.port.vacant { opacity: .7; justify-content: flex-start; }
+.port.vacant .vac { font: 700 11px/1 var(--label); text-transform: uppercase; color: var(--muted); }
+
+/* the two modes */
+.matchbox.mode-race::before, .matchbox.mode-bomb::before { content: ""; display: block; height: 10px; margin: -20px -20px 0; }
+.mode-race::before { background: repeating-conic-gradient(#E8ECFF 0 25%, #0B0E24 0 50%) 0 0 / 10px 10px; }
+.mode-bomb::before { background: repeating-linear-gradient(-45deg, var(--gold) 0 10px, #141414 10px 20px); }
+.mode-race .table, .mode-bomb .table { isolation: isolate; }
+.mode-race .table::after, .mode-bomb .table::after { content: ""; position: absolute; inset: 6%; border-radius: 50%; z-index: -1; }
+.mode-race .table::after { background: radial-gradient(circle, rgba(94, 234, 212, .12) 0%, rgba(94, 234, 212, 0) 62%); }
+.mode-bomb .table::after { background: radial-gradient(circle, rgba(255, 92, 60, calc(.12 + var(--heat, 0) * .5)) 0%, rgba(255, 92, 60, 0) 64%); }
+.mode-bomb .table::before { border-color: #5A2A3A; }
+.mode-bomb.alarm { animation: alarm .5s steps(2) infinite; }
+@keyframes alarm { 50% { box-shadow: 0 -4px 0 0 var(--bad), 0 4px 0 0 var(--bad), -4px 0 0 0 var(--bad), 4px 0 0 0 var(--bad), inset 0 0 50px rgba(255, 92, 122, .22); } }
+:root[data-motion="off"] .mode-bomb.alarm { animation: none; }
+.modehead { display: inline-flex; align-items: center; gap: 8px; }
+.track { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; background: var(--panel2); }
+.lane { --c: var(--s0); display: grid; grid-template-columns: minmax(0, 6.5em) minmax(0, 1fr) 18px; gap: 10px; align-items: center; }
+.lane .ln { font: 700 11px/1 var(--label); text-transform: uppercase; color: var(--c); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.road { position: relative; height: 20px; background: linear-gradient(90deg, var(--line) 50%, transparent 0) center / 10px 2px repeat-x; }
+.road .ico { position: absolute; top: 50%; width: 30px; height: auto; transform: translate(-50%, -50%); transition: left .6s steps(6); }
+.lane > .ico { width: 16px; height: 16px; }
+
 /* number stepper + pack prompt */
 .stepper { display: flex; align-items: center; gap: 6px; }
 .stepper .btn { width: 34px; padding: 7px 0; font-size: 16px; }
@@ -365,23 +417,23 @@ tr.sim td { color: var(--muted); }
 <div class="wrap">
   <header class="mast">
     <div class="brand">
-      <small id="tagline">Orbit Station · H2 Physics</small>
-      <h1>Paper One Duel</h1>
+      <small id="tagline">H2 Physics</small>
+      <h1><span class="logo" id="logo"></span>Orbit Duels</h1>
     </div>
     <div class="who">
       <label for="nick">Callsign</label>
       <input id="nick" maxlength="20" autocomplete="off" spellcheck="false">
-      <button id="cfgbtn" class="btn ghost small" type="button">Settings</button>
+      <button id="cfgbtn" class="btn ghost small iconbtn" type="button" aria-label="Settings" title="Settings"></button>
       <button id="acct" class="btn ghost small" hidden></button>
     </div>
   </header>
   <nav class="tabs" id="tabs">
-    <a href="#duel" data-v="duel">Play</a>
-    <a href="#daily" data-v="daily">Daily test</a>
-    <a href="#practice" data-v="practice">Practice</a>
-    <a href="#progress" data-v="progress">Progress</a>
-    <a href="#leaderboard" data-v="leaderboard">Leaderboard</a>
-    <a href="#packs" data-v="packs">Packs</a>
+    <a href="#duel" data-v="duel" data-ico="rocket">Play</a>
+    <a href="#daily" data-v="daily" data-ico="daily">Daily test</a>
+    <a href="#practice" data-v="practice" data-ico="target">Practice</a>
+    <a href="#progress" data-v="progress" data-ico="bars">Progress</a>
+    <a href="#leaderboard" data-v="leaderboard" data-ico="trophy">Leaderboard</a>
+    <a href="#packs" data-v="packs" data-ico="crate">Packs</a>
     <label class="subj" for="subject">Subject <select id="subject"></select></label>
   </nav>
   <main id="view"><div class="sheet"><p class="muted">Docking… loading the question banks.</p></div></main>
@@ -441,6 +493,85 @@ function coreSprite() {
   }
   r += `<rect x="8" y="2" width="1" height="1" fill="#FFF"/><rect x="9" y="1" width="1" height="1" fill="#FFD166"/>`;
   return svgEl(`<svg class="corepx" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`);
+}
+
+/* pixel icon set: X = main colour, Y = second colour, W = white, D = dark */
+const ICONS = {
+  logo:   ["....XXXX....", "..XXXXXXXX..", ".XXWXXXXXXX.", "YYYYYYYYYYYY", ".XXXXXXXXXX.", "..XXXXXXXX..", "....XXXX...."],
+  rocket: ["....X....", "...XXX...", "...XWX...", "...XXX...", "..XXXXX..", ".X.XXX.X.", "X..XXX..X", "...Y.Y...", "..Y...Y.."],
+  daily:  [".X.....X.", "XXXXXXXXX", "XWWWWWWWX", "XWYWWWWWX", "XWWWWWWWX", "XWWWWYWWX", "XWWWWWWWX", "XXXXXXXXX"],
+  target: ["..XXXXX..", ".X.....X.", "X..YYY..X", "X.Y...Y.X", "X.Y.W.Y.X", "X.Y...Y.X", "X..YYY..X", ".X.....X.", "..XXXXX.."],
+  bars:   ["......XX.", "......XX.", "...XX.XX.", "...XX.XX.", "XX.XX.XX.", "XX.XX.XX.", "XX.XX.XX.", "YYYYYYYYY"],
+  trophy: ["XXXXXXXXX", "X.XXXXX.X", "X.XXXXX.X", ".XXXXXXX.", "..XXXXX..", "...XXX...", "....X....", "..XXXXX..", "..YYYYY.."],
+  crate:  ["XXXXXXXXX", "XYYYYYYYX", "XYX...XYX", "XY.X.X.YX", "XY..X..YX", "XY.X.X.YX", "XYX...XYX", "XYYYYYYYX", "XXXXXXXXX"],
+  gear:   ["...X.X...", ".XXXXXXX.", ".XX...XX.", "XX..W..XX", ".X.WWW.X.", "XX..W..XX", ".XX...XX.", ".XXXXXXX.", "...X.X..."],
+  flag:   ["X........", "XWDWDWD..", "XDWDWDW..", "XWDWDWD..", "XDWDWDW..", "X........", "X........", "X........", "XX......."],
+  core:   ["..XXXXX..", ".XXYYYXX.", "XXYYWYYXX", "XYYWWWYYX", "XYYYWYYYX", "XXYYYYYXX", ".XXYYYXX.", "..XXXXX.."],
+  heart:  [".XX...XX.", "XXXX.XXXX", "XWXXXXXXX", "XXXXXXXXX", ".XXXXXXX.", "..XXXXX..", "...XXX...", "....X...."],
+  clock:  ["..XXXXX..", ".XWWWWWX.", "XWWWXWWWX", "XWWWXWWWX", "XWWWXXXWX", "XWWWWWWWX", ".XWWWWWX.", "..XXXXX.."],
+  book:   ["XXXX.XXXX", "XWWWXWWWX", "XWDWXWDWX", "XWWWXWWWX", "XWDWXWDWX", "XWWWXWWWX", "XXXXXXXXX"],
+  hash:   ["..X...X..", "..X...X..", "XXXXXXXXX", ".X...X...", ".X...X...", "XXXXXXXXX", ".X...X...", "X...X...."],
+  crew:   ["..XXXXXX..", ".XXXXXXXX.", "XXDDDDDDXX", "XDWWDDDDDX", "XDWDDDDDDX", "XXDDDDDDXX", ".XXXXXXXX.", "..XX..XX.."],
+  ship:   [".....XX.......", "....XXXX......", "..XXXXXXXXX...", "YXXXXDWDXXXXX.", "YXXXXDDDXXXXXX", "YXXXXXXXXXXXX.", "..XXXXXXXXX...", "....XXXX......", ".....XX......."],
+};
+function icon(name, o = {}) {
+  const rows = ICONS[name]; if (!rows) return null;
+  let r = "";
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    const fill = ch === "X" ? (o.c || "currentColor") : ch === "Y" ? (o.c2 || "var(--core)") : ch === "W" ? "#E8ECFF" : "#0B0E24";
+    r += `<rect x="${x}" y="${y}" width="1" height="1" style="fill:${fill}"/>`;
+  }));
+  return svgEl(`<svg class="ico ${o.cls || ""}" viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`);
+}
+
+/* drifting asteroids behind everything; frozen when motion is off, paused in hidden tabs */
+function startSpace() {
+  const cv = el("canvas", { id: "space", "aria-hidden": "true" }); document.body.prepend(cv);
+  const ctx = cv.getContext("2d"), SCALE = 3;
+  let W = 0, H = 0;
+  const resize = () => { W = Math.ceil(innerWidth / SCALE); H = Math.ceil(innerHeight / SCALE); cv.width = W; cv.height = H; draw(false); };
+  const r0 = rng(hash("orbit-duels-space"));
+  const stars = Array.from({ length: 110 }, () => ({ x: r0(), y: r0(), z: r0() }));
+  const rock = () => {
+    const rad = 3 + r0() * 9, n = 7 + Math.floor(r0() * 4);
+    return { x: r0(), y: r0(), vx: (0.004 + r0() * 0.012) * (r0() < 0.5 ? -1 : 1), vy: (r0() - 0.5) * 0.008, rot: r0() * 6, vr: (r0() - 0.5) * 0.02, rad,
+      pts: Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2, d = rad * (0.68 + r0() * 0.4); return [Math.cos(a) * d, Math.sin(a) * d]; }),
+      craters: Array.from({ length: 2 + Math.floor(r0() * 2) }, () => [(r0() - 0.5) * rad, (r0() - 0.5) * rad, 1 + Math.floor(r0() * 2)]) };
+  };
+  const rocks = Array.from({ length: 10 }, rock);
+  const motionOk = () => S.cfg.motion && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function draw(move) {
+    ctx.fillStyle = "#0B0E24"; ctx.fillRect(0, 0, W, H);
+    for (const st of stars) {
+      if (move) { st.x -= 0.00012 * (0.3 + st.z); if (st.x < 0) st.x += 1; }
+      ctx.fillStyle = st.z > 0.85 ? "#E8ECFF" : st.z > 0.55 ? "#8C96C4" : "#2E3672";
+      ctx.fillRect(Math.floor(st.x * W), Math.floor(st.y * H), 1, 1);
+    }
+    for (const k of rocks) {
+      if (move) {
+        k.x += k.vx / W * 3; k.y += k.vy / H * 3; k.rot += k.vr;
+        const m = k.rad * 1.5;
+        if (k.x * W < -m) k.x = (W + m) / W; else if (k.x * W > W + m) k.x = -m / W;
+        if (k.y * H < -m) k.y = (H + m) / H; else if (k.y * H > H + m) k.y = -m / H;
+      }
+      ctx.save(); ctx.translate(Math.round(k.x * W), Math.round(k.y * H)); ctx.rotate(k.rot);
+      ctx.beginPath(); k.pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+      ctx.fillStyle = "#262B52"; ctx.fill(); ctx.strokeStyle = "#3D4480"; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = "#1A1E3E"; for (const [x, y, sz] of k.craters) ctx.fillRect(Math.round(x), Math.round(y), sz, sz);
+      ctx.restore();
+    }
+  }
+  let last = 0;
+  function frame(t) {
+    requestAnimationFrame(frame);
+    if (document.hidden || t - last < 50) return;
+    last = t;
+    if (motionOk()) draw(true);
+  }
+  addEventListener("resize", resize);
+  resize();
+  requestAnimationFrame(frame);
 }
 
 /* ---------- question banks ---------- */
@@ -612,7 +743,7 @@ const seenCount = () => seenIn(S.bank);
 function setSubject(k) {
   const b = S.banks[k] ? k : BANKS[0].key;
   S.subject = b; S.bank = S.banks[b].questions; S.sections = S.banks[b].sections; S.constants = S.banks[b].constants;
-  $("#tagline").textContent = bankInfo(b).tag;
+  $("#tagline").textContent = bankInfo(b).tag.replace(/^Orbit Station · /, "");
   $("#subject").value = b;
 }
 
@@ -1023,62 +1154,69 @@ function lobbyView() {
   if (S.roomState === "off") wrap.append(el("div", { class: "banner" }, S.setupMissing ? "Live games aren't set up yet: add your Firebase settings to firebase-config.js (see README). Practice and the Daily test still work." : "Live games can't connect right now. Practice and the Daily test still work."));
   if (S.lobbyMsg) wrap.append(el("div", { class: "banner" }, S.lobbyMsg));
   const f = S.form;
-  const left = el("section", { class: "sheet stack" });
-  left.append(el("p", { class: "eyebrow", style: "margin:0" }, `Host a room · ${bankInfo(S.subject).name} · 2–8 crew`));
+  const host = el("section", { class: "sheet stack launch" });
   if (S.joining) {
-    left.append(el("h2", {}, "Docking…"), el("p", { class: "muted blink" }, "Waiting for the captain to seat you."),
+    host.append(el("h2", {}, "Docking…"), el("p", { class: "muted blink" }, "Waiting for the captain."),
       el("div", {}, el("button", { class: "btn ghost", onclick: () => failJoin("") }, "Cancel")));
   } else {
-    const modeCard = (val, title, desc) => el("label", { class: "mode" },
+    const tile = (val, art, title, line) => el("label", { class: "mode tile" },
       el("input", { type: "radio", name: "mode", value: val, checked: f.mode === val, onchange: () => { f.mode = val; if (val === "bomb" && f.pool === "all") f.pool = "quick"; render(); } }),
-      el("b", {}, title), el("span", {}, desc));
-    left.append(el("fieldset", { class: "modes" }, el("legend", { class: "note", style: "margin-bottom:10px" }, "Game mode"),
-      modeCard("race", "Race", "Everyone gets the same question. The first correct answer scores. Answer wrong and you're out for that question."),
-      modeCard("bomb", "Hot Core", "Pass the unstable core round the ring. Answer right to pass it on. Answer wrong or too slowly and it blows: you lose a life.")));
-    const settings = el("div", { class: "row" });
+      art, el("b", {}, title), el("span", {}, line));
+    host.append(el("div", { class: "modes", role: "radiogroup", "aria-label": "Game mode" },
+      tile("race", icon("flag", { cls: "big" }), "Race", "First right answer scores"),
+      tile("bomb", coreSprite(), "Hot Core", "Pass it on before it blows")));
+    const chip = (ico, label, id, control, wide) => el("div", { class: "chip-field" + (wide ? " wide" : ""), title: label }, ico, el("span", { class: "sr", id }, label), control);
+    const chips = el("div", { class: "chips" });
     if (f.mode === "race") {
       const poolN = poolForBank(S.subject, f.pool).length, maxN = Math.min(MAX_RACE, poolN);
       f.n = Math.max(1, Math.min(f.n, maxN));
-      settings.append(el("div", { class: "field" }, el("span", { id: "rounds-l" }, "Length"),
-        stepper("rounds", f.n, 1, maxN, v => { f.n = v; }, "rounds-l"),
-        el("p", { class: "note", style: "margin:0" }, poolN > MAX_RACE ? `Up to ${MAX_RACE} · ${poolN} in this set, drawn at random` : `Of ${poolN} in this set, drawn at random`)));
+      chips.append(chip(icon("hash"), `Questions per game (up to ${maxN})`, "rounds-l", stepper("rounds", f.n, 1, maxN, v => { f.n = v; }, "rounds-l")));
     } else {
-      settings.append(
-        el("label", { class: "field" }, el("span", {}, "Lives"), el("select", { id: "lives", onchange: e => f.lives = +e.target.value }, [1, 2, 3].map(n => el("option", { value: n, selected: n === f.lives }, n + (n === 1 ? " life" : " lives"))))),
-        el("label", { class: "field" }, el("span", {}, "Fuse"), el("select", { id: "fuse", onchange: e => f.fuse = +e.target.value }, [20, 30, 45, 60].map(n => el("option", { value: n, selected: n === f.fuse }, n + " s")))));
+      chips.append(
+        chip(icon("heart", { c: "var(--bad)" }), "Lives", "lives-l", el("select", { id: "lives", "aria-labelledby": "lives-l", onchange: e => f.lives = +e.target.value }, [1, 2, 3].map(n => el("option", { value: n, selected: n === f.lives }, String(n))))),
+        chip(icon("clock"), "Fuse", "fuse-l", el("select", { id: "fuse", "aria-labelledby": "fuse-l", onchange: e => f.fuse = +e.target.value }, [20, 30, 45, 60].map(n => el("option", { value: n, selected: n === f.fuse }, n + " s")))));
     }
-    settings.append(el("label", { class: "field", style: "flex:1;min-width:12em" }, el("span", {}, "Questions"), poolSelect("pool", f.pool, v => { f.pool = v; render(); })));
-    left.append(settings, el("div", {}, el("button", { class: "btn", onclick: () => withName(openRoom), disabled: S.roomState !== "on" }, "Open room")));
+    const pool = poolSelect("pool", f.pool, v => { f.pool = v; render(); }); pool.setAttribute("aria-labelledby", "pool-l");
+    chips.append(chip(icon("book"), `Question set: ${bankInfo(S.subject).name}`, "pool-l", pool, true));
+    host.append(chips, el("div", { class: "row" },
+      el("button", { class: "btn launchbtn", onclick: () => withName(openRoom), disabled: S.roomState !== "on" }, icon("rocket", { c: "#0B0E24", c2: "#FFF3C4" }), "Open room"),
+      el("span", { class: "note" }, `${bankInfo(S.subject).name} · 2–8 crew`)));
   }
-  const right = el("section", { class: "sheet" },
-    el("p", { class: "eyebrow" }, "Docking bay"),
-    el("div", { class: "row spread" }, el("h2", { style: "margin:0" }, "Open rooms"), el("span", { class: "note", id: "online" })),
-    el("div", { id: "openlist", style: "margin-top:12px" }));
-  wrap.append(el("div", { class: "grid2" }, left, right));
+  const bay = el("section", { class: "sheet" },
+    el("div", { class: "row spread" }, el("h2", { style: "margin:0" }, "Docking bay"), el("span", { class: "aboard", id: "online", title: "Crew aboard" })),
+    el("div", { id: "openlist", class: "ports" }), el("p", { class: "note", id: "baynote", style: "margin:10px 0 0" }));
+  wrap.append(el("div", { class: "grid2" }, host, bay));
   queueMicrotask(renderLobbyLists);
   return wrap;
 }
+function dockedShip(p) {
+  const g = pp(p).g, full = g.pl.length >= MAX_PLAYERS, col = `var(--s${hash(p.peer) % 8})`;
+  const meta = g.mode === "race"
+    ? [el("span", { title: "Race" }, icon("flag", { cls: "mini" })), el("span", { title: "Questions" }, icon("hash", { cls: "mini" }), String(Math.min(MAX_RACE, +g.n || 0)))]
+    : [el("span", { title: "Hot Core" }, icon("core", { cls: "mini", c: "var(--core)", c2: "var(--gold)" })), el("span", { title: "Lives" }, icon("heart", { cls: "mini", c: "var(--bad)" }), String(Math.min(3, +g.lives || 1))), el("span", { title: "Fuse" }, icon("clock", { cls: "mini" }), Math.min(60, +g.lim || 30) + "s")];
+  return el("div", { class: "port docked", style: `--c:${col}` },
+    el("div", { class: "bayhead" }),
+    el("div", { class: "pad" }, el("span", { class: "lights" }, el("i"), el("i"), el("i"), el("i")), icon("ship", { c: col, cls: "shipico" })),
+    el("div", { class: "portinfo" },
+      el("b", {}, (cleanNick(pp(p).nick) || "Crew") + (p.isMe ? " (tab 2)" : "")),
+      el("span", { class: "portmeta" }, ...meta),
+      el("span", { class: "portmeta" }, roomSubject(g))),
+    el("span", { class: "seatlights", role: "img", "aria-label": `${g.pl.length} of ${MAX_PLAYERS} seats taken` }, Array.from({ length: MAX_PLAYERS }, (_, i) => el("i", { class: i < g.pl.length ? "on" : "" }))),
+    el("button", { class: "btn small teal", onclick: () => withName(() => joinRoom(p)), disabled: full || !!S.joining }, full ? "Full" : "Join"));
+}
 function renderLobbyLists() {
   const box = $("#openlist"); if (!box) return;
-  const online = $("#online");
-  if (online) online.textContent = S.roomState === "on" ? `${S.peers.length} aboard` : "";
-  if (S.roomState !== "on") { box.replaceChildren(el("div", { class: "empty" }, "The docking bay isn't connected.")); return; }
+  const online = $("#online"), note = $("#baynote");
+  if (online) online.replaceChildren(...(S.roomState === "on" ? [icon("crew", { c: "var(--accent)" }), String(S.peers.length)] : []));
+  if (S.roomState !== "on") { box.replaceChildren(el("div", { class: "empty", style: "grid-column:1/-1" }, "Bay offline.")); if (note) note.textContent = ""; return; }
   for (const p of S.peers) { const g = pp(p).g; if (pp(p).st === "host" && g && typeof g.bk === "string" && g.bk.startsWith("pk:")) ensurePack(g.bk.slice(3)); }
   const open = S.peers.filter(p => !p.sameTab && pp(p).st === "host" && validG(pp(p).g) && pp(p).g.ph === "lobby");
-  if (!open.length) { box.replaceChildren(el("div", { class: "empty" }, "No open rooms right now. Host one and anyone aboard can join. To try it alone, open the page in a second tab.")); return; }
-  const ul = el("ul", { class: "lobby-list" });
-  for (const p of open) {
-    const g = pp(p).g, full = g.pl.length >= MAX_PLAYERS;
-    const detail = g.mode === "race" ? `${Math.min(MAX_RACE, +g.n || 0)} questions` : `${Math.min(3, +g.lives || 1)} ${+g.lives === 1 ? "life" : "lives"} · ${Math.min(60, +g.lim || 30)} s fuse`;
-    ul.append(el("li", {},
-      el("div", { class: "who-col" },
-        el("div", { class: "nm" }, el("span", { class: "tag" + (g.mode === "race" ? " race" : "") }, modeName(g.mode)), (cleanNick(pp(p).nick) || "Crew") + "'s room", p.isMe ? " (your other tab)" : ""),
-        el("div", { class: "note" }, `${roomSubject(g)} · ${g.pl.length}/${MAX_PLAYERS} seated · ${detail} · ${poolLabel(typeof g.pool === "string" ? g.pool : "all")}`)),
-      el("button", { class: "btn small teal", onclick: () => withName(() => joinRoom(p)), disabled: full || !!S.joining }, full ? "Full" : "Join")));
-  }
-  box.replaceChildren(ul);
+  const ships = open.map(dockedShip);
+  const vacant = Math.max(4 - ships.length, ships.length % 2);
+  for (let i = 0; i < vacant; i++) ships.push(el("div", { class: "port vacant", "aria-hidden": "true" }, el("div", { class: "bayhead" }), el("div", { class: "pad" }, el("span", { class: "lights" }, el("i"), el("i"), el("i"), el("i"))), el("span", { class: "vac" }, "Vacant")));
+  box.replaceChildren(...ships);
+  if (note) note.textContent = open.length ? "" : "No ships docked. Open a room, or open the site in a second tab to try it alone.";
 }
-
 function stepper(id, value, min, max, onset, labelId) {
   const clamp = v => { v = Math.round(+v); return Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : min; };
   const input = el("input", { id, type: "number", class: "stepin", min, max, step: 1, inputmode: "numeric", value: clamp(value), "aria-labelledby": labelId,
@@ -1267,16 +1405,16 @@ function sendChat(text) {
 
 function matchView() {
   const m = S.match, g = m.g, me = mySeat(), host = m.role === "host";
-  const box = el("section", { class: "sheet stack", id: "matchbox" });
+  const box = el("section", { class: `sheet stack matchbox mode-${g.mode}`, id: "matchbox" });
   const head = `${roomSubject(g)} · ${modeName(g.mode)} · ` + (g.mode === "race" ? `${g.n} questions · ${poolLabel(g.pool || "all")}` : `${g.lives} ${g.lives === 1 ? "life" : "lives"} · ${g.lim} s fuse · ${poolLabel(g.pool || "all")}`);
-  box.append(el("div", { class: "row spread" }, el("p", { class: "eyebrow", style: "margin:0" }, head),
+  box.append(el("div", { class: "row spread" }, el("p", { class: "eyebrow modehead", style: "margin:0" }, g.mode === "race" ? icon("flag", { cls: "mini" }) : icon("core", { cls: "mini", c: "var(--core)", c2: "var(--gold)" }), head),
     g.ph === "end" ? null : el("button", { class: "btn ghost small", id: "leave", onclick: e => {
       if (e.currentTarget.dataset.armed) return leaveMatch(host ? "You closed your room." : "");
       e.currentTarget.dataset.armed = "1"; e.currentTarget.textContent = host ? "Close room for everyone?" : "Leave the game?";
       e.currentTarget.classList.add("danger");
     } }, host ? "Close room" : "Leave")));
   const panel = el("div", { class: "panel" });
-  box.append(el("div", { class: "matchgrid" }, el("div", { class: "matchmain" }, tableView(), panel), syncChat(g)));
+  box.append(el("div", { class: "matchgrid" }, el("div", { class: "matchmain" }, raceTrack(g), tableView(), panel), syncChat(g)));
 
   if (g.ph === "lobby") {
     if (host) panel.append(
@@ -1325,6 +1463,16 @@ function matchView() {
     }
   }
   return box;
+}
+// Race: every player's ship flies toward the finish flag as they score; a full track means every question won.
+function raceTrack(g) {
+  if (g.mode !== "race" || !g.sc || g.ph === "lobby") return null;
+  const me = mySeat(), n = Math.max(1, g.n || 1);
+  return el("div", { class: "track", role: "img", "aria-label": "Race track: " + g.pl.map((_, s) => `${seatName(g, s)} ${g.sc[s]}`).join(", ") },
+    g.pl.map((_, s) => el("div", { class: "lane", style: `--c:${seatColor(s)}` },
+      el("span", { class: "ln" }, s === me ? "You" : seatName(g, s)),
+      el("div", { class: "road" }, Object.assign(icon("ship", { c: seatColor(s) }), { style: `left:calc(15px + (100% - 30px) * ${Math.min(1, g.sc[s] / n).toFixed(3)})` })),
+      icon("flag"))));
 }
 function endView() {
   const m = S.match, g = m.g, me = mySeat();
@@ -1375,6 +1523,7 @@ setInterval(() => {
       else if (g.mode === "race" && left <= 5 && !validAns(m.my, g)) sfx("tick");
     }
     const hub = $("#hub"); if (hub && g.mode === "bomb") hub.classList.toggle("urgent", frac * g.lim < 6);
+    const mb = $("#matchbox"); if (mb && g.mode === "bomb") { mb.style.setProperty("--heat", (1 - frac).toFixed(2)); mb.classList.toggle("alarm", frac * g.lim < 6); }
     if (frac === 0 && !validAns(m.my, g)) for (const b of document.querySelectorAll("#matchbox .opt")) b.disabled = true;
   } else if (g.ph === "cd") {
     const cd = $("#cd");
@@ -2039,6 +2188,10 @@ async function boot() {
   const nickIn = $("#nick"); nickIn.value = S.nick;
   applyCfg();
   $("#cfgbtn").addEventListener("click", openSettings);
+  $("#cfgbtn").append(icon("gear"));
+  $("#logo").append(icon("logo", { c: "var(--accent)", c2: "var(--gold)" }));
+  for (const a of document.querySelectorAll("#tabs a[data-ico]")) a.prepend(icon(a.dataset.ico, { c2: a.dataset.ico === "rocket" ? "var(--core)" : "var(--gold)" }));
+  startSpace();
   nickIn.addEventListener("change", () => {
     const v = cleanNick(nickIn.value); if (!v) { nickIn.value = S.nick; return; }
     setNick(v); S.named = true; try { sessionStorage.setItem("p1d.named", "1"); } catch {}

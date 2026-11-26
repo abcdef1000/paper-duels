@@ -1,6 +1,6 @@
-# Paper One Duel
+# Orbit Duels
 
-Party-style multiple-choice game for 2–8 players with three question banks: H2 Physics (9478) Paper 1 style, PSLE Science and PSLE Maths. Players sit around a round table on **Orbit Station**, a pixel-art space station. There is also a **Daily Test** (four questions of rising difficulty, scored on accuracy and speed and ranked on a bell curve), solo practice, per-question progress and a leaderboard.
+Party-style multiple-choice game for 2–8 players with three question banks: H2 Physics (9478) Paper 1 style, PSLE Science and PSLE Maths. Players sit around a round table on **Orbit Station**, a pixel-art space station with drifting asteroids. Open rooms appear as ships parked in the docking bay. There is also a **Daily Test** (four questions of rising difficulty, scored on accuracy and speed and ranked on a bell curve), solo practice, per-question progress and a leaderboard.
 
 - **Race:** everyone gets the same question. The first correct answer scores, and a wrong answer locks you out of that question.
 - **Hot Core:** the holder must answer before the fuse runs out. Right passes the bomb on. Wrong or too slow loses a life. The last player standing wins.
