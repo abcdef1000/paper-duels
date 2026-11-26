@@ -32,7 +32,7 @@ function makeRef(path, q = {}) {
   const ref = {
     key: path.split("/").pop(),
     child: c => makeRef(path + "/" + c),
-    push() { return makeRef(path + "/c" + (++nextId)); },
+    push(v) { const r = makeRef(path + "/c" + (++nextId)); if (v !== undefined) r.set(v); return r; },
     set(v) { if (v == null) delete store[path]; else store[path] = clone(v); notify(); return Promise.resolve(); },
     get() { return Promise.resolve(snapOf(ref.key, readPath(path))); },
     orderByChild(f) { return makeRef(path, { ...q, order: f }); },
@@ -168,6 +168,7 @@ async function seatEveryone(hostOpens) {
     W(A).eval('setG({ qs: ["KIN-05"], n: 1 })');
     (await until(() => btn(A, "Start with 3 players"), "start")).click();
     await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && D(f).getElementById("sa-in")), "short question shown");
+    out(`chat paused during question: ${[A, B, C].every(f => D(f).getElementById("chat-in").disabled)}`);
     const type = (f, v) => { D(f).getElementById("sa-in").value = v; btn(f, "Submit").click(); };
     type(C, "30"); await sleep(120); type(B, "25 m"); await sleep(120); type(A, "25");
     await until(() => S(A).match.g.ph === "r", "short reveal", 100000);
@@ -180,7 +181,18 @@ async function seatEveryone(hostOpens) {
     out(`answer matching: ${cases.length - bad.length}/${cases.length} cases right` + (bad.length ? " FAILED " + JSON.stringify(bad) : ""));
     for (const f of [A, B, C]) (await until(() => btn(f, "See results"), "see results")).click();
     await until(() => [A, B, C].every(f => S(f).match.ended), "short race end", 100000);
-    for (const f of [A, B, C]) btn(f, "Back to lobby").click();
+    const oldId = S(A).match.g.id;
+    btn(A, "Rematch with this crew").click();
+    await until(() => [B, C].every(f => S(f).match && !S(f).match.ended && S(f).match.g.id === S(A).match.g.id && S(f).match.g.ph === "lobby"), "crew follows rematch", 30000);
+    await sleep(3500);   // past the captain's 2.5 s seat-cleanup window
+    (await until(() => [...D(B).querySelectorAll(".chat .quick button")].find(x => x.textContent === "gg" && !x.disabled), "B quick chat")).click();
+    D(C).getElementById("chat-in").value = "rematch time <b>bold?</b>"; D(C).querySelector(".chatform button").click();
+    await until(() => D(A).querySelectorAll(".chatlog li:not(.empty)").length >= 2, "A sees chat", 15000);
+    out(`chat on A: ${[...D(A).querySelectorAll(".chatlog li")].map(li => li.textContent).join(" | ")}; carried rematch chat id: ${S(A).match.g.chat === oldId}`);
+    out(`rematch: new room ${S(A).match.g.id !== oldId ? "created" : "NOT created"}, seated ${S(A).match.g.pl.length}/3, B and C followed: ${[B, C].every(f => S(f).match.g.id === S(A).match.g.id)}`);
+    btn(A, "Close room").click(); btn(A, "Close room for everyone?").click();
+    await until(() => [B, C].every(f => !S(f).match), "crew back in lobby", 30000);
+    out(`closed: B sees "${S(B).lobbyMsg}"`);
 
     /* ---------- player-made pack: AI reply -> validate -> save -> host -> others join ---------- */
     const aiPack = { name: "Sec 3 Acids", questions: [
@@ -196,11 +208,16 @@ async function seatEveryone(hostOpens) {
     out(`saved pack ${pid}; stored: ${!!store["packData/" + pid]} meta: ${!!store["packMeta/" + pid]}`);
     W(A).eval(`setSubject("pk:${pid}")`);
     delete W(B).eval("S").banks["pk:" + pid];                 // B starts without the pack
+    S(C).cfg.notify = true; W(C).location.hash = "practice";
+    const sfxErrors = W(A).eval('(() => { const c = ac(); const bad = []; for (const [k, e] of Object.entries(SFX)) { try { e.play(c); } catch (err) { bad.push(k + ": " + err.message); } } return bad; })()');
+    out(`sound effects: ${W(A).eval("Object.keys(SFX).length")} synthesised, errors: ${sfxErrors.length ? JSON.stringify(sfxErrors) : "none"}`);
     await until(() => btn(A, "Open room"), "A lobby (pack)");
     S(A).form.mode = "race"; S(A).form.n = 5; S(A).form.pool = "all";
     W(A).eval("render()");
     btn(A, "Open room").click();
     (await until(() => btn(B, "Join"), "B sees pack room", 30000)).click();
+    await until(() => D(C).getElementById("toast"), "C gets a new-room alert", 15000);
+    out(`new-room alert on C (in Practice): "${D(C).getElementById("toast").textContent.replace(/Go to lobby|Dismiss/g, "").trim()}"`);
     await until(() => S(B).match, "B seated in pack room");
     out(`B loaded pack for room: ${!!S(B).banks["pk:" + pid]}; room subject ${S(A).match.g.bk}`);
     (await until(() => btn(A, "Start with 2 players"), "start pack game")).click();

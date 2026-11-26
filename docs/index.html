@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;500;600;700&display=swap">
+<!-- digits only: DotGothic16's numerals are the clearest, so every number uses them and letters fall through to the pixel fonts -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&text=0123456789&display=swap">
 <style>
 /* Orbit Station: a pixel-art space station. Deep-space background with a pixel starfield, panels with notched
    pixel borders, crew drawn as 10×10 astronaut helmets, the bomb is a flickering reactor core.
@@ -29,8 +31,8 @@
   --sim: #8C7FD9;           /* chart: simulated players */
   --s0: #5EEAD4; --s1: #FFD166; --s2: #FF7A45; --s3: #C49BF5; --s4: #7CE678; --s5: #FF5C7A; --s6: #78AAFF; --s7: #E6E6F0;
   --display: "Press Start 2P", "Courier New", monospace;
-  --label: "Silkscreen", "Courier New", monospace;
-  --body: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --label: "DotGothic16", "Silkscreen", "Courier New", monospace;
+  --body: "DotGothic16", "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
   --px: 4px;
   color-scheme: dark;
   padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -138,6 +140,11 @@ select, .field input { padding: 8px 10px; border: 0; background: var(--panel2); 
 .seat.holder .av { transform: scale(1.2); }
 .seat.holder .av::after { content: ""; position: absolute; inset: -8px; border: 4px dashed var(--core); animation: spin 2s steps(8) infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* crew bob in two pixel frames while a round is on; the holder of the core bobs twice as fast */
+.table.live .seat:not(.out) .av svg { animation: bob .9s linear infinite; }
+.table.live .seat.holder .av svg { animation-duration: .45s; }
+@keyframes bob { 0%, 49.9% { transform: translateY(0); } 50%, 100% { transform: translateY(-5px); } }
+:root[data-motion="off"] .table.live .av svg, :root[data-motion="off"] .seat.holder .av::after { animation: none; }
 .seat.out { opacity: .35; filter: grayscale(1); }
 .seat.gone .av { opacity: .4; }
 .sn { font: 700 12px/1.2 var(--label); max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
@@ -307,6 +314,33 @@ textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 0; backgr
 .packlist .pn b { display: block; overflow-wrap: anywhere; }
 .preview { display: flex; flex-direction: column; gap: 14px; padding: 14px; background: var(--space); }
 
+/* room chat */
+.matchgrid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 860px) { .matchgrid { grid-template-columns: 1fr; } }
+.matchmain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.chat { background: var(--panel2); padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+@media (min-width: 861px) { .chat { position: sticky; top: calc(12px + env(safe-area-inset-top, 0px)); } }
+.chatlog { list-style: none; margin: 0; padding: 0; height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.chatlog li { overflow-wrap: anywhere; line-height: 1.35; }
+.chatlog li b { color: var(--c); font: 700 12px/1 var(--label); text-transform: uppercase; margin-right: 6px; }
+.chatlog li.mine b { color: var(--gold); }
+.chatlog .empty { border: 0; padding: 4px 0; }
+.chatform { display: flex; gap: 8px; }
+.chatform input { flex: 1; min-width: 0; padding: 8px 10px; border: 0; background: var(--space); box-shadow: inset 0 -3px 0 var(--line); }
+.chat .quick { gap: 6px; }
+.chat .quick .btn { padding: 5px 8px; font-size: 11px; }
+
+/* toast + settings */
+.toast { position: fixed; z-index: 15; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(340px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 8px; }
+.toast b { font: 400 12px/1.4 var(--display); color: var(--gold); }
+.setgrid { display: flex; flex-direction: column; gap: 10px; }
+.setgrid label { display: flex; align-items: center; gap: 10px; }
+.setgrid input[type="checkbox"], .setgrid input[type="range"] { accent-color: var(--accent); }
+.setgrid input[type="checkbox"] { width: 18px; height: 18px; }
+.setgrid input[type="range"] { flex: 1; }
+.setgrid .sub { padding-left: 28px; }
+.setgrid h3 { margin: 8px 0 0; color: var(--accent); }
+
 /* leaderboard */
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
@@ -330,6 +364,7 @@ tr.sim td { color: var(--muted); }
     <div class="who">
       <label for="nick">Callsign</label>
       <input id="nick" maxlength="20" autocomplete="off" spellcheck="false">
+      <button id="cfgbtn" class="btn ghost small" type="button">Settings</button>
       <button id="acct" class="btn ghost small" hidden></button>
     </div>
   </header>
@@ -423,6 +458,130 @@ const RACE_LIM = 60;     // seconds per question in Race
 const GRACE = 1000;      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
 const MAX_PLAYERS = 8;
 const P = { q: {}, w: 0, l: 0, d: 0 };
+
+/* ---------- settings ---------- */
+const CFG_DEFAULT = { sound: true, vol: 0.6, sfxFeedback: true, sfxTimer: true, sfxEvents: true, sfxUi: true, motion: true, notify: false };
+S.cfg = Object.assign({}, CFG_DEFAULT, lsGet("p1d.cfg") || {});
+function applyCfg() { document.documentElement.dataset.motion = S.cfg.motion ? "on" : "off"; if (SND.master) SND.master.gain.value = S.cfg.vol; }
+function saveCfg() { lsSet("p1d.cfg", S.cfg); applyCfg(); }
+
+/* ---------- sound: chiptune effects synthesised with Web Audio, no files ---------- */
+const SND = { ctx: null, master: null };
+function ac() {
+  if (!SND.ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    SND.ctx = new AC(); SND.master = SND.ctx.createGain(); SND.master.gain.value = S.cfg.vol; SND.master.connect(SND.ctx.destination);
+  }
+  if (SND.ctx.state === "suspended") SND.ctx.resume().catch(() => {});
+  return SND.ctx;
+}
+function tone(c, f, t, dur, o = {}) {
+  const osc = c.createOscillator(), g = c.createGain(), v = o.vol == null ? 0.15 : o.vol;
+  osc.type = o.type || "square"; osc.frequency.setValueAtTime(f, t);
+  if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(g); g.connect(SND.master); osc.start(t); osc.stop(t + dur + 0.02);
+}
+function noise(c, t, dur, o = {}) {
+  const len = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  src.buffer = buf; f.type = "lowpass"; f.frequency.setValueAtTime(o.from || 3000, t); f.frequency.exponentialRampToValueAtTime(o.to || 200, t + dur);
+  g.gain.setValueAtTime(o.vol == null ? 0.3 : o.vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(SND.master); src.start(t);
+}
+const seq = (c, notes, step, o) => { const t0 = c.currentTime + 0.01; notes.forEach((f, i) => { if (f) tone(c, f, t0 + i * step, step * 0.95, o); }); };
+const SFX = {
+  click:   { cat: "sfxUi",       play: c => tone(c, 880, c.currentTime, 0.035, { vol: 0.05 }) },
+  lock:    { cat: "sfxFeedback", play: c => { tone(c, 660, c.currentTime, 0.05, { vol: 0.09 }); tone(c, 990, c.currentTime + 0.05, 0.07, { vol: 0.09 }); } },
+  correct: { cat: "sfxFeedback", play: c => seq(c, [523, 659, 784, 1047], 0.07, { vol: 0.11 }) },
+  point:   { cat: "sfxFeedback", play: c => seq(c, [784, 988, 1175, 1568, 0, 1568], 0.065, { vol: 0.12 }) },
+  wrong:   { cat: "sfxFeedback", play: c => { tone(c, 220, c.currentTime, 0.18, { type: "sawtooth", vol: 0.1, to: 150 }); tone(c, 165, c.currentTime + 0.16, 0.25, { type: "sawtooth", vol: 0.1, to: 90 }); } },
+  other:   { cat: "sfxFeedback", play: c => seq(c, [587, 440], 0.09, { vol: 0.09, type: "triangle" }) },
+  none:    { cat: "sfxFeedback", play: c => tone(c, 196, c.currentTime, 0.2, { type: "triangle", vol: 0.1 }) },
+  tick:    { cat: "sfxTimer",    play: c => tone(c, 1200, c.currentTime, 0.03, { vol: 0.06 }) },
+  tickHot: { cat: "sfxTimer",    play: c => { tone(c, 1500, c.currentTime, 0.03, { vol: 0.08 }); tone(c, 1500, c.currentTime + 0.12, 0.03, { vol: 0.06 }); } },
+  count:   { cat: "sfxTimer",    play: c => tone(c, 440, c.currentTime, 0.12, { vol: 0.11 }) },
+  go:      { cat: "sfxTimer",    play: c => tone(c, 880, c.currentTime, 0.25, { vol: 0.13 }) },
+  pass:    { cat: "sfxEvents",   play: c => tone(c, 300, c.currentTime, 0.18, { type: "triangle", vol: 0.13, to: 1200 }) },
+  boom:    { cat: "sfxEvents",   play: c => { noise(c, c.currentTime, 0.9, { vol: 0.45, from: 2500, to: 80 }); tone(c, 120, c.currentTime, 0.6, { type: "sine", vol: 0.28, to: 30 }); } },
+  join:    { cat: "sfxEvents",   play: c => seq(c, [659, 988], 0.08, { vol: 0.09, type: "triangle" }) },
+  room:    { cat: "sfxEvents",   play: c => seq(c, [784, 1047, 784, 1047], 0.07, { vol: 0.08, type: "triangle" }) },
+  win:     { cat: "sfxEvents",   play: c => seq(c, [523, 659, 784, 1047, 0, 784, 1047, 1319], 0.1, { vol: 0.12 }) },
+  lose:    { cat: "sfxEvents",   play: c => seq(c, [494, 466, 440, 415], 0.16, { vol: 0.1, type: "triangle" }) },
+  fanfare: { cat: "sfxEvents",   play: c => seq(c, [392, 523, 659, 784, 659, 784, 1047], 0.09, { vol: 0.11 }) },
+  chat:    { cat: "sfxEvents",   play: c => tone(c, 1320, c.currentTime, 0.05, { vol: 0.06, type: "triangle" }) },
+};
+function sfx(name) {
+  const e = SFX[name]; if (!e || !S.cfg.sound || !S.cfg[e.cat] || S.cfg.vol <= 0) return;
+  try { const c = ac(); if (c) e.play(c); } catch {}
+}
+document.addEventListener("pointerdown", () => { if (S.cfg.sound) ac(); }, { capture: true, once: true });   // browsers unlock audio on a gesture
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest(".btn"); if (b && !b.disabled && !b.closest(".saform")) sfx("click"); }, true);
+
+function openSettings() {
+  const c = S.cfg;
+  const box = el("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "set-h" });
+  const toggle = (key, label, cls) => el("label", { class: cls || "" }, el("input", { type: "checkbox", checked: !!c[key], onchange: e => { c[key] = e.target.checked; saveCfg(); if (key === "notify" && c.notify) askNotify(note); } }), label);
+  const note = el("p", { class: "note", style: "margin:0" }, notifyNote());
+  box.append(el("form", { class: "sheet", onsubmit: e => { e.preventDefault(); box.remove(); } },
+    el("p", { class: "eyebrow" }, "Ship systems"), el("h2", { id: "set-h", style: "margin:0" }, "Settings"),
+    el("div", { class: "setgrid" },
+      el("h3", {}, "Sound"),
+      toggle("sound", "Sound effects"),
+      el("label", { class: "sub" }, "Volume", el("input", { type: "range", min: "0", max: "1", step: "0.05", value: String(c.vol), "aria-label": "Volume", oninput: e => { c.vol = +e.target.value; saveCfg(); }, onchange: () => sfx("correct") })),
+      toggle("sfxFeedback", "Answer feedback: right, wrong, points", "sub"),
+      toggle("sfxTimer", "Countdown and timer ticks", "sub"),
+      toggle("sfxEvents", "Game events: core passes, explosions, wins, new crew, chat", "sub"),
+      toggle("sfxUi", "Button clicks", "sub"),
+      el("h3", {}, "Motion"),
+      toggle("motion", "Animate crew during rounds"),
+      el("h3", {}, "Notifications"),
+      toggle("notify", "Tell me when someone opens a new room"),
+      note),
+    el("div", { class: "row spread" },
+      el("button", { type: "button", class: "btn ghost", onclick: () => { ["count", "go", "lock", "correct", "point", "wrong", "pass", "boom", "win"].forEach((n, i) => setTimeout(() => sfx(n), i * 650)); } }, "Test sounds"),
+      el("button", { type: "submit", class: "btn teal" }, "Done"))));
+  box.addEventListener("keydown", e => { if (e.key === "Escape") box.remove(); });
+  document.body.append(box);
+}
+function notifyNote() {
+  if (!("Notification" in window)) return "This browser can't show notifications. You'll still get an in-page alert while the site is open.";
+  if (Notification.permission === "denied") return "Notifications are blocked for this site. Allow them in your browser's site settings to get alerts in other tabs.";
+  return "Works while this site is open in any tab: an alert pops up even if you're on another tab or app. Closed tabs can't be notified.";
+}
+function askNotify(note) {
+  if (!("Notification" in window) || Notification.permission !== "default") { note.textContent = notifyNote(); return; }
+  Notification.requestPermission().then(() => { note.textContent = notifyNote(); }).catch(() => {});
+}
+function showToast(title, body) {
+  const old = $("#toast"); if (old) old.remove();
+  const t = el("div", { id: "toast", class: "toast sheet", role: "status" }, el("b", {}, title), el("span", { class: "note" }, body),
+    el("div", { class: "row" }, el("a", { class: "btn small teal", href: "#duel", onclick: () => t.remove() }, "Go to lobby"), el("button", { class: "btn ghost small", onclick: () => t.remove() }, "Dismiss")));
+  document.body.append(t);
+  setTimeout(() => t.remove(), 9000);
+}
+// New-room alerts: rooms already open when the page loads, and rematches, don't count.
+function watchRooms() {
+  const now = Date.now();
+  if (!S.seenRooms) { S.seenRooms = new Set(); S.roomsReadyAt = now + 4000; }
+  for (const p of S.peers) {
+    const g = pp(p).g;
+    if (p.isMe || pp(p).st !== "host" || !g || typeof g.id !== "string" || g.ph !== "lobby" || S.seenRooms.has(g.id)) continue;
+    if (!validG(g)) { if (typeof g.bk === "string" && g.bk.startsWith("pk:")) ensurePack(g.bk.slice(3)).then(ok => ok && watchRooms()); continue; }
+    S.seenRooms.add(g.id);
+    if (now < S.roomsReadyAt || (g.prev && S.seenRooms.has(g.prev))) continue;
+    const inLobby = S.view === "duel" && !S.match && !document.hidden;
+    if (!S.cfg.notify || inLobby) continue;
+    const title = `New ${modeName(g.mode)} room`, body = `${cleanNick(pp(p).nick) || "Crew"} · ${roomSubject(g)} · ${g.pl.length}/${MAX_PLAYERS} seated`;
+    let notified = false;
+    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+      try { const n = new Notification(title, { body, tag: "room-" + g.id }); n.onclick = () => { window.focus(); location.hash = "duel"; n.close(); }; notified = true; } catch {}
+    }
+    if (!notified) showToast(title, body);
+    sfx("room");
+  }
+}
 
 const Q = id => S.byId[id];
 const isShort = q => !!q && q.type === "short";
@@ -582,9 +741,28 @@ function setNick(v) {
 function newMatch(role, g, host) {
   return { role, id: g.id, host, g, gKey: JSON.stringify(g), my: null, qStart: {}, recorded: new Set(), ended: false, phaseAt: Date.now(), firstOk: null, gone: {}, readyKey: null, cdAt: null };
 }
+function poolForBank(bk, key) {
+  const b = S.banks[bk] || { questions: S.bank, sections: S.sections };
+  let qs = b.questions;
+  if (key === "quick") qs = qs.filter(q => q.quick);
+  else if (key !== "all") { const sec = b.sections.find(x => x.name === key); if (sec) qs = qs.filter(q => sec.topics.includes(q.topic)); }
+  return qs.length ? qs : b.questions;
+}
+function rematch() {
+  const m = S.match, g = m.g, race = g.mode === "race";
+  const ids = shuffle(poolForBank(g.bk, g.pool).map(q => q.id));
+  const ng = { id: rid(8), prev: g.id, mode: g.mode, pl: g.pl.slice(), nm: g.nm.slice(), ph: "lobby", k: 0,
+    qs: race ? ids.slice(0, Math.min(g.n || 10, ids.length)) : ids.slice(0, 60), n: race ? Math.min(g.n || 10, ids.length) : 0,
+    lim: g.lim, lives: g.lives, pool: g.pool, bk: g.bk, chat: g.chat || g.id, sc: null, lv: null, turn: 0, res: null };
+  S.match = newMatch("host", ng, S.myPeer);
+  pushPresence({ st: "host", g: ng, a: null, rd: null, jm: null });
+  clearInterval(S.hostTimer);
+  S.hostTimer = setInterval(hostTick, 200);
+  render();
+}
 function openRoom() {
   if (!S.myPeer) return;
-  const f = S.form, pool = poolFor(f.pool), ids = shuffle(pool.map(q => q.id));
+  const f = S.form, pool = poolForBank(S.subject, f.pool), ids = shuffle(pool.map(q => q.id));
   const race = f.mode === "race";
   const g = { id: rid(8), mode: f.mode, pl: [S.myPeer], nm: [S.nick], ph: "lobby", k: 0,
     qs: race ? ids.slice(0, Math.min(f.n, ids.length)) : ids.slice(0, 60), n: race ? Math.min(f.n, ids.length) : 0,
@@ -606,6 +784,7 @@ function joinRoom(p) {
 function failJoin(msg) { S.joining = null; S.lobbyMsg = msg; pushPresence({ st: "idle", tgt: null, jm: null }); render(); }
 function leaveMatch(msg) {
   clearInterval(S.hostTimer);
+  closeChat();
   S.match = null; S.joining = null; S.lobbyMsg = msg || "";
   pushPresence({ st: "idle", g: null, a: null, rd: null, tgt: null, jm: null, mast: masteredIn(allQs()) });
   render();
@@ -613,6 +792,16 @@ function leaveMatch(msg) {
 
 function onPeersChanged() {
   const me = S.myPeer;
+  watchRooms();
+  const em = S.match;
+  if (em && em.role === "guest" && em.ended) {   // the captain started a rematch: follow into the new room
+    const host = peerOf(em.host), g = pp(host).g;
+    if (validG(g) && g.prev === em.id && g.pl.includes(me)) {
+      S.match = newMatch("guest", g, host.peer); S.lobbyMsg = "";
+      pushPresence({ st: "play", jm: g.id, a: null, rd: null });
+      onGameState(); return;
+    }
+  }
   if (S.joining && !S.match) {
     const host = peerOf(S.joining.host), g = pp(host).g;
     if (!host) failJoin("That room's captain left.");
@@ -736,8 +925,28 @@ setInterval(() => {
   }
 }, 1000);
 
+function gameSounds(m, g, me) {
+  const prev = m.prevPh, changed = g.ph !== prev || g.k !== m.prevK;
+  if (g.ph === "lobby" && m.prevN != null && g.pl.length > m.prevN) sfx("join");
+  m.prevN = g.pl.length;
+  if (!changed) return;
+  m.prevPh = g.ph; m.prevK = g.k;
+  if (prev == null) return;   // just arrived: stay quiet
+  if (g.ph === "q") sfx(prev === "cd" ? "go" : g.mode === "bomb" ? "pass" : "count");
+  else if (g.ph === "r" && g.res) {
+    const q = Q(qidOf(g));
+    if (g.mode === "race") {
+      const mine = me >= 0 ? g.res.c[me] : null;
+      if (g.res.w === me) sfx("point"); else if (mine != null && isCorrect(q, mine)) sfx("correct"); else if (mine != null) sfx("wrong"); else sfx(g.res.w >= 0 ? "other" : "none");
+    } else if (g.res.boom) sfx("boom"); else sfx(g.res.seat === me ? "correct" : "other");
+  } else if (g.ph === "end") {
+    const won = !g.ab && me >= 0 && (g.mode === "race" ? g.sc[me] === Math.max(...g.sc) : g.win === me);
+    sfx(g.ab ? "none" : won ? "win" : "lose");
+  }
+}
 function onGameState() {
   const m = S.match, g = m.g, key = g.id + ":" + g.k, me = mySeat();
+  gameSounds(m, g, me);
   if (g.ph === "cd" && !m.cdAt) m.cdAt = performance.now();
   if (g.ph === "q" && !m.qStart[key]) m.qStart[key] = performance.now();
   if (g.ph === "r" && !m.recorded.has(key)) {
@@ -768,6 +977,7 @@ function answer(resp) {
   if (rt > g.lim * 1000) return;
   m.my = typeof resp === "string" ? { m: g.id, k: g.k, s: resp.slice(0, 80), rt } : { m: g.id, k: g.k, c: resp, rt };
   pushPresence({ a: m.my });
+  sfx("lock");
   renderMatch();
 }
 function ready() {
@@ -921,7 +1131,9 @@ function ringSvg(frac) {
 }
 function tableView() {
   const m = S.match, g = m.g;
-  const t = el("div", { class: "table", id: "table" });
+  const live = g.ph === "cd" || g.ph === "q" || g.ph === "r";
+  const t = el("div", { class: "table" + (live ? " live" : ""), id: "table" });
+  const phase = (performance.now() % 900) / 1000;   // keeps the bob continuous when the table re-renders
   g.pl.forEach((peer, s) => {
     const ang = seatAngle(g, s) * Math.PI / 180;
     const isMe = peer === S.myPeer, present = isMe || !!peerOf(peer);
@@ -937,7 +1149,9 @@ function tableView() {
     let badge;
     if (g.mode === "race") badge = el("span", { class: "sb" }, g.sc ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === 0 ? "captain" : "ready"));
     else badge = el("span", { class: "sb hearts", "aria-label": `${g.lv ? g.lv[s] : g.lives} lives` }, g.lv ? "♥".repeat(Math.max(0, g.lv[s])) + "♡".repeat(Math.max(0, g.lives - g.lv[s])) : "♥".repeat(g.lives));
-    const av = el("div", { class: "av", style: `--c:${seatColor(s)}`, title: seatName(g, s) }, helmet(s), mark);
+    const sprite = helmet(s);
+    if (live) sprite.style.animationDelay = `${(-phase - s * 0.15).toFixed(2)}s`;
+    const av = el("div", { class: "av", style: `--c:${seatColor(s)}`, title: seatName(g, s) }, sprite, mark);
     t.append(el("div", {
       class: "seat" + (isMe ? " me" : "") + (holder ? " holder" : "") + (out ? " out" : "") + (present ? "" : " gone"),
       style: `left:${(50 + 41 * Math.cos(ang)).toFixed(2)}%;top:${(50 + 41 * Math.sin(ang)).toFixed(2)}%`
@@ -967,6 +1181,60 @@ function renderTable() {
   t.replaceWith(tableView());
 }
 
+/* room chat: chat/<room>/<push id> = { by, nick, text, t }. One persistent element per room, so a re-render
+   never loses what someone is typing. Paused while a question is up, so answers can't be passed around. */
+const QUICK_CHAT = ["gg", "nice one!", "oops", "hurry up!", "rematch?"];
+function closeChat() { if (S.chat && S.chat.unsub) S.chat.unsub(); S.chat = null; }
+function chatFor(g) {
+  const cid = typeof g.chat === "string" && /^[a-z0-9]{6,12}$/.test(g.chat) ? g.chat : g.id;
+  if (S.chat && S.chat.cid === cid) return S.chat;
+  closeChat();
+  const list = el("ol", { class: "chatlog", "aria-live": "polite", "aria-label": "Room chat messages" });
+  const input = el("input", { id: "chat-in", maxlength: "200", autocomplete: "off", placeholder: "Message the crew", "aria-label": "Chat message" });
+  const note = el("p", { class: "note", style: "margin:0" });
+  const sendBtn = el("button", { class: "btn small teal", type: "submit" }, "Send");
+  const quick = el("div", { class: "row quick" }, QUICK_CHAT.map(t => el("button", { type: "button", class: "btn ghost small", onclick: () => sendChat(t) }, t)));
+  const form = el("form", { class: "chatform", onsubmit: e => { e.preventDefault(); sendChat(input.value); } }, input, sendBtn);
+  const box = el("section", { class: "chat", "aria-label": "Room chat" }, el("p", { class: "eyebrow", style: "margin:0" }, "Room chat"), list, note, form, quick);
+  const c = S.chat = { cid, el: box, list, input, note, sendBtn, quick, seen: new Set(), lastSent: 0, paused: false, first: true };
+  list.append(el("li", { class: "empty note" }, "No messages yet. Say hi!"));
+  if (!S.db) { note.textContent = "Chat needs the online connection."; input.disabled = sendBtn.disabled = true; return c; }
+  c.unsub = S.db.collection("chat/" + cid).orderBy("t").limit(60).onSnapshot(snap => {
+    const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => typeof m.text === "string" && m.text.trim()).sort((a, b) => (+a.t || 0) - (+b.t || 0));
+    const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+    let fresh = false;
+    list.replaceChildren(...(msgs.length ? msgs.map(m => {
+      if (!c.seen.has(m.id)) { c.seen.add(m.id); if (!c.first && m.by !== S.uid) fresh = true; }
+      return el("li", { class: m.by === S.uid ? "mine" : "", style: `--c:${seatColor(hash(String(m.by || "")) % 8)}` }, el("b", {}, cleanNick(m.nick) || "Crew"), String(m.text).replace(BAD_CHARS, " ").slice(0, 200));
+    }) : [el("li", { class: "empty note" }, "No messages yet. Say hi!")]));
+    if (nearBottom || c.first) list.scrollTop = list.scrollHeight;
+    if (fresh) sfx("chat");
+    c.first = false;
+  }, () => { note.textContent = "Chat couldn't load. The database rules may need the chat section from database.rules.json."; });
+  return c;
+}
+function syncChat(g) {
+  const c = chatFor(g);
+  c.paused = g.ph === "q";
+  const off = c.paused || !S.db;
+  c.input.disabled = c.sendBtn.disabled = off;
+  c.quick.querySelectorAll("button").forEach(b => { b.disabled = off; });
+  if (S.db) c.note.textContent = c.paused ? "Chat pauses while a question is up." : "";
+  return c.el;
+}
+function sendChat(text) {
+  const c = S.chat; if (!c || c.paused || !S.db || !S.uid) return;
+  const t = String(text || "").replace(BAD_CHARS, " ").trim().slice(0, 200);
+  if (!t) return;
+  const now = Date.now();
+  if (now - c.lastSent < 1000) { c.note.textContent = "Slow down a little."; return; }
+  c.lastSent = now;
+  const p = S.db.push("chat/" + c.cid, { by: S.uid, nick: S.nick, text: t, t: now });
+  if (p && p.catch) p.catch(() => { if (S.chat) S.chat.note.textContent = "Your message couldn't be sent."; });
+  c.input.value = "";
+  c.input.focus({ preventScroll: true });
+}
+
 function matchView() {
   const m = S.match, g = m.g, me = mySeat(), host = m.role === "host";
   const box = el("section", { class: "sheet stack", id: "matchbox" });
@@ -977,9 +1245,8 @@ function matchView() {
       e.currentTarget.dataset.armed = "1"; e.currentTarget.textContent = host ? "Close room for everyone?" : "Leave the game?";
       e.currentTarget.classList.add("danger");
     } }, host ? "Close room" : "Leave")));
-  box.append(tableView());
   const panel = el("div", { class: "panel" });
-  box.append(panel);
+  box.append(el("div", { class: "matchgrid" }, el("div", { class: "matchmain" }, tableView(), panel), syncChat(g)));
 
   if (g.ph === "lobby") {
     if (host) panel.append(
@@ -1048,8 +1315,11 @@ function endView() {
     el("span", { class: "av" }, helmet(s)),
     el("span", { class: "pn" }, s === me ? `${seatName(g, s)} (you)` : seatName(g, s)),
     el("span", { class: "pv" }, g.mode === "race" ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === g.win ? "survived" : "out"))))));
-  wrap.append(el("p", { class: "note" }, g.ab ? "This game isn't counted. Your answers are still saved to Progress." : "Your answers are saved to Progress."));
-  wrap.append(el("div", { class: "row" }, el("button", { class: "btn teal", onclick: () => leaveMatch() }, "Back to lobby"),
+  wrap.append(el("p", { class: "note" }, (g.ab ? "This game isn't counted. Your answers are still saved to Progress." : "Your answers are saved to Progress.") +
+    (m.role === "guest" ? " Stay on this screen and you'll rejoin automatically if the captain starts a rematch." : "")));
+  wrap.append(el("div", { class: "row" },
+    m.role === "host" ? el("button", { class: "btn", onclick: rematch }, "Rematch with this crew") : null,
+    el("button", { class: "btn teal", onclick: () => leaveMatch() }, "Back to lobby"),
     el("a", { class: "btn ghost", href: "#progress", onclick: () => leaveMatch() }, "View progress")));
   return wrap;
 }
@@ -1067,10 +1337,17 @@ setInterval(() => {
     const ring = $("#ring");
     if (ring) { const on = Math.round(frac * RING_N); ring.querySelectorAll("rect").forEach((r, i) => r.classList.toggle("on", i < on)); }
     const fc = $("#fusecount"); if (fc) fc.textContent = Math.ceil(frac * g.lim) + " s";
+    const left = Math.ceil(frac * g.lim);
+    if (left !== m.lastTick && left > 0) {
+      m.lastTick = left;
+      if (g.mode === "bomb" && left <= 6) sfx("tickHot");
+      else if (g.mode === "race" && left <= 5 && !validAns(m.my, g)) sfx("tick");
+    }
     const hub = $("#hub"); if (hub && g.mode === "bomb") hub.classList.toggle("urgent", frac * g.lim < 6);
     if (frac === 0 && !validAns(m.my, g)) for (const b of document.querySelectorAll("#matchbox .opt")) b.disabled = true;
   } else if (g.ph === "cd") {
-    const cd = $("#cd"); if (cd && m.cdAt) cd.textContent = Math.max(1, 3 - Math.floor((performance.now() - m.cdAt) / 1000));
+    const cd = $("#cd");
+    if (cd && m.cdAt) { const n = Math.max(1, 3 - Math.floor((performance.now() - m.cdAt) / 1000)); cd.textContent = n; if (n !== m.lastCd) { m.lastCd = n; sfx("count"); } }
   }
 }, 250);
 
@@ -1135,6 +1412,7 @@ function answerDaily(resp) {
   const q = Q(dl.qs[dl.idx]), sec = (performance.now() - dl.qStart) / 1000;
   const ok = isCorrect(q, resp), pts = dailyPoints(q.d || 2, ok, sec);
   dl.answers.push({ c: resp, ok, sec: Math.round(sec * 10) / 10, pts });
+  sfx(ok ? "correct" : "wrong");
   record(q.id, ok);
   dl.phase = "fb"; render();
 }
@@ -1142,6 +1420,7 @@ function nextDaily() {
   const dl = S.daily;
   if (dl.idx < 3) { dl.idx++; dl.phase = "q"; dl.qStart = performance.now(); render(); return; }
   dl.phase = "done"; dl.done = true;
+  sfx("fanfare");
   dl.score = dl.answers.reduce((s, a) => s + a.pts, 0);
   dl.correct = dl.answers.filter(a => a.ok).length;
   dl.time = Math.round(dl.answers.reduce((s, a) => s + a.sec, 0));
@@ -1334,7 +1613,7 @@ function practiceView() {
     card.append(el("div", { class: "dq-meta" }, tierPips(q.d || 1)));
     card.append(questionCard(q, pr.perm, {
       disabled: done, mine: pr.picked, reveal: done,
-      onPick: resp => { if (pr.picked !== null) return; pr.picked = resp; record(q.id, isCorrect(q, resp)); pushPresence({ mast: masteredIn(allQs()) }); render(); }
+      onPick: resp => { if (pr.picked !== null) return; pr.picked = resp; record(q.id, isCorrect(q, resp)); sfx(isCorrect(q, resp) ? "correct" : "wrong"); pushPresence({ mast: masteredIn(allQs()) }); render(); }
     }));
     const st = P.q[q.id];
     card.append(el("div", { class: "row spread" },
@@ -1726,6 +2005,8 @@ async function boot() {
   S.nick = cleanNick(lsGet("p1d.nick")) || "Cadet " + Math.floor(100 + Math.random() * 900);
   try { S.named = sessionStorage.getItem("p1d.named") === "1"; } catch {}
   const nickIn = $("#nick"); nickIn.value = S.nick;
+  applyCfg();
+  $("#cfgbtn").addEventListener("click", openSettings);
   nickIn.addEventListener("change", () => {
     const v = cleanNick(nickIn.value); if (!v) { nickIn.value = S.nick; return; }
     setNick(v); S.named = true; try { sessionStorage.setItem("p1d.named", "1"); } catch {}
@@ -1797,6 +2078,7 @@ async function initFirebase() {
 }
 function makeDb(rtdb) {
   return {
+    push(path, body) { return rtdb.ref(path).push(body); },
     doc(path) {
       const ref = rtdb.ref(path);
       return { get: () => ref.get().then(s => ({ exists: s.exists(), data: () => s.val() })), set: body => ref.set(body) };

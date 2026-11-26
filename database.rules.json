@@ -52,6 +52,18 @@
         ".write": "auth != null && (data.exists() ? data.child('owner').val() === auth.uid : newData.child('owner').val() === auth.uid)",
         ".validate": "newData.child('owner').val() === auth.uid && newData.child('json').isString() && newData.child('json').val().length < 200000"
       }
+    },
+    "chat": {
+      "$room": {
+        ".read": "auth != null",
+        ".indexOn": [
+          "t"
+        ],
+        "$msg": {
+          ".write": "auth != null && !data.exists() && newData.child('by').val() === auth.uid",
+          ".validate": "newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 200 && newData.child('nick').isString() && newData.child('nick').val().length <= 20 && newData.child('t').isNumber()"
+        }
+      }
     }
   }
 }

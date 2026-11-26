@@ -35,11 +35,18 @@ The config values are safe to publish. Access is controlled by the rules you pas
 
 ## Updating the database rules
 
-Whenever `database.rules.json` changes, paste it into Firebase console → Realtime Database → Rules → Publish again. The Daily Test needs the `daily` section to post scores. Without it, scores stay on each player's device and are compared against simulated players only.
+Whenever `database.rules.json` changes, paste it into Firebase console → Realtime Database → Rules → Publish again. The Daily Test needs the `daily` section, packs need `packMeta`/`packData`, and room chat needs `chat`. Without it, scores stay on each player's device and are compared against simulated players only.
 
 ## Free-tier limits
 
 Firebase's free Spark plan allows 100 simultaneous connections and 10 GB/month of downloads. That's plenty for a class or a few CCAs. Each open tab is one connection.
+
+## Rooms
+
+- **Room chat:** every room has a chat, with quick buttons. It pauses while a question is up so answers can't be shared, and carries over into rematches. Messages are capped at 200 characters and one per second.
+- **Rematch:** the captain can restart with the same crew from the results screen. Crew still on that screen rejoin automatically.
+- **New-room alerts:** turn on in Settings. They work while the site is open in any tab (a browser notification when the tab is hidden, an in-page alert otherwise). Alerts when the site is closed would need Firebase Cloud Messaging plus a Cloud Function, which needs the pay-as-you-go Blaze plan.
+- **Settings:** sound effects (synthesised in the browser, no audio files) with volume and per-group switches, crew animation, and notifications.
 
 ## Player-made packs
 
