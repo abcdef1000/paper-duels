@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paper One Duel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cellipse cx=%2716%27 cy=%2716%27 rx=%2714%27 ry=%279.5%27 fill=%27%232A2F3B%27 stroke=%27%23C8336A%27 stroke-width=%273%27/%3E%3C/svg%3E">
+<meta name="description" content="Live 1v1 multiple-choice duels on H2 Physics (9478) Paper 1-style questions, with practice and progress tracking.">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: an optical answer sheet. Paper-white sheets on a cool desk, drop-out pink printing for structure, graphite for marks you make. */
+:root {
+  --desk: #EEF0F4;
+  --sheet: #FFFFFF;
+  --ink: #1B2030;
+  --muted: #5B6377;
+  --rule: #DADDE6;
+  --drop: #C8336A;          /* OMR drop-out ink: structure only */
+  --drop-soft: #FBE6EE;
+  --graphite: #2A2F3B;      /* a shaded bubble */
+  --on-graphite: #FFFFFF;
+  --you: #3446C4;
+  --opp: #0B7B84;
+  --good: #1D7F52;
+  --good-soft: #E1F3EA;
+  --bad: #B83A12;
+  --bad-soft: #FBE9E1;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --desk: #10131B; --sheet: #191D28; --ink: #E8EAF1; --muted: #9AA1B4; --rule: #2C3243;
+    --drop: #F0709E; --drop-soft: #3A1F2C; --graphite: #E8EAF1; --on-graphite: #10131B;
+    --you: #93A0FF; --opp: #46C9D3; --good: #4CC48C; --good-soft: #15301F; --bad: #F2865C; --bad-soft: #3A2016;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --desk: #10131B; --sheet: #191D28; --ink: #E8EAF1; --muted: #9AA1B4; --rule: #2C3243;
+  --drop: #F0709E; --drop-soft: #3A1F2C; --graphite: #E8EAF1; --on-graphite: #10131B;
+  --you: #93A0FF; --opp: #46C9D3; --good: #4CC48C; --good-soft: #15301F; --bad: #F2865C; --bad-soft: #3A2016;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--desk); color: var(--ink); font: 15px/1.55 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }
+.mono { font-family: var(--mono); }
+.wrap { max-width: 1040px; margin: 0 auto; }
+
+/* masthead */
+.mast { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; padding-block: 22px 14px; border-bottom: 2px solid var(--drop); }
+.brand { display: flex; flex-direction: column; gap: 2px; }
+.brand small { font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--drop); }
+.brand h1 { margin: 0; font: 800 clamp(26px, 4.4vw, 38px)/1 var(--display); letter-spacing: -.02em; text-wrap: balance; }
+.who { display: flex; align-items: center; gap: 8px; }
+.who label { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.who input { width: 11em; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
+nav.tabs { display: flex; gap: 4px; padding-block: 12px; overflow-x: auto; }
+nav.tabs a { padding: 7px 14px; border-radius: 999px; text-decoration: none; color: var(--muted); font-weight: 500; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { background: var(--graphite); color: var(--on-graphite); }
+nav.tabs a:hover:not([aria-current]) { color: var(--ink); background: var(--sheet); }
+
+.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r); padding: 20px; min-width: 0; }
+.eyebrow { font: 500 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--drop); margin: 0 0 6px; }
+h2 { font: 700 22px/1.2 var(--display); margin: 0 0 12px; text-wrap: balance; }
+h3 { font: 700 17px/1.25 var(--display); margin: 0 0 8px; }
+p { margin: 0 0 10px; }
+.muted { color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); }
+.banner { padding: 10px 14px; border-radius: 8px; background: var(--drop-soft); color: var(--ink); font-size: 14px; margin-bottom: 14px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; align-items: start; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field span { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+select, .field input { padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); min-width: 0; }
+.btn { appearance: none; border: 1px solid var(--graphite); background: var(--graphite); color: var(--on-graphite); padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btn:hover { filter: brightness(1.12); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+.btn.ghost:hover { border-color: var(--ink); }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+.btn.small { padding: 5px 12px; font-size: 13px; }
+
+/* lobby */
+.lobby-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lobby-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule); }
+.lobby-list li:first-child { border-top: 0; }
+.lobby-list .who-col { flex: 1; min-width: 0; }
+.lobby-list .nm { font-weight: 600; overflow-wrap: anywhere; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; margin-right: 6px; vertical-align: middle; }
+.empty { padding: 18px; border: 1px dashed var(--rule); border-radius: 8px; color: var(--muted); font-size: 14px; }
+.code { font: 600 28px/1 var(--mono); letter-spacing: .2em; color: var(--drop); }
+.pulse { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+
+/* question card */
+.qcard { display: flex; flex-direction: column; gap: 14px; }
+.qhead { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
+.qid { font: 600 13px/1 var(--mono); color: var(--drop); letter-spacing: .06em; }
+.qtopic { font-size: 13px; color: var(--muted); }
+.stem { font-size: 17px; line-height: 1.6; margin: 0; max-width: 68ch; }
+.opts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.opt { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; text-align: left; padding: 10px 14px 10px 10px; border: 1px solid var(--rule); border-radius: 8px; background: transparent; cursor: pointer; }
+.opt:hover:not(:disabled) { border-color: var(--drop); background: var(--drop-soft); }
+.opt:disabled { cursor: default; }
+.bubble { width: 38px; height: 26px; border-radius: 50%; border: 1.5px solid var(--drop); color: var(--drop); display: grid; place-items: center; font: 600 13px/1 var(--mono); transition: background .15s, color .15s; }
+.opt.mine .bubble { background: var(--graphite); border-color: var(--graphite); color: var(--on-graphite); }
+.opt.correct { border-color: var(--good); background: var(--good-soft); }
+.opt.correct .bubble { border-color: var(--good); color: var(--good); }
+.opt.correct.mine .bubble { background: var(--good); color: var(--on-graphite); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt.wrong .bubble { background: var(--bad); border-color: var(--bad); color: var(--on-graphite); }
+.otext { overflow-wrap: anywhere; }
+.marks { display: flex; gap: 4px; }
+.chip { font: 600 11px/1 var(--mono); padding: 4px 7px; border-radius: 999px; letter-spacing: .04em; white-space: nowrap; }
+.chip.you { background: var(--you); color: var(--sheet); }
+.chip.opp { background: var(--opp); color: var(--sheet); }
+.explain { border-left: 3px solid var(--good); padding: 8px 14px; background: var(--good-soft); border-radius: 0 8px 8px 0; }
+.explain.badx { border-left-color: var(--bad); background: var(--bad-soft); }
+.explain p:last-child { margin: 0; }
+details.data { font-size: 12px; color: var(--muted); }
+details.data summary { cursor: pointer; font-family: var(--mono); letter-spacing: .06em; }
+
+/* scoreboard */
+.score { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 12px; align-items: center; margin-bottom: 14px; }
+.player { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.player.r { align-items: flex-end; text-align: right; }
+.player .nm { font-weight: 600; overflow-wrap: anywhere; }
+.player .pts { font: 800 44px/1 var(--display); font-variant-numeric: tabular-nums; }
+.player.you .pts { color: var(--you); }
+.player.opp .pts { color: var(--opp); }
+.player .st { font-size: 12px; color: var(--muted); min-height: 1.4em; }
+.mid { text-align: center; }
+.mid .round { font: 600 13px/1.2 var(--mono); color: var(--muted); }
+.timer { height: 6px; background: var(--rule); border-radius: 999px; overflow: hidden; margin-bottom: 16px; }
+.timer i { display: block; height: 100%; background: var(--drop); width: 100%; transition: width .25s linear; }
+.result { font: 700 20px/1.25 var(--display); }
+.result.win { color: var(--good); } .result.lose { color: var(--bad); }
+.big-count { font: 800 96px/1 var(--display); text-align: center; color: var(--drop); padding: 30px 0; }
+
+/* progress */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.stat { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r); padding: 14px; }
+.stat b { display: block; font: 800 30px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.stat span { font: 500 11px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sec { margin-bottom: 18px; }
+.sec h3 { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--drop); padding-bottom: 6px; }
+.sec h3 small { font: 500 12px/1.4 var(--mono); color: var(--muted); }
+.trow { display: grid; grid-template-columns: minmax(0, 14em) minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rule); }
+@media (max-width: 560px) { .trow { grid-template-columns: minmax(0,1fr) auto; } .trow .ovals { grid-column: 1 / -1; } }
+.trow .tn { font-size: 14px; overflow-wrap: anywhere; }
+.ovals { display: flex; flex-wrap: wrap; gap: 6px; }
+.oval { width: 34px; height: 22px; border-radius: 50%; border: 1.5px solid var(--drop); background: transparent; color: var(--drop); font: 600 10px/1 var(--mono); cursor: pointer; padding: 0; }
+.oval.ok { background: var(--graphite); border-color: var(--graphite); color: var(--on-graphite); }
+.oval.no { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); text-decoration: line-through; }
+.oval:hover { transform: translateY(-1px); }
+.tpct { font: 600 12px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); align-items: center; margin-bottom: 14px; }
+.legend .oval { cursor: default; width: 26px; height: 17px; vertical-align: middle; margin-right: 4px; }
+
+/* leaderboard */
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+td.num, th.num { text-align: right; }
+tr.me td { background: var(--drop-soft); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+<script src="firebase-config.js"></script>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="brand">
+      <small>H2 Physics 9478 · Paper 1 style</small>
+      <h1>Paper One Duel</h1>
+    </div>
+    <div class="who">
+      <label for="nick">Callsign</label>
+      <input id="nick" maxlength="20" autocomplete="off" spellcheck="false">
+      <button id="acct" class="btn ghost small" hidden></button>
+    </div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <a href="#duel" data-v="duel">Duel</a>
+    <a href="#practice" data-v="practice">Practice</a>
+    <a href="#progress" data-v="progress">Progress</a>
+    <a href="#leaderboard" data-v="leaderboard">Leaderboard</a>
+  </nav>
+  <main id="view"><div class="sheet"><p class="muted">Loading the question bank…</p></div></main>
+</div>
+
+<script>
+"use strict";
+/* ---------- tiny helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, "");
+    else e.setAttribute(k, v);
+  }
+  for (const k of kids.flat(Infinity)) if (k != null && k !== false) e.append(k instanceof Node ? k : document.createTextNode(String(k)));
+  return e;
+}
+const LETTERS = ["A", "B", "C", "D"];
+function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { let a = seed; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function shuffle(arr, r = Math.random) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const permFor = seed => shuffle([0, 1, 2, 3], rng(hash(seed)));
+const rid = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join("");
+function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej({ code: "timeout" }), ms))]);
+const BAD_CHARS = new RegExp("[" + [[0,31],[127,159],[0x200b,0x200f],[0x2028,0x202e],[0x2060,0x206f],[0xfeff,0xfeff]].map(([a,b]) => "\\u" + a.toString(16).padStart(4,"0") + "-\\u" + b.toString(16).padStart(4,"0")).join("") + "]", "g");
+const cleanNick = s => String(s || "").replace(BAD_CHARS, "").trim().slice(0, 20);
+
+/* ---------- state ---------- */
+const S = {
+  bank: [], byId: {}, sections: [], constants: "",
+  view: "duel",
+  db: null, user: null, uid: null, room: null, roomState: "connecting",
+  peers: [], myPeer: null, pres: {},
+  nick: "", storeMode: "local",
+  hosting: null, joining: null, match: null, lobbyMsg: "",
+  prac: { topic: "all", mode: "smart", qid: null, perm: null, picked: null },
+  board: [], boardState: "idle",
+};
+const LIM = 90;          // seconds per question
+const GRACE = 1000;      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
+const P = { q: {}, w: 0, l: 0, d: 0 };
+
+const Q = id => S.byId[id];
+const masteredCount = () => S.bank.reduce((n, q) => n + (P.q[q.id]?.last === 1 ? 1 : 0), 0);
+const seenCount = () => S.bank.reduce((n, q) => n + (P.q[q.id] ? 1 : 0), 0);
+
+/* ---------- progress storage ---------- */
+let saveTimer = null, saveChain = Promise.resolve(), progRef = null, lastPlayerBody = "";
+function record(id, ok) {
+  const r = Object.assign({ n: 0, c: 0 }, P.q[id]);
+  r.n++; if (ok) r.c++; r.last = ok ? 1 : 0; r.t = Date.now();
+  P.q[id] = r; scheduleSave();
+}
+function scheduleSave() {
+  lsSet("p1d.progress", P);
+  clearTimeout(saveTimer); saveTimer = setTimeout(flush, 1200);
+}
+function flush() {
+  if (S.storeMode !== "db" || !progRef) return;
+  const body = JSON.parse(JSON.stringify(P));
+  saveChain = saveChain
+    .then(() => progRef.set(body))
+    .catch(e => { if (e && e.code === "invalid_argument") { S.storeMode = "local"; if (S.view === "progress") render(); } })
+    .then(writePlayer);
+}
+function writePlayer() {
+  if (!S.db || !S.uid || S.storeMode !== "db") return;
+  if (!seenCount() && !(P.w + P.l + P.d)) return;   // stay off the board until you have played
+  const body = { nick: S.nick, mastered: masteredCount(), seen: seenCount(), total: S.bank.length, w: P.w, l: P.l, d: P.d };
+  const key = JSON.stringify(body);
+  if (key === lastPlayerBody) return;
+  lastPlayerBody = key;
+  return S.db.doc("players/" + S.uid).set({ ...body, t: Date.now() }).catch(() => {});
+}
+function mergeProgress(remote) {
+  if (!remote || typeof remote !== "object") return;
+  const rq = remote.q && typeof remote.q === "object" ? remote.q : {};
+  for (const [id, r] of Object.entries(rq)) {
+    if (!r || typeof r !== "object") continue;
+    const mine = P.q[id];
+    if (!mine || (r.t || 0) > (mine.t || 0)) P.q[id] = { n: +r.n || 0, c: +r.c || 0, last: r.last === 1 ? 1 : 0, t: +r.t || 0 };
+  }
+  for (const k of ["w", "l", "d"]) P[k] = Math.max(P[k] || 0, +remote[k] || 0);
+}
+async function initStore() {
+  const local = lsGet("p1d.progress");
+  if (local) mergeProgress(local);
+  if (S.db && S.uid) {
+    try {
+      progRef = S.db.doc("data/users/" + S.uid + "/progress");
+      const snap = await withTimeout(progRef.get(), 10000);
+      if (snap.exists) mergeProgress(snap.data());
+      S.storeMode = "db";
+      scheduleSave();
+    } catch { S.storeMode = "local"; }
+  }
+  render();
+}
+
+/* ---------- room / presence ---------- */
+function pushPresence(patch) {
+  for (const [k, v] of Object.entries(patch)) { if (v === null) delete S.pres[k]; else S.pres[k] = v; }
+  if (S.room) S.room.presence(patch).catch(() => {});
+}
+function onRoomErr(e) {
+  if (["not_granted", "revoked", "capability_disabled", "capability_removed", "transform_error"].includes(e.code)) {
+    S.roomState = "off"; S.room = null; render();
+  }
+}
+function initRoom(room) {
+  if (!room) { S.roomState = "off"; render(); return; }
+  S.room = room; S.roomState = "on";
+  room.onPeers(ch => {
+    S.peers = ch.peers;
+    const me = ch.peers.find(p => p.sameTab);
+    if (me) S.myPeer = me.peer;
+    onPeersChanged();
+  }, onRoomErr);
+  pushPresence({ v: 1, nick: S.nick, mast: masteredCount(), st: "idle" });
+  render();
+}
+const peerOf = id => S.peers.find(p => p.peer === id);
+const pp = p => (p && p.presence) || {};
+const peerNick = p => cleanNick(pp(p).nick) || "Player";
+
+function onPeersChanged() {
+  const me = S.myPeer;
+  // Host waiting: accept the first challenger aimed at me.
+  if (S.hosting && !S.match) {
+    const ch = S.peers.find(p => !p.sameTab && pp(p).st === "join" && pp(p).tgt === me && pp(p).jm === S.hosting.id);
+    if (ch) startAsHost(ch);
+  }
+  // Challenger waiting: see whether the host took me.
+  if (S.joining && !S.match) {
+    const host = peerOf(S.joining.host), hp = pp(host), g = hp.g;
+    if (!host) failJoin("That player left the lobby.");
+    else if (g && g.id === S.joining.id && g.opp === me) startAsGuest(host, g);
+    else if (g && g.id === S.joining.id && g.opp && g.opp !== me) failJoin("Someone else took that match first.");
+    else if (hp.st !== "host" && !g) failJoin("That match is no longer open.");
+  }
+  if (S.match) {
+    const m = S.match;
+    if (m.role === "guest") {
+      const host = peerOf(m.opp);
+      if (host) {
+        m.oppGoneAt = null;
+        const g = pp(host).g;
+        if (g && g.id === m.id && g.opp === me && JSON.stringify(g) !== m.gKey) { m.gKey = JSON.stringify(g); m.g = g; onGameState(); }
+      }
+    }
+    if (S.view === "duel") renderMatchStatus();
+  } else if (S.view === "duel") renderLobbyLists();
+}
+
+/* ---------- match flow ---------- */
+function poolFor(sec) {
+  if (sec === "all") return S.bank;
+  const s = S.sections.find(x => x.name === sec);
+  return s ? S.bank.filter(q => s.topics.includes(q.topic)) : S.bank;
+}
+function createMatch() {
+  const n = +$("#rounds").value, sec = $("#sec").value;
+  const pool = poolFor(sec);
+  const qs = shuffle(pool.map(q => q.id)).slice(0, Math.min(n, pool.length));
+  S.hosting = { id: rid(8), n: qs.length, sec, qs };
+  S.lobbyMsg = "";
+  pushPresence({ st: "host", hx: { id: S.hosting.id, n: qs.length, sec }, g: null, a: null, rd: null, tgt: null, jm: null, mast: masteredCount() });
+  render();
+}
+function cancelHost() { S.hosting = null; pushPresence({ st: "idle", hx: null }); render(); }
+function challenge(p) {
+  const hx = pp(p).hx; if (!hx) return;
+  S.joining = { host: p.peer, id: hx.id, at: Date.now() };
+  S.lobbyMsg = "";
+  pushPresence({ st: "join", tgt: p.peer, jm: hx.id, hx: null });
+  render();
+  setTimeout(() => { if (S.joining && S.joining.id === hx.id && !S.match) failJoin("The host didn't respond. Try another match."); }, 9000);
+}
+function failJoin(msg) { S.joining = null; S.lobbyMsg = msg; pushPresence({ st: "idle", tgt: null, jm: null }); render(); }
+
+function newMatch(role, id, opp, g) {
+  return { role, id, opp, g, gKey: JSON.stringify(g), my: null, qStart: {}, recorded: new Set(), ended: false, phaseAt: Date.now(), firstOk: null, oppGoneAt: null, readyKey: null };
+}
+function startAsHost(ch) {
+  const h = S.hosting;
+  const g = { id: h.id, opp: ch.peer, qs: h.qs, n: h.n, i: 0, ph: "cd", sc: [0, 0], res: null, lim: LIM, sec: h.sec };
+  S.match = newMatch("host", h.id, ch.peer, g);
+  S.hosting = null;
+  pushPresence({ st: "play", hx: null, g, a: null, rd: null });
+  S.hostTimer = setInterval(hostTick, 200);
+  onGameState();
+}
+function startAsGuest(host, g) {
+  S.match = newMatch("guest", g.id, host.peer, g);
+  S.joining = null;
+  pushPresence({ st: "play", tgt: null, a: null, rd: null });
+  onGameState();
+}
+function setG(patch) {
+  const m = S.match, prev = m.g;
+  m.g = { ...prev, ...patch };
+  if (m.g.ph !== prev.ph || m.g.i !== prev.i) { m.phaseAt = Date.now(); m.firstOk = null; }
+  m.gKey = JSON.stringify(m.g);
+  pushPresence({ g: m.g });
+  onGameState();
+}
+function validAns(a, g) {
+  return a && a.m === g.id && a.i === g.i && Number.isInteger(a.c) && a.c >= 0 && a.c < 4 && typeof a.rt === "number" && a.rt >= 0 ? a : null;
+}
+function hostTick() {
+  const m = S.match; if (!m || m.role !== "host") return;
+  const g = m.g, now = Date.now(), opp = peerOf(m.opp);
+  if (g.ph === "end") return;
+  if (!opp) { m.oppGoneAt = m.oppGoneAt || now; if (now - m.oppGoneAt > 6000) { setG({ ph: "end", ab: 1 }); return; } }
+  else m.oppGoneAt = null;
+  if (g.ph === "cd") { if (now - m.phaseAt > 3000) setG({ ph: "q" }); return; }
+  if (g.ph === "q") {
+    const ans = [validAns(m.my, g), validAns(pp(opp).a, g)];
+    const right = Q(g.qs[g.i]).a;
+    const ok = ans.map(a => !!a && a.c === right);
+    if (ok[0] || ok[1]) m.firstOk = m.firstOk || now;
+    const timeUp = now - m.phaseAt > g.lim * 1000 + 1500;
+    if ((ans[0] && ans[1]) || (m.firstOk && now - m.firstOk > GRACE) || timeUp) {
+      let w = -1;
+      if (ok[0] && ok[1]) w = ans[0].rt <= ans[1].rt ? 0 : 1; else if (ok[0]) w = 0; else if (ok[1]) w = 1;
+      const sc = g.sc.slice(); if (w >= 0) sc[w]++;
+      setG({ ph: "r", sc, res: { w, c: ans.map(a => a ? a.c : null), rt: ans.map(a => a ? a.rt : null) } });
+    }
+    return;
+  }
+  if (g.ph === "r") {
+    const key = g.id + ":" + g.i;
+    if ((S.pres.rd === key && pp(opp).rd === key) || now - m.phaseAt > 30000) {
+      if (g.i + 1 < g.n) setG({ ph: "q", i: g.i + 1, res: null }); else setG({ ph: "end" });
+    }
+  }
+}
+// Guest side: notice a vanished host.
+setInterval(() => {
+  const m = S.match; if (!m || m.role !== "guest" || m.ended) return;
+  if (!peerOf(m.opp)) { m.oppGoneAt = m.oppGoneAt || Date.now(); if (Date.now() - m.oppGoneAt > 6000) { m.g = { ...m.g, ph: "end", ab: 1 }; onGameState(); } }
+}, 1000);
+
+function onGameState() {
+  const m = S.match, g = m.g, key = g.id + ":" + g.i;
+  if (g.ph === "q" && !m.qStart[key]) m.qStart[key] = performance.now();
+  if (g.ph === "r" && !m.recorded.has(key)) {
+    m.recorded.add(key);
+    const mine = validAns(m.my, g);
+    if (mine) record(g.qs[g.i], mine.c === Q(g.qs[g.i]).a);
+  }
+  if (g.ph === "end" && !m.ended) {
+    m.ended = true;
+    clearInterval(S.hostTimer);
+    if (!g.ab) {
+      const me = m.role === "host" ? 0 : 1, a = g.sc[me], b = g.sc[1 - me];
+      if (a > b) P.w++; else if (a < b) P.l++; else P.d++;
+      scheduleSave();
+    }
+    pushPresence({ mast: masteredCount() });
+  }
+  if (S.view === "duel") renderMatch();
+}
+function answer(orig) {
+  const m = S.match, g = m.g, key = g.id + ":" + g.i;
+  if (g.ph !== "q" || validAns(m.my, g)) return;
+  const rt = Math.round(performance.now() - (m.qStart[key] || performance.now()));
+  if (rt > g.lim * 1000) return;
+  m.my = { m: g.id, i: g.i, c: orig, rt };
+  pushPresence({ a: m.my });
+  renderMatch();
+}
+function ready() {
+  const m = S.match, key = m.g.id + ":" + m.g.i;
+  m.readyKey = key; pushPresence({ rd: key }); renderMatch();
+}
+function leaveMatch() {
+  clearInterval(S.hostTimer);
+  S.match = null; S.hosting = null; S.joining = null;
+  pushPresence({ st: "idle", g: null, a: null, rd: null, tgt: null, hx: null, jm: null, mast: masteredCount() });
+  render();
+}
+
+/* ---------- rendering ---------- */
+function setTabs() {
+  for (const a of document.querySelectorAll("#tabs a")) {
+    if (a.dataset.v === S.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  }
+}
+function render() {
+  setTabs();
+  const v = $("#view"); v.replaceChildren();
+  if (!S.bank.length) { v.append(el("div", { class: "sheet" }, el("p", { class: "muted" }, "Loading the question bank…"))); return; }
+  if (S.view === "duel") v.append(S.match ? matchView() : lobbyView());
+  else if (S.view === "practice") v.append(practiceView());
+  else if (S.view === "progress") v.append(progressView());
+  else if (S.view === "leaderboard") v.append(boardView());
+}
+
+function lobbyView() {
+  const wrap = el("div", { class: "stack" });
+  if (S.roomState === "off") wrap.append(el("div", { class: "banner" }, S.setupMissing ? "Live duels aren't set up yet: add your Firebase settings to firebase-config.js (see README). Practice and progress tracking still work." : "Live duels can't connect right now. Practice and progress tracking still work."));
+  if (S.lobbyMsg) wrap.append(el("div", { class: "banner" }, S.lobbyMsg));
+  const left = el("section", { class: "sheet stack" });
+  left.append(el("p", { class: "eyebrow" }, "Start a match"));
+  if (S.hosting) {
+    left.append(
+      el("h2", {}, "Waiting for a challenger"),
+      el("p", { class: "muted pulse" }, "Your match is listed in the lobby. It starts as soon as someone takes it."),
+      el("p", { class: "note" }, `${S.hosting.n} questions · ${S.hosting.sec === "all" ? "Whole syllabus" : S.hosting.sec} · ${LIM} s per question`),
+      el("div", { class: "row" }, el("button", { class: "btn ghost", onclick: cancelHost }, "Cancel"))
+    );
+  } else if (S.joining) {
+    left.append(el("h2", {}, "Joining…"), el("p", { class: "muted pulse" }, "Waiting for the host to confirm."),
+      el("button", { class: "btn ghost", onclick: () => failJoin("") }, "Cancel"));
+  } else {
+    const secSel = el("select", { id: "sec" }, el("option", { value: "all" }, "Whole syllabus"), S.sections.map(s => el("option", { value: s.name }, s.name)));
+    const rSel = el("select", { id: "rounds" }, [5, 10, 15].map(n => el("option", { value: n, selected: n === 10 }, n + " questions")));
+    left.append(
+      el("h2", {}, "Host a 1v1"),
+      el("p", { class: "muted" }, "Both players see the same question. The first to answer correctly takes the point. Answer wrong and you're locked out, so your rival can still take it."),
+      el("div", { class: "row" },
+        el("label", { class: "field" }, el("span", {}, "Length"), rSel),
+        el("label", { class: "field" }, el("span", {}, "Topics"), secSel)),
+      el("div", { class: "row" }, el("button", { class: "btn", onclick: createMatch, disabled: S.roomState !== "on" }, "Open match"))
+    );
+  }
+  const right = el("section", { class: "sheet" },
+    el("p", { class: "eyebrow" }, "Lobby"),
+    el("div", { class: "row", style: "justify-content:space-between" }, el("h2", {}, "Open matches"), el("span", { class: "note", id: "online" })),
+    el("div", { id: "openlist" }));
+  wrap.append(el("div", { class: "grid2" }, left, right));
+  queueMicrotask(renderLobbyLists);
+  return wrap;
+}
+function renderLobbyLists() {
+  const box = $("#openlist"); if (!box) return;
+  const online = $("#online");
+  if (online) online.textContent = S.roomState === "on" ? `${S.peers.length} online` : "";
+  const open = S.peers.filter(p => !p.sameTab && pp(p).st === "host" && pp(p).hx && typeof pp(p).hx.id === "string");
+  if (S.roomState !== "on") { box.replaceChildren(el("div", { class: "empty" }, "The lobby isn't connected.")); return; }
+  if (!open.length) { box.replaceChildren(el("div", { class: "empty" }, "No open matches right now. Host one, and anyone who opens this page can take it. To test it yourself, open the page in a second tab.")); return; }
+  const ul = el("ul", { class: "lobby-list" });
+  for (const p of open) {
+    const hx = pp(p).hx, n = Math.max(1, Math.min(15, +hx.n || 10));
+    const sec = typeof hx.sec === "string" && hx.sec !== "all" ? hx.sec : "Whole syllabus";
+    const mast = Number.isFinite(+pp(p).mast) ? +pp(p).mast : 0;
+    ul.append(el("li", {},
+      el("div", { class: "who-col" },
+        el("div", { class: "nm" }, el("span", { class: "dot" }), peerNick(p), p.isMe ? " (your other tab)" : ""),
+        el("div", { class: "note" }, `${n} questions · ${sec} · ${mast}/${S.bank.length} mastered`)),
+      el("button", { class: "btn small", onclick: () => challenge(p), disabled: !!S.hosting || !!S.joining }, "Challenge")));
+  }
+  box.replaceChildren(ul);
+}
+
+function questionCard(q, perm, opts) {
+  // opts: { onPick(orig), disabled, mine (orig|null), reveal (bool), oppPick (orig|null), showOpp }
+  const list = el("ol", { class: "opts" });
+  perm.forEach((orig, k) => {
+    const cls = ["opt"];
+    if (opts.mine === orig) cls.push("mine");
+    if (opts.reveal && orig === q.a) cls.push("correct");
+    if (opts.reveal && opts.mine === orig && orig !== q.a) cls.push("wrong");
+    const marks = el("span", { class: "marks" },
+      opts.reveal && opts.mine === orig ? el("span", { class: "chip you" }, "YOU") : null,
+      opts.reveal && opts.showOpp && opts.oppPick === orig ? el("span", { class: "chip opp" }, "RIVAL") : null);
+    list.append(el("li", {}, el("button", {
+      class: cls.join(" "), disabled: opts.disabled, onclick: () => opts.onPick && opts.onPick(orig),
+      "aria-label": `Option ${LETTERS[k]}: ${q.o[orig]}`
+    }, el("span", { class: "bubble" }, LETTERS[k]), el("span", { class: "otext" }, q.o[orig]), marks)));
+  });
+  return el("article", { class: "qcard" },
+    el("div", { class: "qhead" }, el("span", { class: "qid" }, q.id), el("span", { class: "qtopic" }, q.topic)),
+    el("p", { class: "stem" }, q.q),
+    list,
+    opts.reveal ? el("div", { class: "explain" + (opts.mine === q.a ? "" : " badx") }, el("p", {}, el("b", {}, "Answer " + LETTERS[perm.indexOf(q.a)] + ". "), q.x)) : null,
+    el("details", { class: "data" }, el("summary", {}, "Data"), el("p", {}, S.constants)));
+}
+
+function matchView() {
+  const m = S.match, g = m.g, me = m.role === "host" ? 0 : 1;
+  const opp = peerOf(m.opp);
+  const box = el("section", { class: "sheet", id: "matchbox" });
+  box.append(el("div", { class: "score" },
+    el("div", { class: "player you" }, el("span", { class: "nm" }, S.nick + " (you)"), el("span", { class: "pts" }, g.sc[me]), el("span", { class: "st", id: "st-me" })),
+    el("div", { class: "mid" }, el("div", { class: "round" }, g.ph === "end" ? "FINAL" : g.ph === "cd" ? "GET READY" : `Q ${g.i + 1} / ${g.n}`)),
+    el("div", { class: "player opp r" }, el("span", { class: "nm" }, opp ? peerNick(opp) : "Opponent"), el("span", { class: "pts" }, g.sc[1 - me]), el("span", { class: "st", id: "st-opp" }))));
+
+  if (g.ph === "cd") {
+    box.append(el("div", { class: "big-count", id: "cd" }, "3"), el("p", { class: "muted", style: "text-align:center" }, `${g.n} questions. ${g.lim} s each. First correct answer scores.`));
+  } else if (g.ph === "q" || g.ph === "r") {
+    const q = Q(g.qs[g.i]), perm = permFor(g.id + q.id);
+    const mine = validAns(m.my, g);
+    if (g.ph === "q") box.append(el("div", { class: "timer" }, el("i", { id: "tbar" })));
+    if (g.ph === "r") {
+      const res = g.res || { w: -1, c: [null, null], rt: [null, null] };
+      const txt = res.w === me ? "You took the point." : res.w === 1 - me ? "Your rival took the point." : "Nobody scored.";
+      const sub = [];
+      if (res.c[me] != null) sub.push(`You: ${LETTERS[perm.indexOf(res.c[me])]} in ${(res.rt[me] / 1000).toFixed(1)} s`); else sub.push("You didn't answer");
+      if (res.c[1 - me] != null) sub.push(`Rival: ${LETTERS[perm.indexOf(res.c[1 - me])]} in ${(res.rt[1 - me] / 1000).toFixed(1)} s`); else sub.push("Rival didn't answer");
+      box.append(el("div", { class: "row", style: "justify-content:space-between;margin-bottom:14px" },
+        el("div", {}, el("div", { class: "result " + (res.w === me ? "win" : res.w === 1 - me ? "lose" : "") }, txt), el("div", { class: "note" }, sub.join(" · "))),
+        m.readyKey === g.id + ":" + g.i
+          ? el("span", { class: "note pulse" }, "Waiting for your rival…")
+          : el("button", { class: "btn", onclick: ready }, g.i + 1 < g.n ? "Next question" : "See result")));
+      box.append(questionCard(q, perm, { disabled: true, mine: res.c[me], reveal: true, oppPick: res.c[1 - me], showOpp: true }));
+    } else {
+      box.append(questionCard(q, perm, { onPick: answer, disabled: !!mine, mine: mine ? mine.c : null, reveal: false }));
+    }
+  } else if (g.ph === "end") {
+    const a = g.sc[me], b = g.sc[1 - me];
+    const head = g.ab ? "Your opponent left the match." : a > b ? "You win." : a < b ? "You lose." : "It's a draw.";
+    box.append(el("div", { class: "stack", style: "align-items:flex-start" },
+      el("div", { class: "result " + (g.ab ? "" : a > b ? "win" : a < b ? "lose" : "") }, head),
+      el("p", { class: "muted" }, g.ab ? "This match isn't counted. Your answers so far are saved to Progress." : `Final score ${a}–${b}. Your answers are saved to Progress.`),
+      el("div", { class: "row" }, el("button", { class: "btn", onclick: leaveMatch }, "Back to lobby"),
+        el("a", { class: "btn ghost", href: "#progress", onclick: leaveMatch, style: "text-decoration:none" }, "View progress"))));
+  }
+  queueMicrotask(renderMatchStatus);
+  return box;
+}
+function renderMatch() { if (S.view !== "duel") return; const v = $("#view"); v.replaceChildren(S.match ? matchView() : lobbyView()); }
+function renderMatchStatus() {
+  const m = S.match; if (!m) return;
+  const g = m.g, opp = peerOf(m.opp);
+  const sMe = $("#st-me"), sOpp = $("#st-opp");
+  if (!sMe || !sOpp) return;
+  if (g.ph === "q") {
+    sMe.textContent = validAns(m.my, g) ? "Locked in" : "Thinking…";
+    sOpp.textContent = !opp ? "Disconnected…" : validAns(pp(opp).a, g) ? "Locked in" : "Thinking…";
+  } else if (g.ph === "r") {
+    const key = g.id + ":" + g.i;
+    sMe.textContent = m.readyKey === key ? "Ready" : "";
+    sOpp.textContent = !opp ? "Disconnected…" : pp(opp).rd === key ? "Ready" : "Reading…";
+  } else { sMe.textContent = ""; sOpp.textContent = opp ? "" : (g.ph === "end" ? "" : "Disconnected…"); }
+}
+// Timer and countdown animation.
+setInterval(() => {
+  const m = S.match; if (!m || S.view !== "duel") return;
+  const g = m.g, key = g.id + ":" + g.i;
+  if (g.ph === "q") {
+    const bar = $("#tbar"); if (!bar) return;
+    const el_ = (performance.now() - (m.qStart[key] || performance.now())) / 1000;
+    const frac = Math.max(0, 1 - el_ / g.lim);
+    bar.style.width = (frac * 100).toFixed(1) + "%";
+    if (frac === 0 && !validAns(m.my, g)) for (const b of document.querySelectorAll("#matchbox .opt")) b.disabled = true;
+  } else if (g.ph === "cd") {
+    const cd = $("#cd"); if (!cd) return;
+    if (!m.cdStart) m.cdStart = performance.now();
+    cd.textContent = Math.max(1, 3 - Math.floor((performance.now() - m.cdStart) / 1000));
+  }
+}, 250);
+
+/* practice */
+function nextPractice(forceId) {
+  const pr = S.prac;
+  let pool = pr.topic === "all" ? S.bank : S.bank.filter(q => q.topic === pr.topic);
+  let pick;
+  if (forceId && Q(forceId)) pick = Q(forceId);
+  else {
+    const others = pool.length > 1 ? pool.filter(q => q.id !== pr.qid) : pool;
+    if (pr.mode === "mistakes") { const w = others.filter(q => P.q[q.id]?.last === 0); pick = w.length ? shuffle(w)[0] : null; }
+    else if (pr.mode === "random") pick = shuffle(others)[0];
+    else {
+      const unseen = others.filter(q => !P.q[q.id]);
+      const wrong = others.filter(q => P.q[q.id]?.last === 0);
+      if (unseen.length) pick = shuffle(unseen)[0];
+      else if (wrong.length) pick = shuffle(wrong)[0];
+      else pick = others.slice().sort((a, b) => (P.q[a.id]?.t || 0) - (P.q[b.id]?.t || 0))[0];
+    }
+  }
+  pr.qid = pick ? pick.id : null; pr.picked = null; pr.perm = pick ? shuffle([0, 1, 2, 3]) : null;
+}
+function practiceView() {
+  const pr = S.prac;
+  if (pr.qid === null) nextPractice();
+  const topics = S.sections.flatMap(s => s.topics);
+  const tSel = el("select", { id: "ptopic", onchange: e => { pr.topic = e.target.value; nextPractice(); render(); } },
+    el("option", { value: "all" }, "All topics"), topics.map(t => el("option", { value: t, selected: pr.topic === t }, t)));
+  const mSel = el("select", { id: "pmode", onchange: e => { pr.mode = e.target.value; nextPractice(); render(); } },
+    [["smart", "Unseen first, then mistakes"], ["mistakes", "Only my mistakes"], ["random", "Random"]].map(([v, t]) => el("option", { value: v, selected: pr.mode === v }, t)));
+  const wrap = el("div", { class: "stack" });
+  wrap.append(el("section", { class: "sheet" },
+    el("div", { class: "row", style: "justify-content:space-between;align-items:end" },
+      el("div", {}, el("p", { class: "eyebrow" }, "Solo practice"), el("h2", { style: "margin:0" }, "Work through the canon set")),
+      el("div", { class: "row" }, el("label", { class: "field" }, el("span", {}, "Topic"), tSel), el("label", { class: "field" }, el("span", {}, "Order"), mSel)))));
+  const card = el("section", { class: "sheet stack" });
+  if (!pr.qid) {
+    card.append(el("p", {}, pr.mode === "mistakes" ? "No mistakes to retry here. Every question you've answered in this topic was right last time." : "No questions match."));
+  } else {
+    const q = Q(pr.qid), done = pr.picked !== null;
+    card.append(questionCard(q, pr.perm, {
+      disabled: done, mine: pr.picked, reveal: done,
+      onPick: orig => { if (pr.picked !== null) return; pr.picked = orig; record(q.id, orig === q.a); pushPresence({ mast: masteredCount() }); render(); }
+    }));
+    const st = P.q[q.id];
+    card.append(el("div", { class: "row", style: "justify-content:space-between" },
+      el("span", { class: "note" }, st ? `Answered ${st.n}× · correct ${st.c}×` : "First attempt"),
+      done ? el("button", { class: "btn", onclick: () => { nextPractice(); render(); } }, "Next question") : el("span", { class: "note" }, `${masteredCount()} / ${S.bank.length} mastered`)));
+  }
+  wrap.append(card);
+  return wrap;
+}
+
+/* progress */
+function progressView() {
+  const wrap = el("div");
+  const mast = masteredCount(), seen = seenCount();
+  let n = 0, c = 0; for (const q of S.bank) { const r = P.q[q.id]; if (r) { n += r.n; c += r.c; } }
+  wrap.append(el("div", { class: "stats" },
+    el("div", { class: "stat" }, el("b", {}, `${mast}/${S.bank.length}`), el("span", {}, "Mastered")),
+    el("div", { class: "stat" }, el("b", {}, `${seen}`), el("span", {}, "Attempted")),
+    el("div", { class: "stat" }, el("b", {}, n ? Math.round(100 * c / n) + "%" : "–"), el("span", {}, "Accuracy")),
+    el("div", { class: "stat" }, el("b", {}, `${P.w}–${P.l}–${P.d}`), el("span", {}, "Duels W–L–D"))));
+  const sheet = el("section", { class: "sheet" });
+  sheet.append(
+    el("p", { class: "eyebrow" }, "Answer sheet"),
+    el("h2", {}, "The canon set, by topic"),
+    el("div", { class: "legend" },
+      el("span", {}, el("span", { class: "oval" }), "Not yet answered"),
+      el("span", {}, el("span", { class: "oval ok" }), "Right last time"),
+      el("span", {}, el("span", { class: "oval no" }), "Wrong last time"),
+      el("span", {}, "Click a bubble to practise that question.")));
+  for (const s of S.sections) {
+    const qs = S.bank.filter(q => s.topics.includes(q.topic));
+    const sm = qs.filter(q => P.q[q.id]?.last === 1).length;
+    const sec = el("div", { class: "sec" }, el("h3", {}, s.name, el("small", {}, `${sm}/${qs.length}`)));
+    for (const t of s.topics) {
+      const tq = S.bank.filter(q => q.topic === t);
+      const tm = tq.filter(q => P.q[q.id]?.last === 1).length;
+      sec.append(el("div", { class: "trow" },
+        el("span", { class: "tn" }, t),
+        el("div", { class: "ovals" }, tq.map((q, i) => {
+          const r = P.q[q.id];
+          return el("button", { class: "oval" + (r ? (r.last === 1 ? " ok" : " no") : ""), title: `${q.id}${r ? ` · ${r.c}/${r.n} correct` : " · not yet answered"}`, "aria-label": `${q.id}, practise`,
+            onclick: () => { S.prac.topic = t; nextPractice(q.id); location.hash = "practice"; } }, i + 1);
+        })),
+        el("span", { class: "tpct" }, `${tm}/${tq.length}`)));
+    }
+    sheet.append(sec);
+  }
+  sheet.append(el("p", { class: "note" }, S.storeMode !== "db" ? "Progress is saved in this browser only." : S.google ? "Progress is saved to your Google-linked account, so it follows you across devices." : "Progress is saved online for this browser. Use Sync with Google to keep it on other devices too."));
+  wrap.append(sheet);
+  return wrap;
+}
+
+/* leaderboard */
+let boardUnsub = null;
+function subscribeBoard() {
+  if (!S.db || boardUnsub) return;
+  S.boardState = "loading";
+  const timer = setTimeout(() => { if (S.boardState === "loading") { S.boardState = "slow"; if (S.view === "leaderboard") render(); } }, 10000);
+  boardUnsub = S.db.collection("players").orderBy("mastered", "desc").limit(200).onSnapshot(snap => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    S.board = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    S.boardState = "ok";
+    if (S.view === "leaderboard") render();
+  }, () => { clearTimeout(timer); S.boardState = "err"; if (S.view === "leaderboard") render(); });
+}
+function boardView() {
+  const sheet = el("section", { class: "sheet" }, el("p", { class: "eyebrow" }, "Standings"), el("h2", {}, "Leaderboard"));
+  if (!S.db) { sheet.append(el("div", { class: "empty" }, "The leaderboard isn't connected. It needs the Firebase setup described in the README.")); return sheet; }
+  if (S.boardState === "loading") { sheet.append(el("p", { class: "muted" }, "Loading standings…")); return sheet; }
+  if (S.boardState === "slow") sheet.append(el("div", { class: "banner" }, "The standings can't be reached right now. They'll appear when the connection returns."));
+  if (S.boardState === "err") { sheet.append(el("div", { class: "empty" }, "The standings couldn't be loaded.")); return sheet; }
+  const rows = S.board.filter(r => Number.isFinite(+r.mastered)).sort((a, b) => (+b.mastered - +a.mastered) || ((+b.w || 0) - (+a.w || 0)));
+  if (!rows.length) { sheet.append(el("div", { class: "empty" }, "Nobody is on the board yet. Answer a question or finish a duel to get on it.")); return sheet; }
+  const tbody = el("tbody");
+  rows.forEach((r, i) => {
+    const nameCell = el("td", {}, cleanNick(r.nick) || "Player");
+    tbody.append(el("tr", { class: r.id === S.uid ? "me" : null },
+      el("td", { class: "num mono" }, i + 1), nameCell,
+      el("td", { class: "num" }, `${+r.mastered || 0}/${+r.total || S.bank.length}`),
+      el("td", { class: "num" }, +r.w || 0), el("td", { class: "num" }, +r.l || 0), el("td", { class: "num" }, +r.d || 0)));
+  });
+  sheet.append(el("div", { class: "tablewrap" }, el("table", {},
+    el("thead", {}, el("tr", {}, el("th", { class: "num" }, "#"), el("th", {}, "Player"), el("th", { class: "num" }, "Mastered"), el("th", { class: "num" }, "W"), el("th", { class: "num" }, "L"), el("th", { class: "num" }, "D"))),
+    tbody)));
+  sheet.append(el("p", { class: "note", style: "margin-top:10px" }, "Mastered means the last answer to that question was right."));
+  return sheet;
+}
+
+/* ---------- routing ---------- */
+const VIEWS = ["duel", "practice", "progress", "leaderboard"];
+function route() {
+  const h = location.hash.replace("#", "");
+  S.view = VIEWS.includes(h) ? h : "duel";
+  if (S.view === "leaderboard") subscribeBoard();
+  render();
+}
+window.addEventListener("hashchange", route);
+
+/* ---------- boot ---------- */
+async function boot() {
+  S.nick = cleanNick(lsGet("p1d.nick")) || "Player " + Math.floor(100 + Math.random() * 900);
+  const nickIn = $("#nick"); nickIn.value = S.nick;
+  nickIn.addEventListener("change", () => {
+    const v = cleanNick(nickIn.value); if (!v) { nickIn.value = S.nick; return; }
+    S.nick = v; nickIn.value = v; lsSet("p1d.nick", v); pushPresence({ nick: v }); writePlayer(); if (S.match) renderMatch();
+  });
+  try {
+    const res = await fetch("questions.json");
+    const data = await res.json();
+    S.bank = data.questions; S.sections = data.sections; S.constants = data.constants;
+    for (const q of S.bank) S.byId[q.id] = q;
+  } catch {
+    $("#view").replaceChildren(el("div", { class: "sheet" }, el("p", {}, "The question bank couldn't be loaded. Reload the page to try again.")));
+    return;
+  }
+  route();
+  const fb = await initFirebase();
+  if (!fb) { S.roomState = "off"; await initStore(); return; }
+  S.uid = fb.user.uid; S.db = fb.db;
+  if (!lsGet("p1d.nick") && fb.user.displayName) {
+    const first = cleanNick(fb.user.displayName.split(/\s+/)[0]);
+    if (first) { S.nick = first; nickIn.value = first; }
+  }
+  await initStore();
+  initRoom(fb.room);
+  if (S.view === "leaderboard") subscribeBoard();
+}
+
+/* ---------- Firebase backend ----------
+   Presence lives at lobby/<connection id>; Firebase deletes it when the tab disconnects.
+   Each presence object is stored as a JSON string, because Firebase drops nulls inside arrays. */
+const FB_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+function loadScript(src) {
+  return new Promise((ok, fail) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = fail; document.head.append(s); });
+}
+async function initFirebase() {
+  const cfg = window.FIREBASE_CONFIG;
+  if (!cfg || !cfg.apiKey || /PASTE/.test(cfg.apiKey)) { S.setupMissing = true; return null; }
+  try {
+    if (typeof window.firebase === "undefined") {   // tests inject a fake firebase first
+      await loadScript(FB_SDK + "firebase-app-compat.js");
+      await Promise.all([loadScript(FB_SDK + "firebase-auth-compat.js"), loadScript(FB_SDK + "firebase-database-compat.js")]);
+    }
+    firebase.initializeApp(cfg);
+    const auth = firebase.auth(), rtdb = firebase.database();
+    let user = await new Promise(ok => { const off = auth.onAuthStateChanged(u => { off(); ok(u); }); });
+    if (!user) user = (await auth.signInAnonymously()).user;
+    setupAccountButton(auth, user);
+    return { user, db: makeDb(rtdb), room: makeRoom(rtdb, user.uid) };
+  } catch (e) {
+    console.error("Firebase failed to start", e);
+    return null;
+  }
+}
+function makeDb(rtdb) {
+  return {
+    doc(path) {
+      const ref = rtdb.ref(path);
+      return { get: () => ref.get().then(s => ({ exists: s.exists(), data: () => s.val() })), set: body => ref.set(body) };
+    },
+    collection(path) {
+      let q = rtdb.ref(path);
+      const api = {
+        orderBy(f) { q = q.orderByChild(f); return api; },
+        limit(n) { q = q.limitToLast(n); return api; },
+        onSnapshot(next, err) {
+          const cb = s => { const docs = []; s.forEach(c => { const v = c.val(); docs.push({ id: c.key, data: () => v }); }); next({ docs, metadata: { fromCache: false } }); };
+          q.on("value", cb, err);
+          return () => q.off("value", cb);
+        }
+      };
+      return api;
+    }
+  };
+}
+function makeRoom(rtdb, uid) {
+  const lobby = rtdb.ref("lobby"), me = lobby.push();
+  let pres = {};
+  const write = () => me.set({ by: uid, p: JSON.stringify(pres) });
+  rtdb.ref(".info/connected").on("value", s => { if (s.val() === true) me.onDisconnect().remove().then(write).catch(() => {}); });
+  return {
+    presence(patch) {
+      for (const [k, v] of Object.entries(patch)) { if (v === null) delete pres[k]; else pres[k] = v; }
+      return write();
+    },
+    onPeers(fn, onErr) {
+      lobby.on("value", s => {
+        const peers = [];
+        s.forEach(c => {
+          const v = c.val() || {}; let p = {};
+          try { p = JSON.parse(v.p) || {}; } catch {}
+          peers.push({ peer: c.key, by: v.by || null, isMe: v.by === uid, sameTab: c.key === me.key, kind: "viewer", guest: false, presence: p });
+        });
+        if (!peers.some(p => p.sameTab)) peers.push({ peer: me.key, by: uid, isMe: true, sameTab: true, kind: "viewer", guest: false, presence: pres });
+        fn({ peers });
+      }, () => onErr && onErr({ code: "not_granted" }));
+    }
+  };
+}
+function setupAccountButton(auth, user) {
+  const b = $("#acct"); b.hidden = false;
+  S.google = !user.isAnonymous;
+  if (S.google) {
+    b.textContent = "Sign out";
+    b.title = "Signed in with Google as " + (user.email || user.displayName || "you");
+    b.onclick = () => auth.signOut().then(() => location.reload());
+  } else {
+    b.textContent = "Sync with Google";
+    b.title = "Keep your progress across devices";
+    b.onclick = async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try { await user.linkWithPopup(provider); location.reload(); }
+      catch (e) {
+        if (e.code === "auth/credential-already-in-use" && e.credential) { await auth.signInWithCredential(e.credential); location.reload(); }
+        else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") showToast("Google sign-in failed: " + (e.code || "unknown error"));
+      }
+    };
+  }
+}
+function showToast(msg) { S.lobbyMsg = msg; render(); }
+boot();
+</script>
+</body>
+</html>

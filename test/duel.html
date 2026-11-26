@@ -1,0 +1,119 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>duel test</title>
+<!-- Two game instances in iframes share an in-memory fake Firebase and play a 5-question match.
+     Run via test/run.sh; the verdict is written into the "out" element. -->
+<pre id="out">RUNNING</pre>
+<iframe id="A" width="900" height="700"></iframe>
+<iframe id="B" width="900" height="700"></iframe>
+<script>
+"use strict";
+const log = [];
+const out = m => { log.push(m); document.getElementById("out").textContent = log.join("\n"); };
+
+/* ---- fake Firebase (only the calls the game uses) ---- */
+const store = {};            // full path -> value
+const listeners = [];        // {path, cb, query}
+let nextId = 0, nextUid = 0;
+const clone = v => v === undefined ? null : JSON.parse(JSON.stringify(v));
+function snapOf(key, val) {
+  return { key, val: () => clone(val), exists: () => val != null,
+    forEach(fn) { if (val && typeof val === "object") for (const k of Object.keys(val)) fn(snapOf(k, val[k])); } };
+}
+function readPath(path) {
+  if (path in store) return store[path];
+  const kids = {}; let any = false;
+  for (const [p, v] of Object.entries(store)) if (p.startsWith(path + "/") && !p.slice(path.length + 1).includes("/")) { kids[p.slice(path.length + 1)] = v; any = true; }
+  return any ? kids : null;
+}
+function notify() { setTimeout(() => { for (const l of listeners.slice()) l.fire(); }, 5); }
+function makeRef(path, q = {}) {
+  const ref = {
+    key: path.split("/").pop(),
+    child: c => makeRef(path + "/" + c),
+    push() { return makeRef(path + "/c" + (++nextId)); },
+    set(v) { if (v == null) delete store[path]; else store[path] = clone(v); notify(); return Promise.resolve(); },
+    get() { return Promise.resolve(snapOf(ref.key, readPath(path))); },
+    orderByChild(f) { return makeRef(path, { ...q, order: f }); },
+    limitToLast(n) { return makeRef(path, { ...q, limit: n }); },
+    onDisconnect() { return { remove: () => { ref._od = true; return Promise.resolve(); } }; },
+    on(ev, cb) {
+      if (path === ".info/connected") { setTimeout(() => cb(snapOf("connected", true)), 1); return cb; }
+      const l = { cb, fire() { cb(snapOf(ref.key, readPath(path))); } };
+      listeners.push(l); setTimeout(() => l.fire(), 1); return cb;
+    },
+    off(ev, cb) { const i = listeners.findIndex(l => l.cb === cb); if (i >= 0) listeners.splice(i, 1); },
+  };
+  return ref;
+}
+window.makeFakeFirebase = function () {
+  let user = null;
+  const auth = {
+    onAuthStateChanged(cb) { setTimeout(() => cb(user), 1); return () => {}; },
+    signInAnonymously() { user = { uid: "u" + (++nextUid), isAnonymous: true, displayName: null }; return Promise.resolve({ user }); },
+    signOut() { return Promise.resolve(); },
+  };
+  const fb = { initializeApp() {}, auth: () => auth, database: () => ({ ref: p => makeRef(p) }) };
+  fb.auth.GoogleAuthProvider = function () {};
+  return fb;
+};
+
+/* ---- driver ---- */
+const A = document.getElementById("A"), B = document.getElementById("B");
+A.src = "site/index.html#duel";
+setTimeout(() => { B.src = "site/index.html#duel"; }, 300);
+const W = f => f.contentWindow, D = f => f.contentDocument;
+const S = f => W(f).eval("S");
+const btn = (f, text) => [...D(f).querySelectorAll("button")].find(b => b.textContent.trim() === text && !b.disabled);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function until(fn, what, ms = 20000) {
+  const t0 = Date.now();
+  for (;;) { try { const v = fn(); if (v) return v; } catch {} if (Date.now() - t0 > ms) throw new Error("timeout waiting for " + what); await sleep(50); }
+}
+function pick(f, correct) {
+  const s = S(f), g = s.match.g, q = s.byId[g.qs[g.i]];
+  const target = correct ? q.a : (q.a + 1) % 4;
+  const b = [...D(f).querySelectorAll("#matchbox .opt")].find(b => b.getAttribute("aria-label").endsWith(": " + q.o[target]));
+  b.click();
+}
+(async () => {
+  try {
+    await until(() => btn(A, "Open match"), "A lobby");
+    await until(() => S(B).bank.length && S(B).roomState === "on", "B lobby");
+    D(A).getElementById("rounds").value = "5";
+    btn(A, "Open match").click();
+    out("A opened match");
+    const ch = await until(() => btn(B, "Challenge"), "challenge button in B");
+    ch.click();
+    out("B challenged");
+    await until(() => S(A).match && S(B).match, "both in match");
+    out("match started; roles " + S(A).match.role + "/" + S(B).match.role);
+    // Round plan: who answers what. [A, B]; "r"=right, "w"=wrong, "-"=no answer (B wrong first then A right; etc.)
+    const plan = [["r", "w"], ["w", "r"], ["r", "r"], ["w", "w"], ["-", "r"]];
+    for (let i = 0; i < plan.length; i++) {
+      await until(() => S(A).match.g.ph === "q" && S(A).match.g.i === i && D(A).querySelector("#matchbox .opt") && S(B).match.g.ph === "q" && D(B).querySelector("#matchbox .opt"), "q" + i);
+      const [pa, pb] = plan[i];
+      if (pa === "r" && pb === "r") { pick(B, true); await sleep(150); pick(A, true); }      // B is faster
+      else {
+        if (pb !== "-") pick(B, pb === "r");
+        await sleep(80);
+        if (pa !== "-") pick(A, pa === "r");
+      }
+      await until(() => S(A).match.g.ph === "r" && S(B).match.g.ph === "r", "reveal " + i, 100000);
+      const g = S(A).match.g;
+      out(`Q${i + 1} plan A:${pa} B:${pb} -> winner ${g.res.w} score ${g.sc.join("-")}`);
+      await until(() => btn(A, i < 4 ? "Next question" : "See result") && btn(B, i < 4 ? "Next question" : "See result"), "next buttons");
+      btn(A, i < 4 ? "Next question" : "See result").click();
+      btn(B, i < 4 ? "Next question" : "See result").click();
+    }
+    await until(() => S(A).match.g.ph === "end" && S(B).match.ended, "end");
+    const ga = S(A).match.g;
+    const ra = D(A).querySelector(".result").textContent, rb = D(B).querySelector(".result").textContent;
+    out(`final ${ga.sc.join("-")} | A sees "${ra}" | B sees "${rb}"`);
+    out(`A record W${W(A).eval("P.w")} L${W(A).eval("P.l")} D${W(A).eval("P.d")}; B record W${W(B).eval("P.w")} L${W(B).eval("P.l")} D${W(B).eval("P.d")}`);
+    out(`A answered ${Object.keys(W(A).eval("P.q")).length} questions in progress; B ${Object.keys(W(B).eval("P.q")).length}`);
+    out("players docs: " + JSON.stringify(Object.keys(store).filter(k => k.startsWith("players/"))));
+    out("DONE");
+  } catch (e) { out("FAIL: " + e.message); }
+})();
+</script>
