@@ -14,5 +14,5 @@ SRV=$!
 trap 'kill $SRV' EXIT
 sleep 1
 timeout 120 google-chrome --headless=new --disable-gpu --no-sandbox --virtual-time-budget=600000 \
-  --dump-dom "http://127.0.0.1:$PORT/duel.html" 2>/dev/null \
+  --dump-dom "http://127.0.0.1:$PORT/duel.html${WIDTH:+?w=$WIDTH}" 2>/dev/null \
   | python3 -I -c 'import sys,re,html; m=re.search(r"<pre id=\"out\">(.*?)</pre>", sys.stdin.read(), re.S); print(html.unescape(m.group(1)) if m else "no output")'

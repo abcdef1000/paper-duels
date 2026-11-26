@@ -2,7 +2,7 @@
 
 Party-style multiple-choice game for 2–8 players with three question banks: H2 Physics (9478) Paper 1 style, PSLE Science and PSLE Maths. Players sit around a round table on **Orbit Station**, a pixel-art space station with drifting asteroids. Open rooms appear as ships parked in the docking bay. There is also a **Daily Test** (four questions of rising difficulty, scored on accuracy and speed and ranked on a bell curve), solo practice, per-question progress and a leaderboard.
 
-- **Race:** everyone gets the same question. The first correct answer scores, and a wrong answer locks you out of that question.
+- **Race:** everyone gets the same question. The first correct answer scores, and a wrong answer locks you out of that question. Every wrong answer is a strike, and every second strike costs a point, so random guessing loses points on average.
 - **Hot Core:** the holder must answer before the fuse runs out. Right passes the bomb on. Wrong or too slow loses a life. The last player standing wins.
 
 - `docs/`: the website GitHub Pages serves (`index.html`, `firebase-config.js`, and the banks `questions.json` (H2 Physics), `psle-science.json`, `psle-maths.json`).
@@ -42,6 +42,8 @@ Whenever `database.rules.json` changes, paste it into Firebase console → Realt
 Firebase's free Spark plan allows 100 simultaneous connections and 10 GB/month of downloads. That's plenty for a class or a few CCAs. Each open tab is one connection.
 
 ## Rooms
+
+- **Layout:** on screens 1280 px and wider, the room becomes an arena. Crew stand round a rectangular table with the question in the middle and chat on the right. Narrower screens stack the round table above the question.
 
 - **Room chat:** every room has a chat, with quick buttons. It pauses while a question is up so answers can't be shared, and carries over into rematches. Messages are capped at 200 characters and one per second.
 - **Length:** the host picks any Race length up to 50 (or the size of the chosen pack or topic). Each game draws that many questions at random.

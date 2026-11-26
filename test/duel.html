@@ -62,6 +62,8 @@ window.makeFakeFirebase = function () {
 /* ---- driver ---- */
 const A = document.getElementById("A"), B = document.getElementById("B"), C = document.getElementById("C");
 const F = { A, B, C };
+const IW = new URLSearchParams(location.search).get("w");   // e.g. ?w=1400 tests the wide arena layout
+if (IW) for (const f of [A, B, C]) f.width = IW;
 A.src = "site/index.html#duel";
 setTimeout(() => { B.src = "site/index.html#duel"; }, 300);
 setTimeout(() => { C.src = "site/index.html#duel"; }, 600);

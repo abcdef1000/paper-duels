@@ -50,7 +50,7 @@ body {
 #space { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; image-rendering: pixelated; pointer-events: none; }
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
-.wrap { max-width: 1060px; margin: 0 auto; }
+.wrap { max-width: 1680px; margin: 0 auto; }
 
 /* masthead */
 .mast { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 14px 24px; padding-block: 26px 16px; border-bottom: 4px solid var(--line); }
@@ -78,6 +78,7 @@ p { margin: 0 0 10px; }
 .banner { padding: 10px 14px; background: var(--panel2); border-left: 6px solid var(--gold); color: var(--ink); font-size: 15px; margin-bottom: 14px; }
 .grid2 { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 20px; align-items: start; }
 @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+@media (min-width: 1280px) { .grid2 { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .spread { justify-content: space-between; }
@@ -126,10 +127,10 @@ select, .field input { padding: 8px 10px; border: 0; background: var(--panel2); 
 .seat.holder .av::after { content: ""; position: absolute; inset: -8px; border: 4px dashed var(--core); animation: spin 2s steps(8) infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 /* crew bob in two pixel frames while a round is on; the holder of the core bobs twice as fast */
-.table.live .seat:not(.out) .av svg { animation: bob .9s linear infinite; }
-.table.live .seat.holder .av svg { animation-duration: .45s; }
+.table.live .seat:not(.out) .av svg, .arena.live .seat:not(.out) .av svg { animation: bob .9s linear infinite; }
+.table.live .seat.holder .av svg, .arena.live .seat.holder .av svg { animation-duration: .45s; }
 @keyframes bob { 0%, 49.9% { transform: translateY(0); } 50%, 100% { transform: translateY(-5px); } }
-:root[data-motion="off"] .table.live .av svg, :root[data-motion="off"] .seat.holder .av::after { animation: none; }
+:root[data-motion="off"] .table.live .av svg, :root[data-motion="off"] .arena.live .av svg, :root[data-motion="off"] .seat.holder .av::after { animation: none; }
 .seat.out { opacity: .35; filter: grayscale(1); }
 .seat.gone .av { opacity: .4; }
 .sn { font: 700 12px/1.2 var(--label); max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
@@ -381,6 +382,22 @@ nav.tabs a { display: inline-flex; align-items: center; gap: 8px; }
 .road { position: relative; height: 20px; background: linear-gradient(90deg, var(--line) 50%, transparent 0) center / 10px 2px repeat-x; }
 .road .ico { position: absolute; top: 50%; width: 30px; height: auto; transform: translate(-50%, -50%); transition: left .6s steps(6); }
 .lane > .ico { width: 16px; height: 16px; }
+
+/* wide screens: the arena. Crew stand round a rectangular table; the question sits in the middle. */
+.arena { position: relative; padding: 122px 150px 132px; min-height: 600px; isolation: isolate; }
+.arena::before { content: ""; position: absolute; inset: 64px 84px; border: 4px dotted var(--line); border-radius: 48px; z-index: -1; }
+.arena .seats { position: absolute; inset: 0; pointer-events: none; }
+.arena .seat { pointer-events: auto; }
+.arena .av { width: 64px; height: 64px; }
+.arena-center { display: flex; flex-direction: column; gap: 14px; max-width: 780px; margin: 0 auto; }
+.arena .hub { position: relative; left: auto; top: auto; transform: none; width: 124px; margin: 0 auto; flex: none; }
+.arena .hub .big { font-size: 24px; }
+.arena .hub .count { bottom: -2px; }
+.mode-race .arena::after, .mode-bomb .arena::after { content: ""; position: absolute; inset: 8% 14%; z-index: -1; border-radius: 50%; }
+.mode-race .arena::after { background: radial-gradient(ellipse, rgba(94, 234, 212, .10) 0%, rgba(94, 234, 212, 0) 65%); }
+.mode-bomb .arena::after { background: radial-gradient(ellipse, rgba(255, 92, 60, calc(.10 + var(--heat, 0) * .4)) 0%, rgba(255, 92, 60, 0) 65%); }
+.mode-bomb .arena::before { border-color: #5A2A3A; }
+.strike { color: var(--bad); margin-left: 4px; }
 
 /* number stepper + pack prompt */
 .stepper { display: flex; align-items: center; gap: 6px; }
@@ -977,7 +994,7 @@ function setG(patch) {
 }
 function startGame() {
   const g = S.match.g; if (g.pl.length < 2) return;
-  if (g.mode === "race") setG({ ph: "cd", sc: g.pl.map(() => 0) });
+  if (g.mode === "race") setG({ ph: "cd", sc: g.pl.map(() => 0), st: g.pl.map(() => 0) });
   else setG({ ph: "cd", lv: g.pl.map(() => g.lives), turn: Math.floor(Math.random() * g.pl.length) });
 }
 function hostTick() {
@@ -1019,7 +1036,10 @@ function hostTick() {
         let w = -1;
         ok.forEach((o, s) => { if (o && (w < 0 || ans[s].rt < ans[w].rt)) w = s; });
         const sc = g.sc.slice(); if (w >= 0) sc[w]++;
-        return setG({ ...patch, ph: "r", sc, res: { w, c: ans.map(a => a ? respOf(a) : null), rt: ans.map(a => a ? a.rt : null) } });
+        // anti-guessing: each wrong answer is a strike, and every second strike costs a point
+        const st = (g.st || g.pl.map(() => 0)).slice(), pen = [];
+        ans.forEach((a, s) => { if (a && !ok[s]) { st[s] = (st[s] || 0) + 1; if (st[s] % 2 === 0) { sc[s]--; pen.push(s); } } });
+        return setG({ ...patch, ph: "r", sc, st, res: { w, pen, c: ans.map(a => a ? respOf(a) : null), rt: ans.map(a => a ? a.rt : null) } });
       }
     } else if (g.ph === "r") {
       const key = g.id + ":" + g.k;
@@ -1163,7 +1183,7 @@ function lobbyView() {
       el("input", { type: "radio", name: "mode", value: val, checked: f.mode === val, onchange: () => { f.mode = val; if (val === "bomb" && f.pool === "all") f.pool = "quick"; render(); } }),
       art, el("b", {}, title), el("span", {}, line));
     host.append(el("div", { class: "modes", role: "radiogroup", "aria-label": "Game mode" },
-      tile("race", icon("flag", { cls: "big" }), "Race", "First right answer scores"),
+      tile("race", icon("flag", { cls: "big" }), "Race", "First right answer scores · 2 wrong = −1"),
       tile("bomb", coreSprite(), "Hot Core", "Pass it on before it blows")));
     const chip = (ico, label, id, control, wide) => el("div", { class: "chip-field" + (wide ? " wide" : ""), title: label }, ico, el("span", { class: "sr", id }, label), control);
     const chips = el("div", { class: "chips" });
@@ -1297,15 +1317,15 @@ function ringSvg(frac) {
   }
   return svgEl(`<svg class="ring" id="ring" viewBox="0 0 100 100" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`);
 }
-function tableView() {
-  const m = S.match, g = m.g;
-  const live = g.ph === "cd" || g.ph === "q" || g.ph === "r";
-  const t = el("div", { class: "table" + (live ? " live" : ""), id: "table" });
-  const phase = (performance.now() % 900) / 1000;   // keeps the bob continuous when the table re-renders
+const isLive = g => g.ph === "cd" || g.ph === "q" || g.ph === "r";
+function seatEls(g, place) {
+  const out = [];
+  const phase = (performance.now() % 900) / 1000;   // keeps the bob continuous when seats re-render
+  const live = isLive(g);
   g.pl.forEach((peer, s) => {
     const ang = seatAngle(g, s) * Math.PI / 180;
     const isMe = peer === S.myPeer, present = isMe || !!peerOf(peer);
-    const out = g.mode === "bomb" && g.lv && g.lv[s] <= 0;
+    const out_ = g.mode === "bomb" && g.lv && g.lv[s] <= 0;
     const holder = g.mode === "bomb" && (g.ph === "q" || g.ph === "r") && g.turn === s;
     let mark = null;
     if (g.ph === "q" && g.mode === "race" && seatAnswer(g, s)) mark = el("span", { class: "mark lock", title: "Locked in" }, "•");
@@ -1315,18 +1335,32 @@ function tableView() {
     }
     if (g.ph === "r" && g.mode === "bomb" && g.res && g.res.seat === s) mark = el("span", { class: "mark " + (g.res.ok ? "ok" : "no") }, g.res.ok ? "✓" : "✗");
     let badge;
-    if (g.mode === "race") badge = el("span", { class: "sb" }, g.sc ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === 0 ? "captain" : "ready"));
+    if (g.mode === "race") badge = el("span", { class: "sb" }, g.sc ? `${g.sc[s]} pt${Math.abs(g.sc[s]) === 1 ? "" : "s"}` : (s === 0 ? "captain" : "ready"),
+      g.st && g.st[s] % 2 === 1 ? el("span", { class: "strike", title: "One strike: the next wrong answer costs a point" }, "✗") : null);
     else badge = el("span", { class: "sb hearts", "aria-label": `${g.lv ? g.lv[s] : g.lives} lives` }, g.lv ? "♥".repeat(Math.max(0, g.lv[s])) + "♡".repeat(Math.max(0, g.lives - g.lv[s])) : "♥".repeat(g.lives));
     const sprite = helmet(s);
     if (live) sprite.style.animationDelay = `${(-phase - s * 0.15).toFixed(2)}s`;
     const av = el("div", { class: "av", style: `--c:${seatColor(s)}`, title: seatName(g, s) }, sprite, mark);
-    t.append(el("div", {
-      class: "seat" + (isMe ? " me" : "") + (holder ? " holder" : "") + (out ? " out" : "") + (present ? "" : " gone"),
-      style: `left:${(50 + 41 * Math.cos(ang)).toFixed(2)}%;top:${(50 + 41 * Math.sin(ang)).toFixed(2)}%`
+    out.push(el("div", {
+      class: "seat" + (isMe ? " me" : "") + (holder ? " holder" : "") + (out_ ? " out" : "") + (present ? "" : " gone"),
+      style: place(ang)
     }, av, el("span", { class: "sn" }, isMe ? "You" : seatName(g, s)), badge));
   });
-  t.append(hubView());
-  return t;
+  return out;
+}
+const circlePlace = ang => `left:${(50 + 41 * Math.cos(ang)).toFixed(2)}%;top:${(50 + 41 * Math.sin(ang)).toFixed(2)}%`;
+// map the angle onto the edge of a rectangle, so crew stand round the table on every side
+const rectPlace = ang => { const c = Math.cos(ang), n = Math.sin(ang), k = Math.max(Math.abs(c), Math.abs(n)); return `left:calc(50% + ${(c / k).toFixed(3)} * (50% - 64px));top:calc(50% + ${(n / k).toFixed(3)} * (50% - 66px))`; };
+const wideLayout = () => matchMedia("(min-width: 1280px)").matches;
+function tableView() {
+  const g = S.match.g;
+  return el("div", { class: "table" + (isLive(g) ? " live" : ""), id: "table" }, ...seatEls(g, circlePlace), hubView());
+}
+function arenaView(panel) {
+  const g = S.match.g;
+  return el("div", { class: "arena" + (isLive(g) ? " live" : ""), id: "table" },
+    el("div", { class: "seats", id: "seats" }, ...seatEls(g, rectPlace)),
+    el("div", { class: "arena-center" }, hubView(), panel));
 }
 function hubView() {
   const m = S.match, g = m.g;
@@ -1346,7 +1380,9 @@ function hubView() {
 }
 function renderTable() {
   const t = $("#table"); if (!t || !S.match) return;
-  t.replaceWith(tableView());
+  const seats = $("#seats");
+  if (seats) seats.replaceChildren(...seatEls(S.match.g, rectPlace));   // arena: keep the question (and anything typed) in place
+  else t.replaceWith(tableView());
 }
 
 /* room chat: chat/<room>/<push id> = { by, nick, text, t }. One persistent element per room, so a re-render
@@ -1414,7 +1450,8 @@ function matchView() {
       e.currentTarget.classList.add("danger");
     } }, host ? "Close room" : "Leave")));
   const panel = el("div", { class: "panel" });
-  box.append(el("div", { class: "matchgrid" }, el("div", { class: "matchmain" }, raceTrack(g), tableView(), panel), syncChat(g)));
+  const main = wideLayout() ? el("div", { class: "matchmain" }, raceTrack(g), arenaView(panel)) : el("div", { class: "matchmain" }, raceTrack(g), tableView(), panel);
+  box.append(el("div", { class: "matchgrid" }, main, syncChat(g)));
 
   if (g.ph === "lobby") {
     if (host) panel.append(
@@ -1425,7 +1462,7 @@ function matchView() {
     return box;
   }
   if (g.ph === "cd") {
-    panel.append(el("p", { class: "status", style: "text-align:center" }, g.mode === "race" ? "First correct answer scores." : `${seatName(g, g.turn)} starts with the core.`));
+    panel.append(el("p", { class: "status", style: "text-align:center" }, g.mode === "race" ? "First correct answer scores. Every 2 wrong answers cost a point." : `${seatName(g, g.turn)} starts with the core.`));
     return box;
   }
   if (g.ph === "end") { panel.append(endView()); return box; }
@@ -1439,10 +1476,13 @@ function matchView() {
     } else {
       const res = g.res || { w: -1, c: [], rt: [] };
       const txt = res.w === me ? "You took the point." : res.w >= 0 ? `${seatName(g, res.w)} took the point.` : "Nobody scored.";
+      const myWrong = me >= 0 && res.c[me] != null && !isCorrect(q, res.c[me]);
+      const penNote = (res.pen || []).includes(me) ? "Strike two: −1 point." : myWrong ? "Strike! One more wrong answer costs a point." : (res.pen || []).length ? `${res.pen.map(s => seatName(g, s)).join(", ")} lost a point for a second strike.` : "";
       const key = g.id + ":" + g.k;
       panel.append(el("div", { class: "row spread" },
         el("div", {}, el("div", { class: "status " + (res.w === me ? "win" : "") }, txt),
-          res.w >= 0 ? el("div", { class: "note" }, `in ${(res.rt[res.w] / 1000).toFixed(1)} s`) : null),
+          res.w >= 0 ? el("div", { class: "note" }, `in ${(res.rt[res.w] / 1000).toFixed(1)} s`) : null,
+          penNote ? el("div", { class: "note", style: "color:var(--bad)" }, penNote) : null),
         m.readyKey === key ? el("span", { class: "note blink" }, "Waiting for the others…") : el("button", { class: "btn teal", onclick: ready }, g.k + 1 < g.n ? "Next question" : "See results")));
       const picks = g.pl.map((p, s) => ({ orig: res.c[s], seat: s, label: s === me ? "YOU" : initials(seatName(g, s)) })).filter(p => p.orig != null);
       panel.append(questionCard(q, perm, { disabled: true, mine: me >= 0 ? res.c[me] : null, reveal: true, picks }));
@@ -1471,7 +1511,7 @@ function raceTrack(g) {
   return el("div", { class: "track", role: "img", "aria-label": "Race track: " + g.pl.map((_, s) => `${seatName(g, s)} ${g.sc[s]}`).join(", ") },
     g.pl.map((_, s) => el("div", { class: "lane", style: `--c:${seatColor(s)}` },
       el("span", { class: "ln" }, s === me ? "You" : seatName(g, s)),
-      el("div", { class: "road" }, Object.assign(icon("ship", { c: seatColor(s) }), { style: `left:calc(15px + (100% - 30px) * ${Math.min(1, g.sc[s] / n).toFixed(3)})` })),
+      el("div", { class: "road" }, Object.assign(icon("ship", { c: seatColor(s) }), { style: `left:calc(15px + (100% - 30px) * ${Math.max(0, Math.min(1, g.sc[s] / n)).toFixed(3)})` })),
       icon("flag"))));
 }
 function endView() {
@@ -2192,6 +2232,7 @@ async function boot() {
   $("#logo").append(icon("logo", { c: "var(--accent)", c2: "var(--gold)" }));
   for (const a of document.querySelectorAll("#tabs a[data-ico]")) a.prepend(icon(a.dataset.ico, { c2: a.dataset.ico === "rocket" ? "var(--core)" : "var(--gold)" }));
   startSpace();
+  matchMedia("(min-width: 1280px)").addEventListener("change", () => { if (S.view === "duel" && S.match) renderMatch(); });
   nickIn.addEventListener("change", () => {
     const v = cleanNick(nickIn.value); if (!v) { nickIn.value = S.nick; return; }
     setNick(v); S.named = true; try { sessionStorage.setItem("p1d.named", "1"); } catch {}
