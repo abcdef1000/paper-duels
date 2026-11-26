@@ -62,7 +62,7 @@ body { font-synthesis-weight: none; font-variant-ligatures: none; }
 
 /* masthead */
 .mast { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 14px 24px; padding-block: 26px 16px; border-bottom: 4px solid var(--line); }
-.brand { display: flex; flex-direction: column; gap: 10px; }
+.brand { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; }
 .brand small { font: 400 12px/1 var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 .brand h1 { display: flex; align-items: center; gap: 14px; margin: 0; font: 400 clamp(20px, 4.2vw, 34px)/1.15 var(--display); letter-spacing: 0; color: var(--ink); text-shadow: 3px 3px 0 var(--core); text-wrap: balance; }
 .who { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
@@ -324,6 +324,30 @@ textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 0; backgr
 .chat .quick { gap: 6px; }
 .chat .quick .btn { padding: 5px 8px; font-size: 11px; }
 
+/* subject picker, beside the title */
+.subjwrap { position: relative; }
+.subjbtn { display: inline-flex; align-items: center; gap: 12px; margin: 4px; padding: 10px 14px; border: 0; cursor: pointer; text-align: left; color: var(--ink); background: var(--panel);
+  box-shadow: 0 -4px 0 0 var(--accent), 0 4px 0 0 var(--accent), -4px 0 0 0 var(--accent), 4px 0 0 0 var(--accent); }
+.subjbtn:hover, .subjbtn[aria-expanded="true"] { background: var(--panel2); }
+.subjbtn .ico { width: 36px; height: 36px; }
+.subjbtn .caret { width: 14px; height: 8px; transition: transform .15s steps(2); }
+.subjbtn[aria-expanded="true"] .caret { transform: rotate(180deg); }
+.sp-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.sp-name { font: 400 clamp(12px, 1.8vw, 16px)/1.2 var(--display); color: var(--gold); }
+.sp-tag { font: 400 11px/1.2 var(--label); color: var(--muted); text-transform: uppercase; }
+.subjmenu { position: absolute; z-index: 30; top: calc(100% + 14px); left: 4px; width: min(640px, calc(100vw - 40px)); display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--panel);
+  box-shadow: 0 -4px 0 0 var(--accent), 0 4px 0 0 var(--accent), -4px 0 0 0 var(--accent), 4px 0 0 0 var(--accent), 0 18px 50px rgba(0, 0, 0, .55); }
+.subjmenu .grp { margin: 4px 0 0; font: 400 11px/1 var(--label); text-transform: uppercase; color: var(--muted); }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 8px; }
+.sopt { display: flex; align-items: center; gap: 12px; padding: 10px; border: 0; cursor: pointer; text-align: left; color: var(--ink); background: var(--panel2); }
+.sopt .ico { width: 32px; height: 32px; }
+.sopt b { display: block; font: 400 11px/1.4 var(--display); margin-bottom: 4px; }
+.sopt span { font-size: 15px; color: var(--muted); }
+.sopt:hover, .sopt:focus-visible { background: #2A3172; }
+.sopt[aria-selected="true"] { background: #2A2160; box-shadow: inset 0 0 0 3px var(--gold); }
+.subjmenu .btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; }
+@media (max-width: 560px) { .subjmenu { position: fixed; left: 16px; right: 16px; top: auto; width: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-height: 70vh; overflow-y: auto; } }
+
 /* pixel icons */
 .ico { width: 18px; height: 18px; flex: none; image-rendering: pixelated; }
 .ico.mini { width: 14px; height: 14px; }
@@ -442,8 +466,11 @@ tr.sim td { color: var(--muted); }
 <div class="wrap">
   <header class="mast">
     <div class="brand">
-      <small id="tagline">H2 Physics</small>
       <h1><span class="logo" id="logo"></span>Orbit Duels</h1>
+      <div class="subjwrap">
+        <button id="subjbtn" class="subjbtn" type="button" aria-haspopup="listbox" aria-expanded="false"></button>
+        <select id="subject" hidden aria-hidden="true" tabindex="-1"></select>
+      </div>
     </div>
     <div class="who">
       <label for="nick">Callsign</label>
@@ -459,7 +486,6 @@ tr.sim td { color: var(--muted); }
     <a href="#progress" data-v="progress" data-ico="bars">Progress</a>
     <a href="#leaderboard" data-v="leaderboard" data-ico="trophy">Leaderboard</a>
     <a href="#packs" data-v="packs" data-ico="crate">Packs</a>
-    <label class="subj" for="subject">Subject <select id="subject"></select></label>
   </nav>
   <main id="view"><div class="sheet"><p class="muted">Docking… loading the question banks.</p></div></main>
 </div>
@@ -537,6 +563,13 @@ const ICONS = {
   book:   ["XXXX.XXXX", "XWWWXWWWX", "XWDWXWDWX", "XWWWXWWWX", "XWDWXWDWX", "XWWWXWWWX", "XXXXXXXXX"],
   hash:   ["..X...X..", "..X...X..", "XXXXXXXXX", ".X...X...", ".X...X...", "XXXXXXXXX", ".X...X...", "X...X...."],
   crew:   ["..XXXXXX..", ".XXXXXXXX.", "XXDDDDDDXX", "XDWWDDDDDX", "XDWDDDDDDX", "XXDDDDDDXX", ".XXXXXXXX.", "..XX..XX.."],
+  atom:   ["...XXX...", ".XX...XX.", "X..XYX..X", "X.XYWYX.X", "X..XYX..X", ".XX...XX.", "...XXX..."],
+  leaf:   ["......XXX", "....XXXXX", "...XXYXXX", "..XXYXXX.", ".XXYXXX..", ".XYXXX...", "XYXX.....", "Y........"],
+  calc:   ["..X......", ".XXX.XXX.", "..X......", ".........", ".Y.Y..X..", "..Y..XXX.", ".Y.Y..X.."],
+  flask:  ["...XXX...", "...XWX...", "...XWX...", "..XWWWX..", ".XWWWWWX.", "XYYYYYYYX", "XYYWYYYYX", ".XXXXXXX."],
+  dna:    ["X......X", ".X....X.", "..XYYX..", "...XX...", "..XYYX..", ".X....X.", "X......X"],
+  medal:  ["X.......X", ".X.....X.", "..X...X..", "...XXX...", "..XYYYX..", ".XYYWYYX.", ".XYYYYYX.", "..XYYYX..", "...XXX..."],
+  caret:  ["XXXXXXX", ".XXXXX.", "..XXX..", "...X..."],
   ship:   [".....XX.......", "....XXXX......", "..XXXXXXXXX...", "YXXXXDWDXXXXX.", "YXXXXDDDXXXXXX", "YXXXXXXXXXXXX.", "..XXXXXXXXX...", "....XXXX......", ".....XX......."],
 };
 function icon(name, o = {}) {
@@ -768,8 +801,8 @@ const seenCount = () => seenIn(S.bank);
 function setSubject(k) {
   const b = S.banks[k] ? k : BANKS[0].key;
   S.subject = b; S.bank = S.banks[b].questions; S.sections = S.banks[b].sections; S.constants = S.banks[b].constants;
-  $("#tagline").textContent = bankInfo(b).tag.replace(/^Orbit Station · /, "");
   $("#subject").value = b;
+  renderSubjectButton();
 }
 
 /* ---------- progress storage ---------- */
@@ -1945,6 +1978,51 @@ function refreshSubjects() {
   if (custom.length) sel.append(el("optgroup", { label: "Custom packs" }, custom.map(b => el("option", { value: b.key }, b.name))));
   if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
 }
+const SUBJECT_ICONS = { h2: "atom", sci: "leaf", math: "calc", chem: "flask", bio: "dna", olymp: "medal" };
+const subjIcon = k => k.startsWith("pk:") ? "crate" : (SUBJECT_ICONS[k] || "book");
+function renderSubjectButton() {
+  const b = $("#subjbtn"); if (!b) return;
+  const info = bankInfo(S.subject);
+  const tag = info.tag.replace(/^Orbit Station · /, "").replace(info.name, "").replace(/^\s*·\s*/, "").trim();
+  b.replaceChildren(icon(subjIcon(S.subject), { c: "var(--gold)", c2: "var(--accent)" }),
+    el("span", { class: "sp-text" }, el("span", { class: "sp-name" }, info.name), tag ? el("span", { class: "sp-tag" }, tag) : null),
+    icon("caret", { c: "var(--accent)", cls: "caret" }));
+  b.setAttribute("aria-label", `Subject: ${info.name}. Change subject`);
+}
+function subjectOutside(e) { if (!e.target.closest(".subjwrap")) closeSubjectMenu(); }
+function closeSubjectMenu() {
+  const m = $("#subjmenu"); if (m) m.remove();
+  const b = $("#subjbtn"); if (b) b.setAttribute("aria-expanded", "false");
+  document.removeEventListener("pointerdown", subjectOutside, true);
+}
+function pickSubject(k) {
+  const sel = $("#subject");
+  if ([...sel.options].some(o => o.value === k)) { sel.value = k; sel.dispatchEvent(new Event("change")); }
+  closeSubjectMenu(); $("#subjbtn").focus();
+}
+function openSubjectMenu() {
+  if ($("#subjmenu")) return closeSubjectMenu();
+  const btn = $("#subjbtn"); btn.setAttribute("aria-expanded", "true");
+  const opt = b => el("button", { type: "button", class: "sopt", role: "option", "aria-selected": String(b.key === S.subject), "data-key": b.key, onclick: () => pickSubject(b.key) },
+    icon(subjIcon(b.key), { c: "var(--gold)", c2: "var(--accent)" }),
+    el("div", { style: "min-width:0" }, el("b", {}, b.name), el("span", {}, `${S.banks[b.key] ? S.banks[b.key].questions.length : 0} questions`)));
+  const official = BANKS.filter(b => !b.custom), custom = BANKS.filter(b => b.custom && myPacks().some(p => "pk:" + p.id === b.key));
+  const menu = el("div", { class: "subjmenu", id: "subjmenu", role: "listbox", "aria-label": "Choose a subject" },
+    el("div", { class: "sgrid" }, official.map(opt)),
+    custom.length ? el("p", { class: "grp" }, "Your packs") : null,
+    custom.length ? el("div", { class: "sgrid" }, custom.map(opt)) : null,
+    el("a", { class: "btn ghost small", href: "#packs", onclick: () => closeSubjectMenu() }, icon("crate"), "Make a pack"));
+  btn.parentElement.append(menu);
+  const opts = [...menu.querySelectorAll(".sopt")];
+  (opts.find(o => o.dataset.key === S.subject) || opts[0]).focus();
+  menu.addEventListener("keydown", e => {
+    const i = opts.indexOf(document.activeElement);
+    if (e.key === "Escape") { closeSubjectMenu(); btn.focus(); }
+    else if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); opts[(i + 1) % opts.length].focus(); }
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); opts[(i - 1 + opts.length) % opts.length].focus(); }
+  });
+  setTimeout(() => document.addEventListener("pointerdown", subjectOutside, true));
+}
 function extractJson(text) {
   const t = String(text || "");
   const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -2237,6 +2315,7 @@ async function boot() {
   applyCfg();
   $("#cfgbtn").addEventListener("click", openSettings);
   $("#cfgbtn").append(icon("gear"));
+  $("#subjbtn").addEventListener("click", openSubjectMenu);
   $("#logo").append(icon("logo", { c: "var(--accent)", c2: "var(--gold)" }));
   for (const a of document.querySelectorAll("#tabs a[data-ico]")) a.prepend(icon(a.dataset.ico, { c2: a.dataset.ico === "rocket" ? "var(--core)" : "var(--gold)" }));
   startSpace();
