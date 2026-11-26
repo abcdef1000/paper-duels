@@ -132,7 +132,7 @@ async function seatEveryone(hostOpens) {
     out(`ghosts swept from the database; live tabs still ${S(A).peers.length}`);
 
     /* ---------- Race ---------- */
-    await seatEveryone(() => { S(A).form.mode = "race"; S(A).form.n = 5; S(A).form.pool = "all"; W(A).eval("render()"); D(A).getElementById("rounds").value = "7"; D(A).getElementById("rounds").dispatchEvent(new Event("change")); [...D(A).querySelectorAll(".stepper button")].find(b => b.getAttribute("aria-label") === "One fewer").click(); D(A).querySelectorAll(".stepper button")[0].click(); });
+    await seatEveryone(() => { S(A).form.mode = "race"; S(A).form.n = 5; S(A).form.pool = "all"; S(A).form.cutR = 5; S(A).form.cutW = 12; W(A).eval("render()"); D(A).getElementById("rounds").value = "7"; D(A).getElementById("rounds").dispatchEvent(new Event("change")); [...D(A).querySelectorAll(".stepper button")].find(b => b.getAttribute("aria-label") === "One fewer").click(); D(A).querySelectorAll(".stepper button")[0].click(); });
     out(`race: 3 seated, names ${JSON.stringify(S(A).match.g.nm)}, length ${S(A).match.g.n} with ${S(A).match.g.qs.length} questions drawn`);
     // [A, B, C] in click order; "r" right, "w" wrong
     const plan = [[["A","r"],["B","w"],["C","r"]], [["A","w"],["B","w"],["C","w"]], [["B","w"],["A","w"],["C","r"]], [["C","r"],["A","r"],["B","r"]], [["B","r"],["A","w"],["C","w"]]];   // length 7 - 2 = 5
@@ -140,12 +140,12 @@ async function seatEveryone(hostOpens) {
       await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && S(f).match.g.k === i && D(f).querySelector("#matchbox .opt, #matchbox #sa-in")), "race q" + i);
       if (i === 0) {   // first answer right: red 8 s for the rest, and everyone is told
         pick(A, true);
-        await until(() => D(C).querySelector("#vignette.on:not(.yellow)") && /Ann got it right/.test(D(B).getElementById("cutcount").textContent), "red clock on B and C", 8000);
+        await until(() => D(C).querySelector("#vignette.on:not(.yellow)") && /Ann got it right! 5 s left/.test(D(B).getElementById("cutcount").textContent), "red clock (5 s) on B and C", 8000);
         out(`  first answer right: B reads "${D(B).getElementById("cutcount").textContent}", red vignette on C ${!!D(C).querySelector("#vignette.on:not(.yellow)")}, on A ${!!D(A).querySelector("#vignette.on")}; A reads "${D(A).getElementById("cutcount").textContent}"`);
         await sleep(120); pick(B, false); await sleep(120); pick(C, true);
       } else if (i === 1) {   // first answer wrong: yellow 15 s
         pick(A, false);
-        await until(() => D(B).querySelector("#vignette.on.yellow") && D(C).querySelector("#vignette.on.yellow"), "yellow clock on B and C", 8000);
+        await until(() => D(B).querySelector("#vignette.on.yellow") && D(C).querySelector("#vignette.on.yellow") && /12 s left/.test(D(B).getElementById("cutcount").textContent), "yellow clock (12 s) on B and C", 8000);
         out(`  first answer wrong: B reads "${D(B).getElementById("cutcount").textContent}", yellow on B ${!!D(B).querySelector("#vignette.on.yellow")}, on C ${!!D(C).querySelector("#vignette.on.yellow")}`);
         await sleep(120); pick(B, false); await sleep(120); pick(C, false);
       } else for (const [who, how] of plan[i]) { pick(F[who], how === "r"); await sleep(120); }
