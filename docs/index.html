@@ -395,6 +395,14 @@ nav.tabs a { display: inline-flex; align-items: center; gap: 8px; }
 .port.vacant { opacity: .7; justify-content: flex-start; }
 .port.vacant .vac { font: 700 11px/1 var(--label); text-transform: uppercase; color: var(--muted); }
 
+/* room codes */
+.roomcode { display: inline-flex; align-items: center; gap: 8px; font: 400 12px/1 var(--label); text-transform: uppercase; color: var(--muted); }
+.roomcode b { font: 400 14px/1 var(--display); color: var(--gold); letter-spacing: .12em; padding: 6px 8px; background: var(--space); }
+.shipcode { font: 400 10px/1 var(--display); color: var(--gold); letter-spacing: .12em; }
+.codeform { display: flex; gap: 6px; }
+.codeform input { width: 6.2em; padding: 6px 8px; border: 0; background: var(--panel2); box-shadow: inset 0 -3px 0 var(--line); font: 400 13px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; }
+.codeform input::placeholder { color: var(--muted); }
+
 /* the two modes */
 .matchbox.mode-race::before, .matchbox.mode-bomb::before { content: ""; display: block; height: 10px; margin: -20px -20px 0; }
 .mode-race::before { background: repeating-conic-gradient(#E8ECFF 0 25%, #0B0E24 0 50%) 0 0 / 10px 10px; }
@@ -653,6 +661,7 @@ const S = {
 const RACE_LIM = 60;     // seconds per question in Race
 const GRACE = 1000;      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
 const MAX_PLAYERS = 8;
+const IDLE_ROOM_MS = 30 * 60 * 1000;   // a room still waiting with only its captain closes after this
 const MAX_RACE = 50;      // longest Race a host can pick; each game draws this many at random from the pack or topic
 const MAX_PACK_ASK = 39;  // most questions the pack workshop asks an AI for
 const P = { q: {}, w: 0, l: 0, d: 0 };
@@ -937,7 +946,7 @@ function setNick(v) {
 }
 
 function newMatch(role, g, host) {
-  return { role, id: g.id, host, g, gKey: JSON.stringify(g), my: null, qStart: {}, recorded: new Set(), ended: false, phaseAt: Date.now(), firstOk: null, gone: {}, readyKey: null, cdAt: null };
+  return { role, id: g.id, host, g, gKey: JSON.stringify(g), my: null, qStart: {}, recorded: new Set(), ended: false, phaseAt: Date.now(), createdAt: Date.now(), firstOk: null, gone: {}, readyKey: null, cdAt: null };
 }
 function poolForBank(bk, key) {
   const b = S.banks[bk] || { questions: S.bank, sections: S.sections };
@@ -951,12 +960,42 @@ function rematch() {
   const ids = shuffle(poolForBank(g.bk, g.pool).map(q => q.id));
   const ng = { id: rid(8), prev: g.id, mode: g.mode, pl: g.pl.slice(), nm: g.nm.slice(), ph: "lobby", k: 0,
     qs: race ? ids.slice(0, Math.min(g.n || 10, ids.length)) : ids.slice(0, 60), n: race ? Math.min(g.n || 10, ids.length) : 0,
-    lim: g.lim, lives: g.lives, pool: g.pool, bk: g.bk, chat: g.chat || g.id, sc: null, lv: null, turn: 0, res: null };
+    lim: g.lim, lives: g.lives, pool: g.pool, bk: g.bk, chat: g.chat || g.id, code: g.code, sc: null, lv: null, turn: 0, res: null };
   S.match = newMatch("host", ng, S.myPeer);
   pushPresence({ st: "host", g: ng, a: null, rd: null, jm: null });
   clearInterval(S.hostTimer);
   S.hostTimer = setInterval(hostTick, 200);
   render();
+}
+/* room codes: 5 characters, no look-alikes. #room-CODE links straight into a room. */
+const CODE_RE = /^[A-HJ-NP-Z2-9]{5}$/;
+function newRoomCode() {
+  const taken = new Set(S.peers.map(p => pp(p).g && pp(p).g.code));
+  let c; do { c = rid(5).toUpperCase(); } while (taken.has(c) || !CODE_RE.test(c));
+  return c;
+}
+const roomLink = code => location.href.split("#")[0] + "#room-" + code;
+function requestJoinCode(raw) {
+  const code = String(raw || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!CODE_RE.test(code)) { S.lobbyMsg = "Room codes are 5 letters and numbers, like K7QHM."; render(); return; }
+  if (S.match) { if (S.match.g.code !== code) { S.lobbyMsg = `Leave your current room before joining ${code}.`; render(); } return; }
+  S.pendingJoin = { code };
+  S.lobbyMsg = `Looking for room ${code}…`;
+  render();
+  tryPendingJoin();
+  setTimeout(() => { if (S.pendingJoin && S.pendingJoin.code === code) { S.pendingJoin = null; S.lobbyMsg = `Room ${code} isn't open right now. Check the code, or ask the captain to open it again.`; if (S.view === "duel" && !S.match) render(); } }, 10000);
+}
+function tryPendingJoin() {
+  const pj = S.pendingJoin; if (!pj || S.match || S.joining || S.roomState !== "on") return;
+  const p = S.peers.find(p => !p.sameTab && pp(p).st === "host" && pp(p).g && pp(p).g.code === pj.code);
+  if (!p) return;
+  const g = pp(p).g;
+  if (!validG(g)) { if (typeof g.bk === "string" && g.bk.startsWith("pk:")) ensurePack(g.bk.slice(3)).then(ok => ok && tryPendingJoin()); return; }
+  S.pendingJoin = null;
+  if (g.ph !== "lobby") { S.lobbyMsg = `Room ${pj.code} has already launched. Wait for the next game, or open your own.`; render(); return; }
+  if (g.pl.length >= MAX_PLAYERS) { S.lobbyMsg = `Room ${pj.code} is full.`; render(); return; }
+  S.lobbyMsg = "";
+  withName(() => joinRoom(p));
 }
 function openRoom() {
   if (!S.myPeer) return;
@@ -964,7 +1003,7 @@ function openRoom() {
   const race = f.mode === "race";
   const g = { id: rid(8), mode: f.mode, pl: [S.myPeer], nm: [S.nick], ph: "lobby", k: 0,
     qs: race ? ids.slice(0, Math.max(1, Math.min(f.n, MAX_RACE, ids.length))) : ids.slice(0, 60), n: race ? Math.max(1, Math.min(f.n, MAX_RACE, ids.length)) : 0,
-    lim: race ? RACE_LIM : f.fuse, lives: f.lives, pool: f.pool, bk: S.subject, sc: null, lv: null, turn: 0, res: null };
+    lim: race ? RACE_LIM : f.fuse, lives: f.lives, pool: f.pool, bk: S.subject, code: newRoomCode(), sc: null, lv: null, turn: 0, res: null };
   S.match = newMatch("host", g, S.myPeer);
   S.lobbyMsg = "";
   pushPresence({ st: "host", g, a: null, rd: null, tgt: null, jm: null, mast: masteredIn(allQs()) });
@@ -991,6 +1030,7 @@ function leaveMatch(msg) {
 function onPeersChanged() {
   const me = S.myPeer;
   watchRooms();
+  tryPendingJoin();
   const em = S.match;
   if (em && em.role === "guest" && em.ended) {   // the captain started a rematch: follow into the new room
     const host = peerOf(em.host), g = pp(host).g;
@@ -1050,6 +1090,7 @@ function hostTick() {
   if (JSON.stringify(nm) !== JSON.stringify(g.nm)) patch.nm = nm;
 
   if (g.ph === "lobby") {
+    if (g.pl.length < 2 && now - m.createdAt > IDLE_ROOM_MS) return leaveMatch("Your room closed after 30 minutes without crew. Open a new one any time.");
     let pl = g.pl.slice(), names = (patch.nm || g.nm).slice();
     const keep = pl.map((_, s) => goneFor(s) < 2500);
     pl = pl.filter((_, s) => keep[s]); names = names.filter((_, s) => keep[s]);
@@ -1244,7 +1285,12 @@ function lobbyView() {
       el("span", { class: "note" }, `${bankInfo(S.subject).name} · 2–8 crew`)));
   }
   const bay = el("section", { class: "sheet" },
-    el("div", { class: "row spread" }, el("h2", { style: "margin:0" }, "Docking bay"), el("span", { class: "aboard", id: "online", title: "Crew aboard" })),
+    el("div", { class: "row spread" }, el("h2", { style: "margin:0" }, "Docking bay"),
+      el("div", { class: "row" },
+        el("form", { class: "codeform", onsubmit: e => { e.preventDefault(); requestJoinCode(e.currentTarget.elements.code.value); } },
+          el("input", { name: "code", id: "codein", maxlength: "5", autocomplete: "off", spellcheck: "false", placeholder: "CODE", "aria-label": "Room code", value: S.pendingJoin ? S.pendingJoin.code : "" }),
+          el("button", { class: "btn small teal", type: "submit", disabled: S.roomState !== "on" }, "Go")),
+        el("span", { class: "aboard", id: "online", title: "Crew aboard" }))),
     el("div", { id: "openlist", class: "ports" }), el("p", { class: "note", id: "baynote", style: "margin:10px 0 0" }));
   wrap.append(el("div", { class: "grid2" }, host, bay));
   queueMicrotask(renderLobbyLists);
@@ -1260,6 +1306,7 @@ function dockedShip(p) {
     el("div", { class: "pad" }, el("span", { class: "lights" }, el("i"), el("i"), el("i"), el("i")), icon("ship", { c: col, cls: "shipico" })),
     el("div", { class: "portinfo" },
       el("b", {}, (cleanNick(pp(p).nick) || "Crew") + (p.isMe ? " (tab 2)" : "")),
+      typeof g.code === "string" && CODE_RE.test(g.code) ? el("span", { class: "shipcode" }, g.code) : null,
       el("span", { class: "portmeta" }, ...meta),
       el("span", { class: "portmeta" }, roomSubject(g))),
     el("span", { class: "seatlights", role: "img", "aria-label": `${g.pl.length} of ${MAX_PLAYERS} seats taken` }, Array.from({ length: MAX_PLAYERS }, (_, i) => el("i", { class: i < g.pl.length ? "on" : "" }))),
@@ -1484,12 +1531,14 @@ function matchView() {
   const m = S.match, g = m.g, me = mySeat(), host = m.role === "host";
   const box = el("section", { class: `sheet stack matchbox mode-${g.mode}`, id: "matchbox" });
   const head = `${roomSubject(g)} · ${modeName(g.mode)} · ` + (g.mode === "race" ? `${g.n} questions · ${poolLabel(g.pool || "all")}` : `${g.lives} ${g.lives === 1 ? "life" : "lives"} · ${g.lim} s fuse · ${poolLabel(g.pool || "all")}`);
+  const codeBox = typeof g.code === "string" && CODE_RE.test(g.code) ? el("div", { class: "roomcode" }, el("span", {}, "Room"), el("b", { title: "Room code" }, g.code),
+    el("button", { class: "btn ghost small", "data-label": "Copy invite link", onclick: e => copyText(roomLink(g.code), e.currentTarget, "Link copied!") }, "Copy invite link")) : null;
   box.append(el("div", { class: "row spread" }, el("p", { class: "eyebrow modehead", style: "margin:0" }, g.mode === "race" ? icon("flag", { cls: "mini" }) : icon("core", { cls: "mini", c: "var(--core)", c2: "var(--gold)" }), head),
-    g.ph === "end" ? null : el("button", { class: "btn ghost small", id: "leave", onclick: e => {
+    el("div", { class: "row" }, codeBox, g.ph === "end" ? null : el("button", { class: "btn ghost small", id: "leave", onclick: e => {
       if (e.currentTarget.dataset.armed) return leaveMatch(host ? "You closed your room." : "");
       e.currentTarget.dataset.armed = "1"; e.currentTarget.textContent = host ? "Close room for everyone?" : "Leave the game?";
       e.currentTarget.classList.add("danger");
-    } }, host ? "Close room" : "Leave")));
+    } }, host ? "Close room" : "Leave"))));
   const panel = el("div", { class: "panel" });
   const main = wideLayout() ? el("div", { class: "matchmain" }, raceTrack(g), arenaView(panel)) : el("div", { class: "matchmain" }, raceTrack(g), tableView(), panel);
   box.append(el("div", { class: "matchgrid" }, main, syncChat(g)));
@@ -1497,7 +1546,7 @@ function matchView() {
   if (g.ph === "lobby") {
     if (host) panel.append(
       el("p", { class: "status" }, g.pl.length < 2 ? "Waiting for crew to board…" : `${g.pl.length} crew seated.`),
-      el("p", { class: "muted" }, "Your room is listed in the docking bay. Anyone aboard can join, up to 8 crew."),
+      el("p", { class: "muted" }, g.code ? `Share code ${g.code} or the invite link. Your ship is also docked in the bay. Up to 8 crew.` : "Your room is listed in the docking bay. Anyone aboard can join, up to 8 crew."),
       el("div", {}, el("button", { class: "btn", onclick: startGame, disabled: g.pl.length < 2 }, g.pl.length < 2 ? "Need at least 2 players" : `Start with ${g.pl.length} players`)));
     else panel.append(el("p", { class: "status blink" }, `Waiting for ${seatName(g, 0)} to launch…`), el("p", { class: "muted" }, `${g.pl.length} of ${MAX_PLAYERS} seats taken.`));
     return box;
@@ -2299,6 +2348,8 @@ function renderCommunity() {
 const VIEWS = ["duel", "daily", "practice", "progress", "leaderboard", "packs"];
 function route() {
   const h = location.hash.replace("#", "");
+  const roomM = h.match(/^room-([A-Za-z0-9]{5})$/);
+  if (roomM) { S.view = "duel"; history.replaceState(null, "", "#duel"); render(); requestJoinCode(roomM[1]); return; }
   const shared = h.match(/^pack-([a-z0-9]{6,20})$/);
   if (shared) { S.view = "packs"; addSharedPack(shared[1]); render(); return; }
   S.view = VIEWS.includes(h) ? h : "duel";
@@ -2411,26 +2462,54 @@ function makeDb(rtdb) {
     }
   };
 }
+/* Presence. Each tab owns lobby/<push id> = { by, p: JSON presence, t: last heartbeat (server time) }.
+   The entry is written first and only then is the disconnect cleanup armed: Firebase rejects an onDisconnect delete
+   for an entry that doesn't exist yet, and that once left a ghost behind for every closed tab. Entries whose
+   heartbeat is older than LIVE_MS are ignored; ones older than SWEEP_MS (or from before heartbeats) are deleted by
+   whichever tab notices, which the database rules allow. */
+const BEAT_MS = 60000, LIVE_MS = 150000, SWEEP_MS = 300000;
 function makeRoom(rtdb, uid) {
   const lobby = rtdb.ref("lobby"), me = lobby.push();
-  let pres = {};
-  const write = () => me.set({ by: uid, p: JSON.stringify(pres) });
-  rtdb.ref(".info/connected").on("value", s => { if (s.val() === true) me.onDisconnect().remove().then(write).catch(() => {}); });
+  const SV = typeof firebase !== "undefined" && firebase.database && firebase.database.ServerValue;
+  const stamp = () => SV ? SV.TIMESTAMP : Date.now();
+  let pres = {}, offset = 0, raw = [], onFn = null;
+  rtdb.ref(".info/serverTimeOffset").on("value", s => { offset = +s.val() || 0; });
+  const serverNow = () => Date.now() + offset;
+  const write = () => me.set({ by: uid, p: JSON.stringify(pres), t: stamp() });
+  rtdb.ref(".info/connected").on("value", s => {
+    if (s.val() === true) write().then(() => me.onDisconnect().remove()).catch(() => {});
+  });
+  const emit = () => {
+    if (!onFn) return;
+    const now = serverNow(), peers = [];
+    for (const e of raw) {
+      const mine = e.key === me.key;
+      if (!mine && !(typeof e.t === "number" && now - e.t < LIVE_MS)) continue;   // dead or pre-heartbeat entry
+      let pr = {};
+      try { pr = JSON.parse(e.p) || {}; } catch {}
+      peers.push({ peer: e.key, by: e.by, isMe: e.by === uid, sameTab: mine, presence: mine ? pres : pr });
+    }
+    if (!peers.some(p => p.sameTab)) peers.push({ peer: me.key, by: uid, isMe: true, sameTab: true, presence: pres });
+    onFn({ peers });
+  };
+  setInterval(() => {
+    me.child("t").set(stamp()).catch(() => {});   // heartbeat: just the timestamp, so it costs almost no bandwidth
+    const now = serverNow();
+    raw.filter(e => e.key !== me.key && (typeof e.t !== "number" || now - e.t > SWEEP_MS)).slice(0, 5)
+      .forEach(e => lobby.child(e.key).remove().catch(() => {}));
+    emit();
+  }, BEAT_MS);
   return {
     presence(patch) {
       for (const [k, v] of Object.entries(patch)) { if (v === null) delete pres[k]; else pres[k] = v; }
       return write();
     },
     onPeers(fn, onErr) {
-      lobby.on("value", s => {
-        const peers = [];
-        s.forEach(c => {
-          const v = c.val() || {}; let p = {};
-          try { p = JSON.parse(v.p) || {}; } catch {}
-          peers.push({ peer: c.key, by: v.by || null, isMe: v.by === uid, sameTab: c.key === me.key, presence: p });
-        });
-        if (!peers.some(p => p.sameTab)) peers.push({ peer: me.key, by: uid, isMe: true, sameTab: true, presence: pres });
-        fn({ peers });
+      onFn = fn;
+      lobby.on("value", snap => {
+        raw = [];
+        snap.forEach(c => { const v = c.val() || {}; raw.push({ key: c.key, by: v.by || null, p: v.p, t: v.t }); });
+        emit();
       }, () => onErr && onErr());
     }
   };

@@ -33,7 +33,17 @@ function makeRef(path, q = {}) {
     key: path.split("/").pop(),
     child: c => makeRef(path + "/" + c),
     push(v) { const r = makeRef(path + "/c" + (++nextId)); if (v !== undefined) r.set(v); return r; },
-    set(v) { if (v == null) delete store[path]; else store[path] = clone(v); notify(); return Promise.resolve(); },
+    set(v) {
+      // a write below an existing entry (e.g. lobby/<id>/t) updates that entry in place
+      const parent = Object.keys(store).find(k => path.startsWith(k + "/"));
+      if (parent) {
+        const parts = path.slice(parent.length + 1).split("/"); let o = store[parent];
+        for (const p of parts.slice(0, -1)) o = o[p] = o[p] || {};
+        if (v == null) delete o[parts[parts.length - 1]]; else o[parts[parts.length - 1]] = clone(v);
+      } else if (v == null) delete store[path]; else store[path] = clone(v);
+      notify(); return Promise.resolve();
+    },
+    remove() { return ref.set(null); },
     get() { return Promise.resolve(snapOf(ref.key, readPath(path))); },
     orderByChild(f) { return makeRef(path, { ...q, order: f }); },
     limitToLast(n) { return makeRef(path, { ...q, limit: n }); },
@@ -110,6 +120,15 @@ async function seatEveryone(hostOpens) {
 }
 (async () => {
   try {
+    /* ---------- ghost presence entries are hidden, then swept ---------- */
+    store["lobby/ghostold"] = { by: "x1", p: JSON.stringify({ st: "host", nick: "Ghost", g: { id: "ghostroom", code: "GH0ST", mode: "race", pl: ["ghostold"], nm: ["Ghost"], qs: ["KIN-01"], n: 5, ph: "lobby", bk: "h2" } }), t: Date.now() - 10 * 60 * 1000 };
+    store["lobby/ghostlegacy"] = { by: "x2", p: JSON.stringify({ st: "idle", nick: "Old tab" }) };
+    notify();
+    await until(() => [A, B, C].every(f => S(f).roomState === "on" && S(f).peers.length === 3), "3 live tabs counted", 30000);
+    out(`ghosts: A counts ${S(A).peers.length} online (3 real tabs), ghost room listed: ${!!D(A).querySelector("#openlist .port.docked")}`);
+    await until(() => !store["lobby/ghostold"] && !store["lobby/ghostlegacy"], "ghosts swept", 90000);
+    out(`ghosts swept from the database; live tabs still ${S(A).peers.length}`);
+
     /* ---------- Race ---------- */
     await seatEveryone(() => { S(A).form.mode = "race"; S(A).form.n = 5; S(A).form.pool = "all"; W(A).eval("render()"); D(A).getElementById("rounds").value = "7"; D(A).getElementById("rounds").dispatchEvent(new Event("change")); [...D(A).querySelectorAll(".stepper button")].find(b => b.getAttribute("aria-label") === "One fewer").click(); D(A).querySelectorAll(".stepper button")[0].click(); });
     out(`race: 3 seated, names ${JSON.stringify(S(A).match.g.nm)}, length ${S(A).match.g.n} with ${S(A).match.g.qs.length} questions drawn`);
@@ -211,6 +230,23 @@ async function seatEveryone(hostOpens) {
     out(`saved pack ${pid}; stored: ${!!store["packData/" + pid]} meta: ${!!store["packMeta/" + pid]}`);
     W(A).eval(`setSubject("pk:${pid}")`);
     delete W(B).eval("S").banks["pk:" + pid];                 // B starts without the pack
+    /* ---------- room code + invite link with name prompt ---------- */
+    await until(() => btn(A, "Open room"), "A lobby (code)");
+    btn(A, "Open room").click();
+    await until(() => S(A).match && S(A).match.g.code, "room code");
+    const code = S(A).match.g.code;
+    W(B).eval("S.named = false"); W(B).sessionStorage.removeItem("p1d.named");
+    W(B).location.hash = "room-" + code;
+    await until(() => D(B).getElementById("nm-in"), "B asked for a name", 15000);
+    D(B).getElementById("nm-in").value = "Benny"; btn(B, "Take a seat").click();
+    await until(() => S(B).match && S(B).match.g.code === code, "B joined by link", 15000);
+    await until(() => S(A).match.g.nm.includes("Benny"), "host sees Benny", 15000);
+    out(`invite link: code ${code}, B prompted for a name and joined as ${JSON.stringify(S(A).match.g.nm)}, hash now "${W(B).location.hash}"`);
+    W(C).location.hash = "room-ZZZZ9";
+    await until(() => /isn't open/.test(S(C).lobbyMsg || ""), "C told the room is closed", 20000);
+    out(`bad code: C sees "${S(C).lobbyMsg}"`);
+    btn(A, "Close room").click(); btn(A, "Close room for everyone?").click();
+    await until(() => !S(B).match, "B back in lobby", 15000);
     S(C).cfg.notify = true; W(C).location.hash = "practice";
     const sfxErrors = W(A).eval('(() => { const c = ac(); const bad = []; for (const [k, e] of Object.entries(SFX)) { try { e.play(c); } catch (err) { bad.push(k + ": " + err.message); } } return bad; })()');
     out(`sound effects: ${W(A).eval("Object.keys(SFX).length")} synthesised, errors: ${sfxErrors.length ? JSON.stringify(sfxErrors) : "none"}`);
