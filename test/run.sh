@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 rm -rf site && mkdir site
-cp ../docs/index.html ../docs/*.json site/
+cp -r ../docs/index.html ../docs/*.json ../docs/fonts site/
 cat > site/firebase-config.js <<'EOF'
 window.FIREBASE_CONFIG = { apiKey: "test" };
 window.firebase = parent.makeFakeFirebase(window);

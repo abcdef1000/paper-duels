@@ -6,12 +6,18 @@
 <title>Orbit Duels</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 8 8%27 shape-rendering=%27crispEdges%27%3E%3Crect width=%278%27 height=%278%27 fill=%27%230B0E24%27/%3E%3Crect x=%272%27 y=%271%27 width=%274%27 height=%276%27 fill=%27%23FF7A45%27/%3E%3Crect x=%271%27 y=%272%27 width=%276%27 height=%274%27 fill=%27%23FF7A45%27/%3E%3Crect x=%273%27 y=%273%27 width=%272%27 height=%272%27 fill=%27%23FFD166%27/%3E%3C/svg%3E">
 <meta name="description" content="Orbit Duels: a pixel-art party quiz for H2 Physics, PSLE Science and PSLE Maths. Race or pass the Hot Core with 2–8 crew, take the Daily Test, practise and track progress.">
+<link rel="preload" href="fonts/vt323-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;500;600;700&display=swap">
 <!-- digits only: DotGothic16's numerals are the clearest, so every number uses them and letters fall through to the pixel fonts -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&text=0123456789&display=swap">
 <style>
+/* Body text: VT323 (SIL OFL, docs/fonts/OFL-VT323.txt), hosted here so it can be scaled up evenly: it draws small for its size. */
+@font-face { font-family: "Orbit Body"; src: url(fonts/vt323-latin.woff2) format("woff2"); font-display: swap; size-adjust: 125%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Orbit Body"; src: url(fonts/vt323-latin-ext.woff2) format("woff2"); font-display: swap; size-adjust: 125%;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 /* Orbit Station: a pixel-art space station. Deep-space background with a pixel starfield, panels with notched
    pixel borders, crew drawn as 10×10 astronaut helmets, the bomb is a flickering reactor core.
    Deliberately one dark theme: it is space. */
@@ -32,7 +38,7 @@
   --s0: #5EEAD4; --s1: #FFD166; --s2: #FF7A45; --s3: #C49BF5; --s4: #7CE678; --s5: #FF5C7A; --s6: #78AAFF; --s7: #E6E6F0;
   --display: "Press Start 2P", "Courier New", monospace;
   --label: "DotGothic16", "Silkscreen", "Courier New", monospace;
-  --body: "DotGothic16", "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Orbit Body", "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
   --px: 4px;
   color-scheme: dark;
   padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -49,6 +55,8 @@ body {
 /* moving space: a low-res canvas of drifting pixel asteroids and stars, scaled up with crisp pixels */
 #space { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; image-rendering: pixelated; pointer-events: none; }
 button, input, select { font: inherit; color: inherit; }
+body { font-synthesis-weight: none; font-variant-ligatures: none; }
+.explain b, .stem b, .sapicks b { color: var(--gold); font-weight: 400; }
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .wrap { max-width: 1680px; margin: 0 auto; }
 
