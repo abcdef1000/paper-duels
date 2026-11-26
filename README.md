@@ -44,13 +44,14 @@ Firebase's free Spark plan allows 100 simultaneous connections and 10 GB/month o
 ## Rooms
 
 - **Room chat:** every room has a chat, with quick buttons. It pauses while a question is up so answers can't be shared, and carries over into rematches. Messages are capped at 200 characters and one per second.
+- **Length:** the host picks any Race length up to 50 (or the size of the chosen pack or topic). Each game draws that many questions at random.
 - **Rematch:** the captain can restart with the same crew from the results screen. Crew still on that screen rejoin automatically.
 - **New-room alerts:** turn on in Settings. They work while the site is open in any tab (a browser notification when the tab is hidden, an in-page alert otherwise). Alerts when the site is closed would need Firebase Cloud Messaging plus a Cloud Function, which needs the pay-as-you-go Blaze plan.
 - **Settings:** sound effects (synthesised in the browser, no audio files) with volume and per-group switches, crew animation, and notifications.
 
 ## Player-made packs
 
-The **Packs** tab lets anyone make a pack. They describe it and add notes or screenshots, copy the generated prompt into Claude, ChatGPT or Gemini, and paste the reply back. The site checks the pack, previews it and saves it to Firebase (`packMeta/`, `packData/`). Saved packs show up in the subject menu for practice, the Daily Test and hosting rooms. Players joining a room download its pack automatically. Packs can be shared with a `#pack-<id>` link or listed under Community packs. Player-made packs can't contain figures, and everything in them is shown as plain text.
+The **Packs** tab lets anyone make a pack. They describe it and add notes or screenshots, copy the generated prompt into Claude, ChatGPT or Gemini, and paste the reply back. The site checks the pack, previews it and saves it to Firebase (`packMeta/`, `packData/`). Saved packs show up in the subject menu for practice, the Daily Test and hosting rooms. Players joining a room download its pack automatically. The workshop asks the AI for 1–39 questions; hosts can then play a random few at a time. After every game and Daily Test, players are invited to make their own pack. Packs can be shared with a `#pack-<id>` link or listed under Community packs. Player-made packs can't contain figures, and everything in them is shown as plain text.
 
 ## Editing questions
 

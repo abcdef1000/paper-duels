@@ -109,10 +109,10 @@ async function seatEveryone(hostOpens) {
 (async () => {
   try {
     /* ---------- Race ---------- */
-    await seatEveryone(() => { S(A).form.mode = "race"; S(A).form.n = 5; S(A).form.pool = "all"; });
-    out("race: 3 seated, names " + JSON.stringify(S(A).match.g.nm));
+    await seatEveryone(() => { S(A).form.mode = "race"; S(A).form.n = 5; S(A).form.pool = "all"; W(A).eval("render()"); D(A).getElementById("rounds").value = "7"; D(A).getElementById("rounds").dispatchEvent(new Event("change")); [...D(A).querySelectorAll(".stepper button")].find(b => b.getAttribute("aria-label") === "One fewer").click(); D(A).querySelectorAll(".stepper button")[0].click(); });
+    out(`race: 3 seated, names ${JSON.stringify(S(A).match.g.nm)}, length ${S(A).match.g.n} with ${S(A).match.g.qs.length} questions drawn`);
     // [A, B, C] in click order; "r" right, "w" wrong
-    const plan = [[["A","r"],["B","w"],["C","r"]], [["A","w"],["B","w"],["C","w"]], [["B","w"],["A","w"],["C","r"]], [["C","r"],["A","r"],["B","r"]], [["B","r"],["A","w"],["C","w"]]];
+    const plan = [[["A","r"],["B","w"],["C","r"]], [["A","w"],["B","w"],["C","w"]], [["B","w"],["A","w"],["C","r"]], [["C","r"],["A","r"],["B","r"]], [["B","r"],["A","w"],["C","w"]]];   // length 7 - 2 = 5
     for (let i = 0; i < plan.length; i++) {
       await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && S(f).match.g.k === i && D(f).querySelector("#matchbox .opt, #matchbox #sa-in")), "race q" + i);
       for (const [who, how] of plan[i]) { pick(F[who], how === "r"); await sleep(120); }
@@ -123,6 +123,7 @@ async function seatEveryone(hostOpens) {
       for (const f of [A, B, C]) (await until(() => btn(f, label), "next"))?.click();
     }
     await until(() => [A, B, C].every(f => S(f).match.ended), "race end");
+    out(`  make-a-pack prompt after the game: A ${!!D(A).querySelector(".packcta")}, B ${!!D(B).querySelector(".packcta")}`);
     out("  final " + S(A).match.g.sc.join("-") + " | " + ["A","B","C"].map(n => `${n} sees "${D(F[n]).querySelector(".status").textContent}"`).join(" | "));
     out(`  records A ${rec(A)} · B ${rec(B)} · C ${rec(C)}`);
     for (const f of [A, B, C]) btn(f, "Back to lobby").click();

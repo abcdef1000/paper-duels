@@ -330,6 +330,13 @@ textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 0; backgr
 .chat .quick { gap: 6px; }
 .chat .quick .btn { padding: 5px 8px; font-size: 11px; }
 
+/* number stepper + pack prompt */
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper .btn { width: 34px; padding: 7px 0; font-size: 16px; }
+.stepin { width: 4.2em; text-align: center; padding: 8px 6px; border: 0; background: var(--panel2); box-shadow: inset 0 -3px 0 var(--line); font-size: 17px; -moz-appearance: textfield; appearance: textfield; }
+.stepin::-webkit-inner-spin-button, .stepin::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.packcta { display: flex; flex-direction: column; gap: 10px; border-left-color: var(--core); margin: 0; }
+
 /* toast + settings */
 .toast { position: fixed; z-index: 15; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(340px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 8px; }
 .toast b { font: 400 12px/1.4 var(--display); color: var(--gold); }
@@ -457,6 +464,8 @@ const S = {
 const RACE_LIM = 60;     // seconds per question in Race
 const GRACE = 1000;      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
 const MAX_PLAYERS = 8;
+const MAX_RACE = 50;      // longest Race a host can pick; each game draws this many at random from the pack or topic
+const MAX_PACK_ASK = 39;  // most questions the pack workshop asks an AI for
 const P = { q: {}, w: 0, l: 0, d: 0 };
 
 /* ---------- settings ---------- */
@@ -765,7 +774,7 @@ function openRoom() {
   const f = S.form, pool = poolForBank(S.subject, f.pool), ids = shuffle(pool.map(q => q.id));
   const race = f.mode === "race";
   const g = { id: rid(8), mode: f.mode, pl: [S.myPeer], nm: [S.nick], ph: "lobby", k: 0,
-    qs: race ? ids.slice(0, Math.min(f.n, ids.length)) : ids.slice(0, 60), n: race ? Math.min(f.n, ids.length) : 0,
+    qs: race ? ids.slice(0, Math.max(1, Math.min(f.n, MAX_RACE, ids.length))) : ids.slice(0, 60), n: race ? Math.max(1, Math.min(f.n, MAX_RACE, ids.length)) : 0,
     lim: race ? RACE_LIM : f.fuse, lives: f.lives, pool: f.pool, bk: S.subject, sc: null, lv: null, turn: 0, res: null };
   S.match = newMatch("host", g, S.myPeer);
   S.lobbyMsg = "";
@@ -1028,14 +1037,17 @@ function lobbyView() {
       modeCard("bomb", "Hot Core", "Pass the unstable core round the ring. Answer right to pass it on. Answer wrong or too slowly and it blows: you lose a life.")));
     const settings = el("div", { class: "row" });
     if (f.mode === "race") {
-      settings.append(el("label", { class: "field" }, el("span", {}, "Length"),
-        el("select", { id: "rounds", onchange: e => f.n = +e.target.value }, [5, 10, 15].map(n => el("option", { value: n, selected: n === f.n }, n + " questions")))));
+      const poolN = poolForBank(S.subject, f.pool).length, maxN = Math.min(MAX_RACE, poolN);
+      f.n = Math.max(1, Math.min(f.n, maxN));
+      settings.append(el("div", { class: "field" }, el("span", { id: "rounds-l" }, "Length"),
+        stepper("rounds", f.n, 1, maxN, v => { f.n = v; }, "rounds-l"),
+        el("p", { class: "note", style: "margin:0" }, poolN > MAX_RACE ? `Up to ${MAX_RACE} · ${poolN} in this set, drawn at random` : `Of ${poolN} in this set, drawn at random`)));
     } else {
       settings.append(
         el("label", { class: "field" }, el("span", {}, "Lives"), el("select", { id: "lives", onchange: e => f.lives = +e.target.value }, [1, 2, 3].map(n => el("option", { value: n, selected: n === f.lives }, n + (n === 1 ? " life" : " lives"))))),
         el("label", { class: "field" }, el("span", {}, "Fuse"), el("select", { id: "fuse", onchange: e => f.fuse = +e.target.value }, [20, 30, 45, 60].map(n => el("option", { value: n, selected: n === f.fuse }, n + " s")))));
     }
-    settings.append(el("label", { class: "field", style: "flex:1;min-width:12em" }, el("span", {}, "Questions"), poolSelect("pool", f.pool, v => f.pool = v)));
+    settings.append(el("label", { class: "field", style: "flex:1;min-width:12em" }, el("span", {}, "Questions"), poolSelect("pool", f.pool, v => { f.pool = v; render(); })));
     left.append(settings, el("div", {}, el("button", { class: "btn", onclick: () => withName(openRoom), disabled: S.roomState !== "on" }, "Open room")));
   }
   const right = el("section", { class: "sheet" },
@@ -1057,7 +1069,7 @@ function renderLobbyLists() {
   const ul = el("ul", { class: "lobby-list" });
   for (const p of open) {
     const g = pp(p).g, full = g.pl.length >= MAX_PLAYERS;
-    const detail = g.mode === "race" ? `${Math.min(15, +g.n || 0)} questions` : `${Math.min(3, +g.lives || 1)} ${+g.lives === 1 ? "life" : "lives"} · ${Math.min(60, +g.lim || 30)} s fuse`;
+    const detail = g.mode === "race" ? `${Math.min(MAX_RACE, +g.n || 0)} questions` : `${Math.min(3, +g.lives || 1)} ${+g.lives === 1 ? "life" : "lives"} · ${Math.min(60, +g.lim || 30)} s fuse`;
     ul.append(el("li", {},
       el("div", { class: "who-col" },
         el("div", { class: "nm" }, el("span", { class: "tag" + (g.mode === "race" ? " race" : "") }, modeName(g.mode)), (cleanNick(pp(p).nick) || "Crew") + "'s room", p.isMe ? " (your other tab)" : ""),
@@ -1067,6 +1079,24 @@ function renderLobbyLists() {
   box.replaceChildren(ul);
 }
 
+function stepper(id, value, min, max, onset, labelId) {
+  const clamp = v => { v = Math.round(+v); return Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : min; };
+  const input = el("input", { id, type: "number", class: "stepin", min, max, step: 1, inputmode: "numeric", value: clamp(value), "aria-labelledby": labelId,
+    onchange: e => { const v = clamp(e.target.value); e.target.value = v; onset(v); } });
+  const bump = d => { const v = clamp((+input.value || min) + d); input.value = v; onset(v); };
+  return el("div", { class: "stepper" },
+    el("button", { type: "button", class: "btn ghost small", "aria-label": "One fewer", onclick: () => bump(-1) }, "−"), input,
+    el("button", { type: "button", class: "btn ghost small", "aria-label": "One more", onclick: () => bump(1) }, "+"));
+}
+function packCta() {
+  if (S.hidePackCta) return null;
+  const box = el("div", { class: "banner packcta" },
+    el("p", { style: "margin:0" }, el("b", {}, "Want to make your own pack? "), "Turn your notes or screenshots into questions with an AI chat, then play them with friends."),
+    el("div", { class: "row" },
+      el("a", { class: "btn small", href: "#packs" }, "Make a pack"),
+      el("button", { type: "button", class: "btn ghost small", onclick: () => { S.hidePackCta = true; try { sessionStorage.setItem("p1d.nocta", "1"); } catch {} box.remove(); } }, "Not now")));
+  return box;
+}
 function questionCard(q, perm, opts) {
   // opts: { onPick(response), disabled, mine (option index | typed text | null), reveal, picks: [{orig, label, seat}] }
   // A response is an option index for MCQ, or the typed text for a short-answer question.
@@ -1317,6 +1347,7 @@ function endView() {
     el("span", { class: "pv" }, g.mode === "race" ? `${g.sc[s]} pt${g.sc[s] === 1 ? "" : "s"}` : (s === g.win ? "survived" : "out"))))));
   wrap.append(el("p", { class: "note" }, (g.ab ? "This game isn't counted. Your answers are still saved to Progress." : "Your answers are saved to Progress.") +
     (m.role === "guest" ? " Stay on this screen and you'll rejoin automatically if the captain starts a rematch." : "")));
+  wrap.append(packCta());
   wrap.append(el("div", { class: "row" },
     m.role === "host" ? el("button", { class: "btn", onclick: rematch }, "Rematch with this crew") : null,
     el("button", { class: "btn teal", onclick: () => leaveMatch() }, "Back to lobby"),
@@ -1496,6 +1527,7 @@ function dailyResults() {
     const q = Q(id), a = dl.answers[i];
     return el("li", {}, tierPips(q.d), el("span", {}, `${q.id} · ${a.ok ? "correct" : "wrong"} · ${a.sec} s`), el("span", { class: "pts" }, `+${a.pts}`));
   })));
+  const cta = packCta(); if (cta) box.append(cta);
   box.append(el("h3", { style: "margin-top:6px" }, "Today's bell curve"));
   box.append(bellCurve(all, dl.score, mean, sd));
   box.append(el("div", { class: "key" },
@@ -1901,7 +1933,7 @@ function packsView() {
     el("div", { class: "row" },
       el("label", { class: "field", style: "flex:1;min-width:12em" }, el("span", {}, "Pack name"), el("input", { id: "pk-name", maxlength: "60", value: f.name, placeholder: "e.g. Sec 3 Chemistry: Acids", oninput: e => f.name = e.target.value })),
       el("label", { class: "field", style: "flex:1;min-width:12em" }, el("span", {}, "Subject and level"), el("input", { id: "pk-level", maxlength: "80", value: f.level, placeholder: "e.g. O-Level Pure Chemistry", oninput: e => f.level = e.target.value })),
-      el("label", { class: "field" }, el("span", {}, "Questions"), el("select", { id: "pk-count", onchange: e => f.count = +e.target.value }, [10, 20, 30, 40].map(n => el("option", { value: n, selected: n === f.count }, n))))),
+      el("div", { class: "field" }, el("span", { id: "pk-count-l" }, "Questions"), stepper("pk-count", f.count, 1, MAX_PACK_ASK, v => { f.count = v; }, "pk-count-l"))),
     el("label", { class: "field" }, el("span", {}, "Notes, topics or ideas"), el("textarea", { id: "pk-notes", maxlength: "4000", placeholder: "Paste notes, list topics, or describe what to test. Example: neutralisation, pH scale, making salts; include 2 calculation questions.", oninput: e => f.notes = e.target.value }, f.notes)),
     el("label", { class: "field" }, el("span", {}, "Screenshots (optional)"),
       el("input", { type: "file", id: "pk-shots", accept: "image/*", multiple: true, onchange: e => {
@@ -1909,7 +1941,7 @@ function packsView() {
         for (const file of [...e.target.files].slice(0, 8)) { const u = URL.createObjectURL(file); f.shots.push(u); shotsBox.append(el("img", { src: u, alt: file.name })); }
       } })),
     shotsBox,
-    el("p", { class: "note" }, "Screenshots stay on your device. You'll attach them in the AI chat in the next step.")));
+    el("p", { class: "note" }, `Screenshots stay on your device. You'll attach them in the AI chat in the next step. Ask for anything from 1 to ${MAX_PACK_ASK} questions; when you host a game you can play a random few of them.`)));
   // 2 prompt
   const copyBtn = el("button", { class: "btn", "data-label": "Copy prompt", onclick: e => copyText(packPrompt({ ...f, shots: f.shots.length }), e.currentTarget, "Copied! Now paste it into an AI chat") }, "Copy prompt");
   steps.append(el("div", { class: "stepbox stack" }, el("h3", {}, "Ask an AI"),
@@ -2003,7 +2035,7 @@ window.addEventListener("hashchange", route);
 /* ---------- boot ---------- */
 async function boot() {
   S.nick = cleanNick(lsGet("p1d.nick")) || "Cadet " + Math.floor(100 + Math.random() * 900);
-  try { S.named = sessionStorage.getItem("p1d.named") === "1"; } catch {}
+  try { S.named = sessionStorage.getItem("p1d.named") === "1"; S.hidePackCta = sessionStorage.getItem("p1d.nocta") === "1"; } catch {}
   const nickIn = $("#nick"); nickIn.value = S.nick;
   applyCfg();
   $("#cfgbtn").addEventListener("click", openSettings);
