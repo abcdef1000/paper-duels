@@ -410,6 +410,11 @@ nav.tabs a { display: inline-flex; align-items: center; gap: 8px; }
 .codeform { display: flex; gap: 6px; }
 .codeform input { width: 6.4em; padding: 6px 8px; border: 0; background: var(--panel2); color: var(--ink); box-shadow: inset 0 -3px 0 var(--line); font: 400 13px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; }
 .codeform input::placeholder { color: var(--muted); }
+.thinking { margin: 0; font-size: 18px; color: var(--muted); }
+.dots i { font-style: normal; animation: dot 1.2s steps(1) infinite; }
+.dots i:nth-child(2) { animation-delay: .3s; } .dots i:nth-child(3) { animation-delay: .6s; }
+@keyframes dot { 0%, 20% { opacity: 0; } 25%, 100% { opacity: 1; } }
+:root[data-motion="off"] .dots i { animation: none; }
 .launch.glow { box-shadow: 0 -4px 0 0 var(--core), 0 4px 0 0 var(--core), -4px 0 0 0 var(--core), 4px 0 0 0 var(--core); }
 
 /* the two modes */
@@ -1073,7 +1078,7 @@ function onPeersChanged() {
     }
   }
   if (S.view !== "duel") return;
-  if (S.match) renderTable(); else renderLobbyLists();
+  if (S.match) { renderTable(); updateThinking(); } else renderLobbyLists();
 }
 
 function setG(patch) {
@@ -1499,7 +1504,7 @@ function renderTable() {
 }
 
 /* room chat: chat/<room>/<push id> = { by, nick, text, t }. One persistent element per room, so a re-render
-   never loses what someone is typing. Paused while a question is up, so answers can't be passed around. */
+   never loses what someone is typing. */
 const QUICK_CHAT = ["gg", "nice one!", "oops", "hurry up!", "rematch?"];
 function closeChat() { if (S.chat && S.chat.unsub) S.chat.unsub(); S.chat = null; }
 function chatFor(g) {
@@ -1532,11 +1537,11 @@ function chatFor(g) {
 }
 function syncChat(g) {
   const c = chatFor(g);
-  c.paused = g.ph === "q";
+  c.paused = false;   // chat stays open during questions
   const off = c.paused || !S.db;
   c.input.disabled = c.sendBtn.disabled = off;
   c.quick.querySelectorAll("button").forEach(b => { b.disabled = off; });
-  if (S.db) c.note.textContent = c.paused ? "Chat pauses while a question is up." : "";
+  if (S.db && c.note.textContent === "Chat pauses while a question is up.") c.note.textContent = "";
   return c.el;
 }
 function sendChat(text) {
@@ -1588,6 +1593,7 @@ function matchView() {
     if (g.ph === "q") {
       panel.append(el("div", { class: "timer" }, el("i", { id: "tbar" })));
       panel.append(questionCard(q, perm, { onPick: answer, disabled: !!mine, mine: respOf(mine) }));
+      if (mine) { panel.append(el("p", { class: "thinking", id: "thinking", role: "status" })); queueMicrotask(updateThinking); }
     } else {
       const res = g.res || { w: -1, c: [], rt: [] };
       const txt = res.w === me ? "You took the point." : res.w >= 0 ? `${seatName(g, res.w)} took the point.` : "Nobody scored.";
@@ -1605,7 +1611,7 @@ function matchView() {
   } else {
     const holding = g.turn === me;
     if (g.ph === "q") {
-      panel.append(el("p", { class: "status " + (holding ? "lose" : "") }, holding ? "You have the core. Answer before it blows!" : `${seatName(g, g.turn)} has the core.`));
+      panel.append(el("p", { class: "status " + (holding ? "lose" : "") }, holding ? "You have the core. Answer before it blows!" : [`${seatName(g, g.turn)} has the core and is thinking`, dots()]));
       panel.append(questionCard(q, perm, { onPick: answer, disabled: !holding || !!mine, mine: holding ? respOf(mine) : null }));
     } else {
       const res = g.res || {};
@@ -1620,6 +1626,15 @@ function matchView() {
   return box;
 }
 // Race: every player's ship flies toward the finish flag as they score; a full track means every question won.
+const dots = () => el("span", { class: "dots", "aria-hidden": "true" }, el("i", {}, "."), el("i", {}, "."), el("i", {}, "."));
+const nameList = names => names.length <= 1 ? names.join("") : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+// Race: once you've locked in, show who is still answering (live as they lock in)
+function updateThinking() {
+  const box = $("#thinking"), m = S.match; if (!box || !m) return;
+  const g = m.g, me = mySeat();
+  const waiting = g.pl.map((p, s) => s).filter(s => s !== me && (g.pl[s] === S.myPeer || peerOf(g.pl[s])) && !seatAnswer(g, s)).map(s => seatName(g, s));
+  box.replaceChildren(...(waiting.length ? [`${nameList(waiting)} ${waiting.length === 1 ? "is" : "are"} thinking`, dots()] : ["Everyone's in. Revealing", dots()]));
+}
 function raceTrack(g) {
   if (g.mode !== "race" || !g.sc || g.ph === "lobby") return null;
   const me = mySeat(), n = Math.max(1, g.n || 1);

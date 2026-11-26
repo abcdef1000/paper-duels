@@ -190,9 +190,15 @@ async function seatEveryone(hostOpens) {
     W(A).eval('setG({ qs: ["KIN-05"], n: 1 })');
     (await until(() => btn(A, "Start with 3 players"), "start")).click();
     await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && D(f).getElementById("sa-in")), "short question shown");
-    out(`chat paused during question: ${[A, B, C].every(f => D(f).getElementById("chat-in").disabled)}`);
+    out(`chat open during question: ${[A, B, C].every(f => !D(f).getElementById("chat-in").disabled)}`);
     const type = (f, v) => { D(f).getElementById("sa-in").value = v; btn(f, "Submit").click(); };
-    type(C, "30"); await sleep(120); type(B, "25 m"); await sleep(120); type(A, "25");
+    type(C, "30");
+    await until(() => D(C).getElementById("thinking") && /Ann and Ben are thinking/.test(D(C).getElementById("thinking").textContent), "C sees who is thinking", 10000);
+    const t1 = D(C).getElementById("thinking").textContent;
+    await sleep(120); type(B, "25 m");
+    await until(() => /^Ann is thinking/.test(D(C).getElementById("thinking") ? D(C).getElementById("thinking").textContent : ""), "C sees only Ann thinking", 10000);
+    out(`thinking line on C: "${t1}" then "${D(C).getElementById("thinking").textContent}"`);
+    await sleep(120); type(A, "25");
     await until(() => S(A).match.g.ph === "r", "short reveal", 100000);
     const gs = S(A).match.g;
     out(`short race: C "30", B "25 m", A "25" -> winner ${gs.nm[gs.res.w]}, picks ${JSON.stringify(gs.res.c)}`);
