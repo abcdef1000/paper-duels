@@ -136,7 +136,12 @@ async function seatEveryone(hostOpens) {
     const plan = [[["A","r"],["B","w"],["C","r"]], [["A","w"],["B","w"],["C","w"]], [["B","w"],["A","w"],["C","r"]], [["C","r"],["A","r"],["B","r"]], [["B","r"],["A","w"],["C","w"]]];   // length 7 - 2 = 5
     for (let i = 0; i < plan.length; i++) {
       await until(() => [A, B, C].every(f => S(f).match.g.ph === "q" && S(f).match.g.k === i && D(f).querySelector("#matchbox .opt, #matchbox #sa-in")), "race q" + i);
-      for (const [who, how] of plan[i]) { pick(F[who], how === "r"); await sleep(120); }
+      if (i === 1) {   // the 10 s clock: after the first answer, the others see the red vignette
+        pick(A, false);
+        await until(() => D(B).querySelector("#vignette.on") && D(C).querySelector("#vignette.on"), "vignette on B and C", 8000);
+        out(`  10 s clock: vignette on B ${!!D(B).querySelector("#vignette.on")}, on C ${!!D(C).querySelector("#vignette.on")}, on A (answered) ${!!D(A).querySelector("#vignette.on")}; B reads "${D(B).getElementById("cutcount").textContent}"`);
+        await sleep(120); pick(B, false); await sleep(120); pick(C, false);
+      } else for (const [who, how] of plan[i]) { pick(F[who], how === "r"); await sleep(120); }
       await until(() => [A, B, C].every(f => S(f).match.g.ph === "r"), "race reveal " + i, 100000);
       const g = S(A).match.g;
       out(`  Q${i + 1} ${plan[i].map(x => x.join(":")).join(" ")} -> winner seat ${g.res.w}, scores ${g.sc.join("-")}`);

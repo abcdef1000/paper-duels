@@ -88,6 +88,7 @@ For a numerical short answer, use `num` instead of (or as well as) `answers`:
 | `d` | yes | Difficulty 1–4: 1 recall, 2 one-step application, 3 multi-step, 4 hardest in the syllabus. The Daily Test takes one question from each tier, so give every pack some of each. |
 | `quick` | no | `true` if it can be done in your head in under ~30 s with the constants given. Hot Core mode uses these. |
 | `fig` | no | An inline SVG diagram. See Figures below. Official packs only. |
+| `of` | no | Picture answers: a list of 4 SVG strings, one per option, in the same order as `o`. Keep `o` as short text descriptions; they're read aloud by screen readers. Same rules as `fig`. Official packs only. |
 
 ## Writing good questions
 

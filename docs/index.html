@@ -189,6 +189,16 @@ select, .field input { padding: 8px 10px; border: 0; background: var(--panel2); 
 .opt.wrong { background: #4A1E33; }
 .opt.wrong .bubble { background: var(--bad); color: var(--space); box-shadow: 0 0 0 3px var(--bad); }
 .otext { overflow-wrap: anywhere; }
+.opts.pics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.opts.pics .opt { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; align-items: start; padding: 10px; }
+.opts.pics .marks { grid-column: 1 / -1; justify-content: flex-start; }
+.optfig { display: block; color: var(--ink); }
+.optfig svg { display: block; width: 100%; max-width: 190px; height: auto; margin: 0 auto; }
+.optfig line, .optfig path, .optfig polyline, .optfig .hollow, .optfig ellipse { stroke: currentColor; stroke-width: 1.5; fill: none; }
+.optfig .solid, .optfig .hd { fill: currentColor; stroke: none; }
+.optfig .ac { stroke: var(--core); } .optfig .hd.ac, .optfig .acf { fill: var(--core); stroke: none; }
+.optfig .thick { stroke-width: 3; }
+.optfig text { fill: var(--muted); stroke: none; font: 13px var(--body); }
 .marks { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
 .chip { --c: var(--s0); font: 700 11px/1 var(--label); padding: 4px 6px; white-space: nowrap; background: var(--c); color: var(--space); }
 .explain { border-left: 6px solid var(--good); padding: 10px 14px; background: var(--panel2); }
@@ -410,6 +420,13 @@ nav.tabs a { display: inline-flex; align-items: center; gap: 8px; }
 .codeform { display: flex; gap: 6px; }
 .codeform input { width: 6.4em; padding: 6px 8px; border: 0; background: var(--panel2); color: var(--ink); box-shadow: inset 0 -3px 0 var(--line); font: 400 13px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; }
 .codeform input::placeholder { color: var(--muted); }
+/* Race 10 s clock */
+#vignette { position: fixed; inset: 0; z-index: 12; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, rgba(255, 40, 60, 0) 55%, rgba(255, 40, 60, .38) 100%); box-shadow: inset 0 0 0 6px rgba(255, 92, 122, .6); }
+#vignette.on { animation: vig .8s steps(2) infinite; }
+@keyframes vig { 0% { opacity: .55; } 50% { opacity: 1; } }
+:root[data-motion="off"] #vignette.on { animation: none; opacity: .8; }
+@media (prefers-reduced-motion: reduce) { #vignette.on { opacity: .8; } }
+.cutcount { margin: 0; min-height: 1.2em; font: 400 13px/1.4 var(--display); color: var(--bad); }
 .thinking { margin: 0; font-size: 18px; color: var(--muted); }
 .dots i { font-style: normal; animation: dot 1.2s steps(1) infinite; }
 .dots i:nth-child(2) { animation-delay: .3s; } .dots i:nth-child(3) { animation-delay: .6s; }
@@ -684,7 +701,8 @@ const S = {
   board: [], boardState: "idle",
 };
 const RACE_LIM = 60;     // seconds per question in Race
-const GRACE = 1000;      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
+const GRACE = 1000;
+const CUT_MS = 10000;    // Race: once anyone answers, the others have this long left      // ms to wait after the first correct answer, so a faster-but-laggier rival can still land
 const MAX_PLAYERS = 8;
 const IDLE_ROOM_MS = 30 * 60 * 1000;   // a room still waiting with only its captain closes after this
 const MAX_RACE = 50;      // longest Race a host can pick; each game draws this many at random from the pack or topic
@@ -1093,7 +1111,7 @@ function onPeersChanged() {
 function setG(patch) {
   const m = S.match, prev = m.g;
   m.g = { ...prev, ...patch };
-  if (m.g.ph !== prev.ph || m.g.k !== prev.k) { m.phaseAt = Date.now(); m.firstOk = null; }
+  if (m.g.ph !== prev.ph || m.g.k !== prev.k) { m.phaseAt = Date.now(); m.firstOk = null; m.firstAns = null; }
   m.gKey = JSON.stringify(m.g);
   pushPresence({ g: m.g });
   onGameState();
@@ -1137,8 +1155,9 @@ function hostTick() {
       const ans = g.pl.map((_, s) => seatAnswer(g, s));
       const ok = ans.map(a => !!a && isCorrect(qq, respOf(a)));
       if (ok.some(Boolean)) m.firstOk = m.firstOk || now;
+      if (ans.some(Boolean) && !m.firstAns) { m.firstAns = now; if (g.cut !== g.k) return setG({ ...patch, cut: g.k }); }
       const allIn = ans.every((a, s) => a || !active[s]);
-      const timeUp = now - m.phaseAt > g.lim * 1000 + 1500;
+      const timeUp = now - m.phaseAt > g.lim * 1000 + 1500 || (m.firstAns && now - m.firstAns > CUT_MS + 700);
       if (allIn || (m.firstOk && now - m.firstOk > GRACE) || timeUp) {
         let w = -1;
         ok.forEach((o, s) => { if (o && (w < 0 || ans[s].rt < ans[w].rt)) w = s; });
@@ -1216,6 +1235,9 @@ function onGameState() {
   gameSounds(m, g, me);
   if (g.ph === "cd" && !m.cdAt) m.cdAt = performance.now();
   if (g.ph === "q" && !m.qStart[key]) m.qStart[key] = performance.now();
+  m.cutStart = m.cutStart || {};
+  if (g.ph === "q" && g.mode === "race" && g.cut === g.k && !m.cutStart[key]) m.cutStart[key] = performance.now();
+  setVignette(false);
   if (g.ph === "r" && !m.recorded.has(key)) {
     m.recorded.add(key);
     const qid = qidOf(g);
@@ -1395,7 +1417,8 @@ function questionCard(q, perm, opts) {
   // opts: { onPick(response), disabled, mine (option index | typed text | null), reveal, picks: [{orig, label, seat}] }
   // A response is an option index for MCQ, or the typed text for a short-answer question.
   if (isShort(q)) return shortCard(q, opts);
-  const list = el("ol", { class: "opts" });
+  const pics = Array.isArray(q.of) && q.of.length === 4;   // picture answers (official packs only)
+  const list = el("ol", { class: "opts" + (pics ? " pics" : "") });
   perm.forEach((orig, k) => {
     const cls = ["opt"];
     if (opts.mine === orig) cls.push("mine");
@@ -1405,7 +1428,8 @@ function questionCard(q, perm, opts) {
     list.append(el("li", {}, el("button", {
       class: cls.join(" "), disabled: opts.disabled, onclick: () => opts.onPick && opts.onPick(orig),
       "aria-label": `Option ${LETTERS[k]}: ${q.o[orig]}`
-    }, el("span", { class: "bubble" }, LETTERS[k]), el("span", { class: "otext" }, q.o[orig]), marks)));
+    }, el("span", { class: "bubble" }, LETTERS[k]),
+      pics ? el("span", { class: "optfig" }, svgEl(q.of[orig])) : el("span", { class: "otext" }, q.o[orig]), marks)));
   });
   const fig = q.fig ? el("figure", { class: "fig" }) : null;
   if (fig) fig.append(svgEl(q.fig));   // figures are our own SVG from the question banks
@@ -1610,6 +1634,7 @@ function matchView() {
   if (g.mode === "race") {
     if (g.ph === "q") {
       panel.append(el("div", { class: "timer" }, el("i", { id: "tbar" })));
+      panel.append(el("p", { class: "cutcount", id: "cutcount", role: "status" }));
       panel.append(questionCard(q, perm, { onPick: answer, disabled: !!mine, mine: respOf(mine) }));
       if (mine) { panel.append(el("p", { class: "thinking", id: "thinking", role: "status" })); queueMicrotask(updateThinking); }
     } else {
@@ -1690,6 +1715,12 @@ function endView() {
     el("a", { class: "btn ghost", href: "#progress", onclick: () => leaveMatch() }, "View progress")));
   return wrap;
 }
+// pulsing red edge while you're on someone else's 10 s clock
+function setVignette(on) {
+  let v = $("#vignette");
+  if (!v) { v = el("div", { id: "vignette", "aria-hidden": "true" }); document.body.append(v); }
+  v.classList.toggle("on", !!on && S.view === "duel");
+}
 function renderMatch() { if (S.view !== "duel") return; $("#view").replaceChildren(S.match ? matchView() : lobbyView()); }
 
 // Timers: question bar, hub ring, core fuse, countdown, daily speed bonus.
@@ -1699,13 +1730,27 @@ setInterval(() => {
   const g = m.g, key = g.id + ":" + g.k;
   if (g.ph === "q") {
     const elapsed = (performance.now() - (m.qStart[key] || performance.now())) / 1000;
-    const frac = Math.max(0, 1 - elapsed / g.lim);
+    let frac = Math.max(0, 1 - elapsed / g.lim);
+    const cutAt = m.cutStart && m.cutStart[key];
+    if (cutAt && g.mode === "race") {   // someone has answered: the rest are on a 10 s clock
+      const left = Math.max(0, CUT_MS / 1000 - (performance.now() - cutAt) / 1000);
+      frac = Math.min(frac, left / g.lim);
+      const waiting = !validAns(m.my, g) && mySeat() >= 0;
+      setVignette(waiting && left > 0);
+      const cd = $("#cutcount");
+      if (waiting && left > 0) {
+        const n = Math.ceil(left);
+        if (cd) cd.textContent = `Someone's locked in. ${n} s left!`;
+        if (n !== m.lastCut) { m.lastCut = n; sfx("tickHot"); }
+      } else if (cd) cd.textContent = "";
+      if (left === 0 && !validAns(m.my, g)) for (const b of document.querySelectorAll("#matchbox .opt, #matchbox #sa-in, #matchbox .saform button")) b.disabled = true;
+    }
     const bar = $("#tbar"); if (bar) bar.style.width = (frac * 100).toFixed(1) + "%";
     const ring = $("#ring");
     if (ring) { const on = Math.round(frac * RING_N); ring.querySelectorAll("rect").forEach((r, i) => r.classList.toggle("on", i < on)); }
     const fc = $("#fusecount"); if (fc) fc.textContent = Math.ceil(frac * g.lim) + " s";
     const left = Math.ceil(frac * g.lim);
-    if (left !== m.lastTick && left > 0) {
+    if (left !== m.lastTick && left > 0 && !(m.cutStart && m.cutStart[key])) {
       m.lastTick = left;
       if (g.mode === "bomb" && left <= 6) sfx("tickHot");
       else if (g.mode === "race" && left <= 5 && !validAns(m.my, g)) sfx("tick");
@@ -2175,7 +2220,7 @@ function validatePack(raw) {
       if (answers.length) item.answers = answers;
       if (num) item.num = num;
     }
-    if (q.fig) warnings.push(`${where}: images and figures aren't supported in player-made packs, so it was dropped.`);
+    if (q.fig || q.of) warnings.push(`${where}: images and figures aren't supported in player-made packs, so they were dropped.`);
     out.push(item);
   });
   const topics = [...new Set(out.map(q => q.topic))];

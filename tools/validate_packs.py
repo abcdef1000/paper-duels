@@ -76,7 +76,13 @@ def check_question(q, i, topics, errors):
         errors.append(f"{where}: quick must be true or false")
     if "fig" in q:
         check_fig(q["fig"], where, errors)
-    unknown = set(q) - {"id", "topic", "type", "q", "o", "a", "answers", "num", "x", "d", "quick", "fig"}
+    if "of" in q:
+        if t != "mcq" or not (isinstance(q["of"], list) and len(q["of"]) == 4):
+            errors.append(f"{where}: of (picture options) must be a list of 4 SVG strings on an mcq question")
+        else:
+            for k, f in enumerate(q["of"]):
+                check_fig(f, f"{where} option {k + 1}", errors)
+    unknown = set(q) - {"id", "topic", "type", "q", "o", "a", "answers", "num", "x", "d", "quick", "fig", "of"}
     if unknown:
         errors.append(f"{where}: unknown fields {sorted(unknown)}")
 
